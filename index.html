@@ -824,10 +824,12 @@ const COLORS = [
 
 // ─── PEOPLE (editável via modal) ──────────────────────
 let PEOPLE_LIST = [
-  {key:'JS',name:'João Silva',   role:'Vendas Pleno',  ci:0},
-  {key:'MC',name:'Maria Carvalho',role:'Vendas Sênior', ci:1},
-  {key:'FS',name:'Felipe Santos', role:'Vendas Pleno',  ci:2},
-  {key:'RP',name:'Rafael Pereira',role:'Vendas Júnior', ci:3},
+  {key:'JL', name:'Júlia Lima',    role:'Instagram / Conteúdo',  ci:1},
+  {key:'FD', name:'Fernanda/Dayane',role:'Vendas / Parceiros',   ci:2},
+  {key:'BJ', name:'Bruno Jr',      role:'JF Eternno / Marketing',ci:0},
+  {key:'HE', name:'Helton',        role:'Outlet / Descontos',    ci:3},
+  {key:'TH', name:'Thesco',        role:'JM / Métricas / Dev',   ci:4},
+  {key:'ED', name:'Eduardo',       role:'Gestão / Coordenação',  ci:5},
 ];
 
 function getPeople(){
@@ -845,13 +847,41 @@ function initials(name){ return name.split(' ').slice(0,2).map(w=>w[0]).join('')
 
 // ─── TASKS ────────────────────────────────────────────
 let TASKS = [
-  {id:1,title:'Ligar para cliente Empresa ABC — follow-up proposta',person:'JS',priority:'urgente',status:'pendente',due:'Hoje, 14h',late:1},
-  {id:2,title:'Atualizar CRM com visitas realizadas esta semana',person:'JS',priority:'alta',status:'progress',due:'Hoje',late:0},
-  {id:3,title:'Enviar proposta para lead Distribuidora XYZ',person:'JS',priority:'media',status:'done',due:'Hoje',late:0},
-  {id:4,title:'Montar apresentação para reunião de quinta-feira',person:'JS',priority:'media',status:'pendente',due:'Quarta, 17h',late:0},
-  {id:5,title:'Prospectar 10 novos contatos via LinkedIn',person:'JS',priority:'baixa',status:'pendente',due:'Esta semana',late:0},
-  {id:6,title:'Responder e-mails pendentes da sexta-feira',person:'JS',priority:'alta',status:'done',due:'Hoje',late:0},
-  {id:7,title:'Negociar desconto com cliente inadimplente — Loja do Pedro',person:'JS',priority:'urgente',status:'pendente',due:'Hoje',late:2},
+  // ── JF — JOIAS FABRICADAS ──
+  {id:1, title:'Pulseira Turmalina E8664 — acompanhar pedido UVM e registrar chegada', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:2, title:'Desapego — tentar vender a peça que ficou. Registrar status', person:'JL', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  {id:3, title:'Trizz — verificar outra peça que não foi pedida e definir destino', person:'ED', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  {id:4, title:'Instagram JF — chamar Júlia para registrar fabricação e criar conteúdo vinculado', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:5, title:'Olhar caixa de pedras e definir o que precisa fabricar', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:6, title:'Reciclagem JF — passar olho em joias encalhadas abaixo de R$10.000 e propor transformação', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  // ── MARKETING ──
+  {id:7, title:'Marketing — conteúdo mostrando transformação da pulseira em colar/brincos (assim que chegar)', person:'BJ', priority:'alta', status:'pendente', due:'Assim que pulseira chegar', late:0},
+  {id:8, title:'Colar Riviera esmeralda navete → pulseira + colar meia Riviera: fazer conteúdo', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  {id:9, title:'Voltar a postar JM/JF/Outlet no Instagram do Bruno', person:'BJ', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:10, title:'Curadoria — troca de pedras em joias antigas: criar conceito e conteúdo de comunicação', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  // ── FOTOGRAFIA ──
+  {id:11, title:'Teste de IA na edição de imagens — setor de desenvolvimento avaliar e implementar', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:12, title:'Alinhamento Fernanda/Dayane com fotografia — joias saírem do cadastro separadas por saquinho por dia', person:'FD', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:13, title:'Fotografia seguir ordem de saquinho para controlar engasgamento de fotos. Prioridade: vender', person:'FD', priority:'urgente', status:'pendente', due:'Imediato', late:0},
+  // ── JM — JOIAS MODIFICADAS ──
+  {id:14, title:'Sentar com equipe e analisar estoque JM — o que falta fabricar e o que tem em estoque', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:15, title:'Métricas JM — levantar dados e enviar para Thesco analisar', person:'ED', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:16, title:'Instagram JM — chamar Júlia para criar conteúdo vinculado à fabricação', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  {id:17, title:'Reciclagem JM — joias encalhadas abaixo de R$10.000: propor refabricação/modificação', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  {id:18, title:'Olhar caixa de pedras JM e definir o que fabricar/modificar', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  // ── FERNANDA / DAYANE ──
+  {id:19, title:'Eduardo — levantar média de venda de cada parceiro e enviar para Fernanda e Dayane', person:'ED', priority:'urgente', status:'pendente', due:'Esta semana', late:0},
+  {id:20, title:'Descontos para clientes — concentrar no Helton (não passar pelo Bruno)', person:'HE', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  // ── LEILÕES / SCRAP ──
+  {id:21, title:'Analisar leilões ativos — dias, quantidade de peças e desempenho', person:'ED', priority:'media', status:'pendente', due:'Sábado 10h', late:0},
+  {id:22, title:'Scrap para Second — analisar o que vendeu, onde vendeu e margens de lucro', person:'ED', priority:'media', status:'pendente', due:'Sábado 10h', late:0},
+  // ── HELTON / OUTLET ──
+  {id:23, title:'Outlet de joias — criar página e Instagram. Vender pelo peso, bandeja pós-polimento', person:'HE', priority:'alta', status:'pendente', due:'Esta semana', late:0},
+  // ── PARCEIROS ──
+  {id:24, title:'Bruno — falar com Luciana (parceira nova)', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
+  {id:25, title:'Sábado — verificar vendas dos parceiros do quadro e checar se média está subindo', person:'ED', priority:'alta', status:'pendente', due:'Sábado 16/05', late:0},
+  {id:26, title:'Se média não subir: conversar com Dayane e Fernanda na reunião de segunda', person:'FD', priority:'media', status:'pendente', due:'Segunda 10h', late:0},
+  {id:27, title:'Itens abaixo de R$10.000 — reenviar para loucar e baixar o preço', person:'HE', priority:'alta', status:'pendente', due:'Esta semana', late:0},
 ];
 
 const KB_TASKS_BASE = [
