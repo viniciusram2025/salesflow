@@ -296,6 +296,9 @@ select option{background:var(--c-bg);}
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
 
     <div class="sidebar-bottom">
+      <div class="nav-item" onclick="openPessoas()" style="margin-bottom:6px;">
+        <i class="ti ti-user-cog"></i>Colaboradores
+      </div>
       <div class="user-card">
         <div class="av av-lg" style="background:rgba(79,110,247,.2);color:var(--c-accent);">JS</div>
         <div>
@@ -644,12 +647,7 @@ select option{background:var(--c-bg);}
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Responsável</label>
-        <select id="new-person">
-          <option value="JS">João Silva</option>
-          <option value="MC">Maria Carvalho</option>
-          <option value="FS">Felipe Santos</option>
-          <option value="RP">Rafael Pereira</option>
-        </select>
+        <select id="new-person"></select>
       </div>
       <div class="form-group">
         <label class="form-label">Prioridade</label>
@@ -664,7 +662,7 @@ select option{background:var(--c-bg);}
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Prazo</label>
-        <input type="date" id="new-date"/>
+        <input type="text" id="new-date" placeholder="Ex: Hoje, Sexta, 20/05"/>
       </div>
       <div class="form-group">
         <label class="form-label">Status</label>
@@ -681,6 +679,106 @@ select option{background:var(--c-bg);}
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button class="btn-ghost" onclick="closeModal('modal-new')">Cancelar</button>
       <button class="btn" onclick="saveNewTask()"><i class="ti ti-plus"></i>Criar tarefa</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: EDITAR TAREFA ══════ -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Editar Tarefa</div>
+      <button class="modal-close" onclick="closeModal('modal-edit')">&times;</button>
+    </div>
+    <input type="hidden" id="edit-id"/>
+    <div class="form-group">
+      <label class="form-label">Título *</label>
+      <input type="text" id="edit-title" placeholder="Título da tarefa..."/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Responsável</label>
+        <select id="edit-person"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prioridade</label>
+        <select id="edit-prio">
+          <option value="baixa">Baixa</option>
+          <option value="media">Média</option>
+          <option value="alta">Alta</option>
+          <option value="urgente">Urgente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prazo</label>
+        <input type="text" id="edit-due" placeholder="Ex: Hoje, Sexta, 20/05"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="edit-status">
+          <option value="pendente">Pendente</option>
+          <option value="progress">Em andamento</option>
+          <option value="done">Concluída</option>
+          <option value="blocked">Bloqueada</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:4px;">
+      <button class="btn" style="background:var(--c-red);flex-shrink:0;" onclick="promptDeleteTask()"><i class="ti ti-trash"></i>Excluir</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-ghost" onclick="closeModal('modal-edit')">Cancelar</button>
+        <button class="btn" onclick="saveEditTask()"><i class="ti ti-check"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: SENHA PARA EXCLUIR ══════ -->
+<div class="modal-overlay" id="modal-senha">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-lock" style="color:var(--c-red);"></i> Confirmação de exclusão</div>
+      <button class="modal-close" onclick="closeModal('modal-senha')">&times;</button>
+    </div>
+    <div style="font-size:13px;color:var(--c-muted);margin-bottom:16px;">Esta ação é irreversível. Digite a senha master para confirmar a exclusão.</div>
+    <div class="form-group">
+      <label class="form-label">Senha master</label>
+      <input type="password" id="senha-input" placeholder="••••••" onkeydown="if(event.key==='Enter')confirmDelete()"/>
+    </div>
+    <div id="senha-erro" style="font-size:12px;color:var(--c-red);display:none;margin-bottom:8px;"><i class="ti ti-alert-circle"></i> Senha incorreta.</div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-ghost" onclick="closeModal('modal-senha')">Cancelar</button>
+      <button class="btn" style="background:var(--c-red);" onclick="confirmDelete()"><i class="ti ti-trash"></i>Excluir definitivamente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL: EDITAR COLABORADORES ══════ -->
+<div class="modal-overlay" id="modal-pessoas">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-users"></i> Gerenciar colaboradores</div>
+      <button class="modal-close" onclick="closeModal('modal-pessoas')">&times;</button>
+    </div>
+    <div id="pessoas-list" style="margin-bottom:16px;"></div>
+    <div style="border-top:1px solid var(--c-border);padding-top:16px;margin-bottom:4px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Adicionar novo colaborador</div>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Nome completo</label>
+          <input type="text" id="np-nome" placeholder="Ex: Ana Lima"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Cargo / Função</label>
+          <input type="text" id="np-cargo" placeholder="Ex: Vendas Pleno"/>
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="addPessoa()"><i class="ti ti-plus"></i>Adicionar</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+      <button class="btn-ghost" onclick="closeModal('modal-pessoas')">Fechar</button>
     </div>
   </div>
 </div>
@@ -712,14 +810,40 @@ select option{background:var(--c-bg);}
 </div>
 
 <script>
-// ─── DATA ───────────────────────────────────────────────
-const PEOPLE = {
-  JS:{name:'João Silva',role:'Vendas Pleno',bg:'rgba(79,110,247,.2)',color:'var(--c-accent)'},
-  MC:{name:'Maria Carvalho',role:'Vendas Sênior',bg:'rgba(34,201,135,.15)',color:'var(--c-green)'},
-  FS:{name:'Felipe Santos',role:'Vendas Pleno',bg:'rgba(245,166,35,.15)',color:'var(--c-amber)'},
-  RP:{name:'Rafael Pereira',role:'Vendas Júnior',bg:'rgba(155,114,240,.15)',color:'var(--c-purple)'}
-};
+// ══════════════════════════════════════════
+// DADOS — edite aqui os colaboradores iniciais
+// ══════════════════════════════════════════
+const COLORS = [
+  {bg:'rgba(79,110,247,.2)',color:'var(--c-accent)'},
+  {bg:'rgba(34,201,135,.15)',color:'var(--c-green)'},
+  {bg:'rgba(245,166,35,.15)',color:'var(--c-amber)'},
+  {bg:'rgba(155,114,240,.15)',color:'var(--c-purple)'},
+  {bg:'rgba(240,82,82,.15)',color:'var(--c-red)'},
+  {bg:'rgba(79,110,247,.1)',color:'#a78bfa)'},
+];
 
+// ─── PEOPLE (editável via modal) ──────────────────────
+let PEOPLE_LIST = [
+  {key:'JS',name:'João Silva',   role:'Vendas Pleno',  ci:0},
+  {key:'MC',name:'Maria Carvalho',role:'Vendas Sênior', ci:1},
+  {key:'FS',name:'Felipe Santos', role:'Vendas Pleno',  ci:2},
+  {key:'RP',name:'Rafael Pereira',role:'Vendas Júnior', ci:3},
+];
+
+function getPeople(){
+  const saved = localStorage.getItem('sf_people');
+  if(saved) PEOPLE_LIST = JSON.parse(saved);
+  return PEOPLE_LIST;
+}
+function savePeople(){ localStorage.setItem('sf_people',JSON.stringify(PEOPLE_LIST)); }
+function getPeopleMap(){
+  const m={};
+  getPeople().forEach((p,i)=>{ m[p.key]={name:p.name,role:p.role,bg:COLORS[p.ci%COLORS.length].bg,color:COLORS[p.ci%COLORS.length].color}; });
+  return m;
+}
+function initials(name){ return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+
+// ─── TASKS ────────────────────────────────────────────
 let TASKS = [
   {id:1,title:'Ligar para cliente Empresa ABC — follow-up proposta',person:'JS',priority:'urgente',status:'pendente',due:'Hoje, 14h',late:1},
   {id:2,title:'Atualizar CRM com visitas realizadas esta semana',person:'JS',priority:'alta',status:'progress',due:'Hoje',late:0},
@@ -730,7 +854,7 @@ let TASKS = [
   {id:7,title:'Negociar desconto com cliente inadimplente — Loja do Pedro',person:'JS',priority:'urgente',status:'pendente',due:'Hoje',late:2},
 ];
 
-const KB_TASKS = [
+const KB_TASKS_BASE = [
   {title:'Prospectar novos clientes B2B',person:'JS',priority:'media',col:'pendente'},
   {title:'Criar planilha de metas Q2',person:'MC',priority:'baixa',col:'pendente'},
   {title:'Treinamento novo colaborador',person:'RP',priority:'media',col:'pendente'},
@@ -740,20 +864,28 @@ const KB_TASKS = [
   {title:'Montar apresentação Q2',person:'RP',priority:'media',col:'progress'},
   {title:'Follow-up leads quentes',person:'FS',priority:'alta',col:'progress'},
   {title:'Ligar inadimplentes — Lista A',person:'JS',priority:'urgente',col:'progress'},
-  {title:'Envio proposta — aguardando aprovação gerência',person:'RP',priority:'urgente',col:'blocked'},
-  {title:'Campanha email — aguardando conteúdo marketing',person:'MC',priority:'media',col:'blocked'},
+  {title:'Envio proposta — aguardando aprovação',person:'RP',priority:'urgente',col:'blocked'},
+  {title:'Campanha email — aguardando mkt',person:'MC',priority:'media',col:'blocked'},
   {title:'Enviar proposta Distribuidora XYZ',person:'JS',priority:'media',col:'done'},
   {title:'Responder e-mails sexta-feira',person:'MC',priority:'alta',col:'done'},
   {title:'Reunião kick-off novo cliente',person:'FS',priority:'alta',col:'done'},
 ];
 
-// ─── NAV ────────────────────────────────────────────────
+// Carrega dados salvos no localStorage
+function loadData(){
+  const t = localStorage.getItem('sf_tasks');
+  if(t) TASKS = JSON.parse(t);
+  getPeople();
+}
+function saveData(){ localStorage.setItem('sf_tasks',JSON.stringify(TASKS)); }
+
+// ─── NAV ──────────────────────────────────────────────
 const PAGE_TITLES = {
   minhas:{title:'Minhas Tarefas',sub:''},
-  kanban:{title:'Kanban da equipe',sub:'Semana 20 — 12 a 17 de maio'},
+  kanban:{title:'Kanban da equipe',sub:''},
   calendario:{title:'Calendário',sub:'Visualização por data'},
   equipe:{title:'Painel da equipe',sub:'Visão do coordenador'},
-  dashboard:{title:'Dashboard executivo',sub:'Semana 20 — Relatório consolidado'},
+  dashboard:{title:'Dashboard executivo',sub:'Relatório consolidado'},
   relatorios:{title:'Relatórios',sub:'Exportar dados e análises'},
   ia:{title:'IA de Reuniões',sub:'Extração automática de tarefas via inteligência artificial'}
 };
@@ -762,7 +894,8 @@ function goTo(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  document.querySelector('[data-page="'+name+'"]').classList.add('active');
+  const ni = document.querySelector('[data-page="'+name+'"]');
+  if(ni) ni.classList.add('active');
   const t = PAGE_TITLES[name]||{title:name,sub:''};
   document.getElementById('topbar-title').innerHTML =
     `<div class="page-title">${t.title}</div>`+
@@ -770,120 +903,309 @@ function goTo(name){
   if(name==='kanban') renderKanban();
 }
 
-// ─── TASK LIST ─────────────────────────────────────────
+// ─── HELPERS ──────────────────────────────────────────
+function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+
 function statusLabel(s,late){
-  if(s==='done') return '<span class="tag done-tag">Concluída</span>';
+  if(s==='done')     return '<span class="tag done-tag">Concluída</span>';
   if(s==='progress') return '<span class="tag progress">Em andamento</span>';
-  if(late>0) return `<span class="tag late">Atrasada ${late}d</span>`;
+  if(s==='blocked')  return '<span class="tag blocked">Bloqueada</span>';
+  if(late>0)         return `<span class="tag late">Atrasada ${late}d</span>`;
   return '<span class="tag pending">Pendente</span>';
 }
 
+function buildPersonOptions(selectId, selectedKey){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  sel.innerHTML = getPeople().map(p=>`<option value="${p.key}" ${p.key===selectedKey?'selected':''}>${p.name}</option>`).join('');
+}
+
+// ─── TASK LIST ────────────────────────────────────────
 function renderTasks(list){
   const el = document.getElementById('task-list');
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:32px;color:var(--c-muted);">Nenhuma tarefa encontrada.</div>';return;}
-  el.innerHTML = list.map(t=>`
-    <div class="task-item">
-      <div class="task-check ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id},this)"></div>
+  const pm = getPeopleMap();
+  if(!list||!list.length){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--c-muted);">Nenhuma tarefa encontrada.</div>';
+    updateKPIs(); return;
+  }
+  el.innerHTML = list.map(t=>{
+    const p = pm[t.person]||{name:t.person,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+    const ini = initials(p.name);
+    return `
+    <div class="task-item" id="task-row-${t.id}">
+      <div class="task-check ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id})"></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:1px;">
+        <div class="av" style="background:${p.bg};color:${p.color};font-size:9px;" title="${p.name}">${ini}</div>
+      </div>
       <div style="flex:1;">
         <div class="task-title${t.status==='done'?' done':''}">${t.title}</div>
         <div class="task-meta">
-          <span class="tag ${t.priority}">${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)}</span>
+          <span class="tag ${t.priority}">${cap(t.priority)}</span>
           <span class="meta-text"><i class="ti ti-calendar" style="font-size:11px;"></i> ${t.due}</span>
           ${t.late>0?`<span class="meta-text" style="color:var(--c-red);"><i class="ti ti-clock" style="font-size:11px;"></i> ${t.late}d atraso</span>`:''}
           ${statusLabel(t.status,t.late)}
+          <span class="meta-text" style="color:var(--c-muted2);">${p.name}</span>
         </div>
       </div>
-      <button class="btn-ghost btn-sm" style="flex-shrink:0;" onclick="editTask(${t.id})"><i class="ti ti-dots-vertical"></i></button>
-    </div>`).join('');
+      <button class="btn-ghost btn-sm" style="flex-shrink:0;" onclick="openEditTask(${t.id})" title="Editar tarefa">
+        <i class="ti ti-edit"></i>
+      </button>
+    </div>`;
+  }).join('');
   updateKPIs();
 }
 
-function toggleTask(id,el){
+function toggleTask(id){
   const t = TASKS.find(x=>x.id===id);
   if(!t) return;
   t.status = t.status==='done'?'pendente':'done';
+  saveData();
   renderTasks(TASKS);
 }
 
-function editTask(id){
-  const t=TASKS.find(x=>x.id===id);
-  if(!t) return;
-  alert(`Tarefa: ${t.title}\nPrioridade: ${t.priority}\nStatus: ${t.status}`);
-}
-
-function filterTasks(f,chip){
+let currentFilter = 'todas';
+function filterTasks(f, chip){
+  currentFilter = f;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
-  chip.classList.add('active');
+  if(chip) chip.classList.add('active');
+  applyFilter();
+}
+function applyFilter(){
   let list = TASKS;
-  if(f==='atrasadas') list=TASKS.filter(t=>t.late>0);
-  else if(f==='concluidas') list=TASKS.filter(t=>t.status==='done');
-  else if(f==='hoje') list=TASKS.filter(t=>t.due.toLowerCase().includes('hoje'));
+  if(currentFilter==='atrasadas')  list = TASKS.filter(t=>t.late>0);
+  else if(currentFilter==='concluidas') list = TASKS.filter(t=>t.status==='done');
+  else if(currentFilter==='hoje')  list = TASKS.filter(t=>t.due.toLowerCase().includes('hoje'));
+  else if(currentFilter==='amanha') list = TASKS.filter(t=>t.due.toLowerCase().includes('amanh'));
   renderTasks(list);
 }
 
 function updateKPIs(){
-  const done=TASKS.filter(t=>t.status==='done').length;
-  document.getElementById('kpi-total').textContent=TASKS.length;
-  document.getElementById('kpi-done').textContent=done;
-  document.getElementById('kpi-pct').textContent=Math.round(done/TASKS.length*100)+'%';
+  const done = TASKS.filter(t=>t.status==='done').length;
+  const total = TASKS.length;
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-done').textContent  = done;
+  document.getElementById('kpi-pct').textContent   = total>0 ? Math.round(done/total*100)+'%' : '0%';
 }
 
-// ─── KANBAN ────────────────────────────────────────────
+// ─── KANBAN ───────────────────────────────────────────
 function renderKanban(){
+  const pm = getPeopleMap();
   const cols={pendente:[],progress:[],blocked:[],done:[]};
-  KB_TASKS.forEach(t=>cols[t.col].push(t));
+  // Mistura KB_TASKS_BASE + TASKS adicionadas
+  const kbList = [...KB_TASKS_BASE, ...TASKS.filter(t=>!KB_TASKS_BASE.find(k=>k.title===t.title)).map(t=>({...t,col:t.status==='done'?'done':t.status==='progress'?'progress':t.status==='blocked'?'blocked':'pendente'}))];
+  kbList.forEach(t=>{ if(cols[t.col]) cols[t.col].push(t); });
   ['pendente','progress','blocked','done'].forEach(col=>{
-    const el=document.getElementById('kb-'+col);
+    const el = document.getElementById('kb-'+col);
     if(!el) return;
-    el.innerHTML=cols[col].map(t=>`
-      <div class="kb-card" draggable="true">
+    el.innerHTML = cols[col].map(t=>{
+      const p = pm[t.person]||{name:t.person,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+      return `<div class="kb-card" draggable="true">
         <div class="kb-card-title">${t.title}</div>
         <div class="kb-card-foot">
-          <span class="tag ${t.priority}">${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)}</span>
-          <div class="av" style="background:${PEOPLE[t.person].bg};color:${PEOPLE[t.person].color};">${t.person}</div>
+          <span class="tag ${t.priority}">${cap(t.priority)}</span>
+          <div class="av" style="background:${p.bg};color:${p.color};font-size:9px;" title="${p.name}">${initials(p.name)}</div>
         </div>
-      </div>`).join('');
-    const cnt=document.getElementById('kb-cnt-'+col);
-    if(cnt) cnt.textContent=cols[col].length;
+      </div>`;
+    }).join('');
+    const cnt = document.getElementById('kb-cnt-'+col);
+    if(cnt) cnt.textContent = cols[col].length;
   });
 }
 
-// ─── NEW TASK MODAL ────────────────────────────────────
+// ─── NOVA TAREFA ──────────────────────────────────────
 function openNewTask(){
-  document.getElementById('new-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('modal-new').classList.add('open');
-}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function saveNewTask(){
-  const title=document.getElementById('new-title').value.trim();
-  if(!title){alert('Informe o título da tarefa.');return;}
-  const newTask={
-    id:TASKS.length+1,
-    title,
-    person:document.getElementById('new-person').value,
-    priority:document.getElementById('new-prio').value,
-    status:document.getElementById('new-status').value,
-    due:'Hoje',late:0
-  };
-  TASKS.unshift(newTask);
-  renderTasks(TASKS);
-  closeModal('modal-new');
+  buildPersonOptions('new-person','JS');
   document.getElementById('new-title').value='';
   document.getElementById('new-desc').value='';
+  document.getElementById('new-date').value='Hoje';
+  document.getElementById('new-prio').value='media';
+  document.getElementById('new-status').value='pendente';
+  openModal('modal-new');
 }
 
-// ─── NOTIFICATIONS ─────────────────────────────────────
-function toggleNotif(){
-  document.getElementById('notif-panel').classList.toggle('open');
+function saveNewTask(){
+  const title = document.getElementById('new-title').value.trim();
+  if(!title){ shake('new-title'); return; }
+  const newTask = {
+    id: Date.now(),
+    title,
+    person:   document.getElementById('new-person').value,
+    priority: document.getElementById('new-prio').value,
+    status:   document.getElementById('new-status').value,
+    due:      document.getElementById('new-date').value||'Hoje',
+    late: 0
+  };
+  TASKS.unshift(newTask);
+  saveData();
+  renderTasks(TASKS);
+  closeModal('modal-new');
 }
+
+// ─── EDITAR TAREFA ────────────────────────────────────
+let editingId = null;
+
+function openEditTask(id){
+  const t = TASKS.find(x=>x.id===id);
+  if(!t) return;
+  editingId = id;
+  document.getElementById('edit-id').value    = id;
+  document.getElementById('edit-title').value = t.title;
+  document.getElementById('edit-due').value   = t.due;
+  document.getElementById('edit-prio').value  = t.priority;
+  document.getElementById('edit-status').value= t.status;
+  buildPersonOptions('edit-person', t.person);
+  document.getElementById('senha-erro').style.display='none';
+  openModal('modal-edit');
+}
+
+function saveEditTask(){
+  const title = document.getElementById('edit-title').value.trim();
+  if(!title){ shake('edit-title'); return; }
+  const t = TASKS.find(x=>x.id===editingId);
+  if(!t) return;
+  t.title    = title;
+  t.person   = document.getElementById('edit-person').value;
+  t.priority = document.getElementById('edit-prio').value;
+  t.status   = document.getElementById('edit-status').value;
+  t.due      = document.getElementById('edit-due').value||t.due;
+  saveData();
+  applyFilter();
+  closeModal('modal-edit');
+  toast('Tarefa atualizada com sucesso!');
+}
+
+// ─── EXCLUIR COM SENHA ────────────────────────────────
+const MASTER_PASS = '105055';
+
+function promptDeleteTask(){
+  document.getElementById('senha-input').value='';
+  document.getElementById('senha-erro').style.display='none';
+  closeModal('modal-edit');
+  openModal('modal-senha');
+}
+
+function confirmDelete(){
+  const v = document.getElementById('senha-input').value;
+  if(v !== MASTER_PASS){
+    document.getElementById('senha-erro').style.display='block';
+    shake('senha-input');
+    return;
+  }
+  TASKS = TASKS.filter(x=>x.id!==editingId);
+  saveData();
+  applyFilter();
+  closeModal('modal-senha');
+  editingId = null;
+  toast('Tarefa excluída.', 'red');
+}
+
+// ─── GERENCIAR COLABORADORES ──────────────────────────
+function openPessoas(){
+  renderPessoasList();
+  openModal('modal-pessoas');
+}
+
+function renderPessoasList(){
+  const el = document.getElementById('pessoas-list');
+  const people = getPeople();
+  el.innerHTML = people.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-border);">
+      <div class="av av-lg" style="background:${COLORS[p.ci%COLORS.length].bg};color:${COLORS[p.ci%COLORS.length].color};">${initials(p.name)}</div>
+      <div style="flex:1;">
+        <input type="text" value="${p.name}" style="margin-bottom:4px;" onchange="updatePessoa(${i},'name',this.value)"/>
+        <input type="text" value="${p.role}" style="font-size:12px;" onchange="updatePessoa(${i},'role',this.value)"/>
+      </div>
+      <button class="btn-ghost btn-sm" style="color:var(--c-red);border-color:var(--c-red-dim);" onclick="removePessoa(${i})" title="Remover colaborador">
+        <i class="ti ti-trash"></i>
+      </button>
+    </div>`).join('');
+}
+
+function updatePessoa(i, field, val){
+  PEOPLE_LIST[i][field] = val;
+  // Atualiza key se for o nome
+  if(field==='name'){
+    const newKey = initials(val);
+    const oldKey = PEOPLE_LIST[i].key;
+    if(newKey!==oldKey){
+      TASKS.forEach(t=>{ if(t.person===oldKey) t.person=newKey; });
+      saveData();
+    }
+    PEOPLE_LIST[i].key = newKey;
+  }
+  savePeople();
+}
+
+function removePessoa(i){
+  if(PEOPLE_LIST.length<=1){ toast('Deve haver ao menos 1 colaborador.','amber'); return; }
+  PEOPLE_LIST.splice(i,1);
+  savePeople();
+  renderPessoasList();
+}
+
+function addPessoa(){
+  const nome  = document.getElementById('np-nome').value.trim();
+  const cargo = document.getElementById('np-cargo').value.trim();
+  if(!nome){ shake('np-nome'); return; }
+  const key = initials(nome);
+  if(PEOPLE_LIST.find(p=>p.key===key)){ toast('Iniciais já existem. Use um nome diferente.','amber'); return; }
+  PEOPLE_LIST.push({key, name:nome, role:cargo||'Colaborador', ci:PEOPLE_LIST.length});
+  savePeople();
+  document.getElementById('np-nome').value='';
+  document.getElementById('np-cargo').value='';
+  renderPessoasList();
+  toast('Colaborador adicionado!');
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// Fecha ao clicar fora
 document.addEventListener('click',function(e){
-  const panel=document.getElementById('notif-panel');
-  if(panel.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.icon-btn')){
+  ['modal-new','modal-edit','modal-senha','modal-pessoas','notif-panel'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el.classList.contains('open') && !el.contains(e.target)){
+      const isOverlay = e.target===el;
+      if(isOverlay) closeModal(id);
+    }
+  });
+});
+
+// Fecha notif ao clicar fora
+document.addEventListener('click',function(e){
+  const panel = document.getElementById('notif-panel');
+  if(panel && panel.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.icon-btn')){
     panel.classList.remove('open');
   }
 });
 
-// ─── IA ─────────────────────────────────────────────────
+// Shake animation para campos inválidos
+function shake(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.borderColor='rgba(240,82,82,.7)';
+  el.style.animation='shake .3s ease';
+  setTimeout(()=>{ el.style.borderColor=''; el.style.animation=''; },600);
+}
+
+// Toast feedback
+function toast(msg, type='green'){
+  const colors = {green:'var(--c-green)',red:'var(--c-red)',amber:'var(--c-amber)'};
+  const t = document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;right:24px;background:var(--c-surface);border:1px solid ${colors[type]||colors.green};border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;color:${colors[type]||colors.green};z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeUp .2s ease;`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2800);
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────
+function toggleNotif(){
+  document.getElementById('notif-panel').classList.toggle('open');
+}
+
+// ─── IA ───────────────────────────────────────────────
 const EXAMPLE_TEXT = `Reunião comercial — Segunda-feira 12/05
 
 Ficou definido que João deve atualizar o controle de estoque até quarta-feira, pois há divergências nos registros do sistema.
@@ -901,13 +1223,11 @@ const EXTRACTED_DEMO = [
   {title:'Prospectar 15 novos leads via LinkedIn',person:'RP',personName:'Rafael Pereira',deadline:'Esta semana',priority:'media',tag:'media',reason:'Meta de prospecção definida'}
 ];
 
-function loadExample(){
-  document.getElementById('meeting-input').value=EXAMPLE_TEXT;
-}
+function loadExample(){ document.getElementById('meeting-input').value=EXAMPLE_TEXT; }
 
 function processIA(){
-  const txt=document.getElementById('meeting-input').value.trim();
-  if(!txt){document.getElementById('meeting-input').style.borderColor='rgba(240,82,82,.5)';setTimeout(()=>{document.getElementById('meeting-input').style.borderColor='';},1500);return;}
+  const txt = document.getElementById('meeting-input').value.trim();
+  if(!txt){ shake('meeting-input'); return; }
   document.getElementById('ai-loading').classList.add('show');
   document.getElementById('ai-results').style.display='none';
   setTimeout(()=>{
@@ -918,44 +1238,53 @@ function processIA(){
 }
 
 function renderAITasks(tasks){
-  document.getElementById('ai-count').textContent=tasks.length+' tarefas';
-  document.getElementById('ai-task-list').innerHTML=tasks.map((t,i)=>`
-    <div class="ai-task-card">
+  const pm = getPeopleMap();
+  document.getElementById('ai-count').textContent = tasks.length+' tarefas';
+  document.getElementById('ai-task-list').innerHTML = tasks.map((t,i)=>{
+    const p = pm[t.person]||{name:t.personName,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+    return `<div class="ai-task-card">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
-        <div class="av av-lg" style="background:${PEOPLE[t.person].bg};color:${PEOPLE[t.person].color};">${t.person}</div>
+        <div class="av av-lg" style="background:${p.bg};color:${p.color};">${initials(p.name)}</div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;margin-bottom:3px;">${t.title}</div>
           <div style="font-size:11px;color:var(--c-muted);">${t.personName} &nbsp;·&nbsp; <i class="ti ti-calendar" style="font-size:11px;"></i> ${t.deadline}</div>
           <div style="font-size:11px;color:var(--c-muted2);margin-top:3px;font-style:italic;">"${t.reason}"</div>
         </div>
-        <span class="tag ${t.tag}">${t.priority.charAt(0).toUpperCase()+t.priority.slice(1)}</span>
+        <span class="tag ${t.tag}">${cap(t.priority)}</span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-size:11px;color:var(--c-muted2);">Ajustar prioridade:</span>
-        <select style="width:auto;padding:4px 10px;font-size:12px;flex-shrink:0;">
-          <option ${t.tag==='urgente'?'selected':''}>Urgente</option>
-          <option ${t.tag==='alta'?'selected':''}>Alta</option>
-          <option ${t.tag==='media'?'selected':''}>Média</option>
-          <option ${t.tag==='baixa'?'selected':''}>Baixa</option>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:11px;color:var(--c-muted2);">Prioridade:</span>
+        <select id="ai-prio-${i}" style="width:auto;padding:4px 10px;font-size:12px;">
+          <option ${t.tag==='urgente'?'selected':''} value="urgente">Urgente</option>
+          <option ${t.tag==='alta'?'selected':''} value="alta">Alta</option>
+          <option ${t.tag==='media'?'selected':''} value="media">Média</option>
+          <option ${t.tag==='baixa'?'selected':''} value="baixa">Baixa</option>
         </select>
         <span style="font-size:11px;color:var(--c-muted2);">Responsável:</span>
-        <select style="width:auto;padding:4px 10px;font-size:12px;flex-shrink:0;">
-          ${Object.entries(PEOPLE).map(([k,v])=>`<option value="${k}" ${k===t.person?'selected':''}>${v.name}</option>`).join('')}
+        <select id="ai-person-${i}" style="width:auto;padding:4px 10px;font-size:12px;">
+          ${getPeople().map(pp=>`<option value="${pp.key}" ${pp.key===t.person?'selected':''}>${pp.name}</option>`).join('')}
         </select>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('ai-confirm-msg').style.display='none';
-  document.querySelector('.btn-green').disabled=false;
-  document.querySelector('.btn-green').style.opacity='1';
+  const btn = document.querySelector('.btn-green');
+  btn.disabled=false; btn.style.opacity='1';
+  window._aiTaskCount = tasks.length;
 }
 
 function confirmIA(){
-  EXTRACTED_DEMO.forEach(t=>{
-    TASKS.unshift({id:Date.now()+Math.random(),title:t.title,person:t.person,priority:t.tag,status:'pendente',due:t.deadline,late:0});
-  });
+  for(let i=0;i<window._aiTaskCount;i++){
+    const p  = document.getElementById('ai-prio-'+i)?.value || 'media';
+    const pp = document.getElementById('ai-person-'+i)?.value || 'JS';
+    const card = document.getElementById('ai-task-list').children[i];
+    const title = card?.querySelector('div[style*="font-weight:600"]')?.textContent||'Nova tarefa';
+    TASKS.unshift({id:Date.now()+i,title,person:pp,priority:p,status:'pendente',due:'Esta semana',late:0});
+  }
+  saveData();
   document.getElementById('ai-confirm-msg').style.display='inline-flex';
-  document.querySelector('.btn-green').disabled=true;
-  document.querySelector('.btn-green').style.opacity='.5';
+  const btn=document.querySelector('.btn-green'); btn.disabled=true; btn.style.opacity='.5';
+  toast('Tarefas criadas com sucesso!');
 }
 
 function resetIA(){
@@ -964,7 +1293,13 @@ function resetIA(){
   document.getElementById('ai-confirm-msg').style.display='none';
 }
 
-// ─── INIT ───────────────────────────────────────────────
+// ─── SHAKE KEYFRAME ───────────────────────────────────
+const ks = document.createElement('style');
+ks.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}`;
+document.head.appendChild(ks);
+
+// ─── INIT ─────────────────────────────────────────────
+loadData();
 renderTasks(TASKS);
 </script>
 </body>
