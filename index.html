@@ -711,6 +711,10 @@ select option{background:var(--c-bg);}
         </select>
       </div>
     </div>
+    <div class="form-group">
+      <label class="form-label">Descrição (opcional)</label>
+      <textarea id="edit-desc" placeholder="Contexto adicional..."></textarea>
+    </div>
     <div style="display:flex;gap:10px;justify-content:space-between;margin-top:4px;">
       <button class="btn" style="background:var(--c-red);flex-shrink:0;" onclick="promptDeleteTask()"><i class="ti ti-trash"></i>Excluir</button>
       <div style="display:flex;gap:10px;">
@@ -1246,7 +1250,6 @@ function openEditTask(id){
   editingId = id;
   document.getElementById('edit-id').value     = id;
   document.getElementById('edit-title').value  = t.title;
-  document.getElementById('edit-prio').value   = t.priority;
   document.getElementById('edit-status').value = t.status;
   buildPersonOptions('edit-person', t.person);
 
@@ -1265,6 +1268,7 @@ function openEditTask(id){
     inp.style.opacity = '1';
   }
   document.getElementById('senha-erro').style.display='none';
+  document.getElementById('edit-desc').value = t.desc || '';
   openModal('modal-edit');
 }
 
@@ -1281,6 +1285,7 @@ function saveEditTask(){
   t.priority = document.getElementById('edit-prio').value;
   t.status   = document.getElementById('edit-status').value;
   t.due      = noDate ? 'Sem prazo' : fmtDate(dateVal);
+  t.desc     = document.getElementById('edit-desc').value.trim();
   saveData();
   applyFilter();
   closeModal('modal-edit');
