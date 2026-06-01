@@ -1217,13 +1217,17 @@ function openNewTask(){
 function saveNewTask(){
   const title = document.getElementById('new-title').value.trim();
   if(!title){ shake('new-title'); return; }
+  const noDate = document.getElementById('new-no-date').checked;
+  const dateVal = document.getElementById('new-date').value;
+  if(!noDate && !dateVal){ shake('new-date'); toast('Selecione um prazo ou marque "Sem prazo".','amber'); return; }
+  const due = noDate ? 'Sem prazo' : fmtDate(dateVal);
   const newTask = {
     id: Date.now(),
     title,
     person:   document.getElementById('new-person').value,
     priority: document.getElementById('new-prio').value,
     status:   document.getElementById('new-status').value,
-    due:      document.getElementById('new-date').value||'Hoje',
+    due,
     late: 0
   };
   TASKS.unshift(newTask);
@@ -1240,12 +1244,26 @@ function openEditTask(id){
   const t = TASKS.find(x=>x.id===id);
   if(!t) return;
   editingId = id;
-  document.getElementById('edit-id').value    = id;
-  document.getElementById('edit-title').value = t.title;
-  document.getElementById('edit-due').value   = t.due;
-  document.getElementById('edit-prio').value  = t.priority;
-  document.getElementById('edit-status').value= t.status;
+  document.getElementById('edit-id').value     = id;
+  document.getElementById('edit-title').value  = t.title;
+  document.getElementById('edit-prio').value   = t.priority;
+  document.getElementById('edit-status').value = t.status;
   buildPersonOptions('edit-person', t.person);
+
+  const noDate = !t.due || t.due === 'Sem prazo';
+  document.getElementById('edit-no-date').checked = noDate;
+  const inp = document.getElementById('edit-due');
+  if(noDate){
+    inp.value    = '';
+    inp.disabled = true;
+    inp.style.opacity = '0.35';
+  } else {
+    // converte dd/mm/yyyy → yyyy-mm-dd para o input date
+    const parts = t.due.split('/');
+    inp.value = parts.length===3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : todayISO();
+    inp.disabled = false;
+    inp.style.opacity = '1';
+  }
   document.getElementById('senha-erro').style.display='none';
   openModal('modal-edit');
 }
@@ -1255,11 +1273,14 @@ function saveEditTask(){
   if(!title){ shake('edit-title'); return; }
   const t = TASKS.find(x=>x.id===editingId);
   if(!t) return;
+  const noDate = document.getElementById('edit-no-date').checked;
+  const dateVal = document.getElementById('edit-due').value;
+  if(!noDate && !dateVal){ shake('edit-due'); toast('Selecione um prazo ou marque "Sem prazo".','amber'); return; }
   t.title    = title;
   t.person   = document.getElementById('edit-person').value;
   t.priority = document.getElementById('edit-prio').value;
   t.status   = document.getElementById('edit-status').value;
-  t.due      = document.getElementById('edit-due').value||t.due;
+  t.due      = noDate ? 'Sem prazo' : fmtDate(dateVal);
   saveData();
   applyFilter();
   closeModal('modal-edit');
