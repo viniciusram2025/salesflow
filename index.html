@@ -258,6 +258,12 @@ select option{background:var(--c-bg);}
 .prog-bar-inline{height:4px;background:var(--c-border2);border-radius:2px;overflow:hidden;margin-top:6px;}
 .prog-bar-inner{height:100%;border-radius:2px;}
 
+/* ── EMPTY STATE ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:12px;color:var(--c-muted);}
+.empty-state i{font-size:40px;opacity:.3;}
+.empty-state-title{font-size:15px;font-weight:600;color:var(--c-text);}
+.empty-state-sub{font-size:13px;text-align:center;max-width:280px;}
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .sidebar{display:none;}
@@ -266,11 +272,92 @@ select option{background:var(--c-bg);}
   .kanban{grid-template-columns:1fr 1fr;}
   .form-row{grid-template-columns:1fr;}
 }
+
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;background:var(--c-bg);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+  background-image:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,110,247,.18) 0%, transparent 70%);
+}
+.login-box{
+  width:380px;max-width:92vw;
+  background:var(--c-surface);
+  border:1px solid var(--c-border2);
+  border-radius:20px;
+  padding:36px 32px;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;justify-content:center;}
+.login-logo-mark{width:40px;height:40px;background:var(--c-accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;font-style:italic;}
+.login-logo-text{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.login-logo-sub{font-size:11px;color:var(--c-muted);}
+.login-title{font-size:22px;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:-.4px;}
+.login-sub{font-size:13px;color:var(--c-muted);text-align:center;margin-bottom:28px;}
+.login-field{margin-bottom:14px;}
+.login-field label{display:block;font-size:12px;color:var(--c-muted);font-weight:500;margin-bottom:6px;}
+.login-field input{
+  width:100%;background:var(--c-surface2);border:1px solid var(--c-border2);
+  border-radius:var(--r);padding:11px 14px;color:var(--c-text);
+  font-family:var(--font);font-size:14px;outline:none;transition:border .2s;
+}
+.login-field input:focus{border-color:rgba(79,110,247,.6);box-shadow:0 0 0 3px rgba(79,110,247,.1);}
+.login-field input::placeholder{color:var(--c-muted2);}
+.login-btn{
+  width:100%;background:var(--c-accent);color:#fff;border:none;
+  border-radius:var(--r);padding:13px;font-family:var(--font);
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;
+  margin-top:4px;letter-spacing:.01em;
+}
+.login-btn:hover{background:var(--c-accent2);transform:translateY(-1px);}
+.login-btn:active{transform:translateY(0);}
+.login-err{
+  background:var(--c-red-dim);border:1px solid rgba(240,82,82,.3);
+  border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--c-red);
+  margin-bottom:14px;display:none;text-align:center;
+}
+.login-footer{text-align:center;font-size:11px;color:var(--c-muted2);margin-top:22px;}
+@keyframes loginFadeIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.login-box{animation:loginFadeIn .35s ease;}
 </style>
 </head>
 <body>
 
-<div class="app">
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark">S</div>
+      <div>
+        <div class="login-logo-text">SalesFlow</div>
+        <div class="login-logo-sub">Goldtech Joias</div>
+      </div>
+    </div>
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-sub">Faça login para acessar o painel</div>
+    <div class="login-err" id="login-err">E-mail ou senha incorretos.</div>
+    <div class="login-field">
+      <label>E-mail</label>
+      <input type="text" id="login-email" placeholder="seu@goldtechjoias.com" autocomplete="username"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"/>
+    </div>
+    <div class="login-field">
+      <label>Senha</label>
+      <div style="position:relative;">
+        <input type="password" id="login-pass" placeholder="••••••••••" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()" style="padding-right:42px;"/>
+        <button onclick="togglePassVis()" type="button" id="eye-btn"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--c-muted);padding:0;display:flex;align-items:center;font-size:17px;transition:color .15s;"
+          onmouseover="this.style.color='var(--c-text)'" onmouseout="this.style.color='var(--c-muted)'">
+          <i class="ti ti-eye" id="eye-icon"></i>
+        </button>
+      </div>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-footer">Goldtech Joias &nbsp;·&nbsp; Gestão Comercial</div>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none;">
 
   <!-- ═══════════ SIDEBAR ═══════════ -->
   <aside class="sidebar">
@@ -288,7 +375,7 @@ select option{background:var(--c-bg);}
     <div class="nav-item" onclick="goTo('calendario')" data-page="calendario"><i class="ti ti-calendar"></i>Calendário</div>
 
     <div class="nav-section">Gestão</div>
-    <div class="nav-item" onclick="goTo('equipe')" data-page="equipe"><i class="ti ti-users"></i>Equipe <span class="nav-badge">6</span></div>
+    <div class="nav-item" onclick="goTo('equipe')" data-page="equipe"><i class="ti ti-users"></i>Equipe <span class="nav-badge" id="badge-equipe" style="display:none;"></span></div>
     <div class="nav-item" onclick="goTo('dashboard')" data-page="dashboard"><i class="ti ti-chart-bar"></i>Dashboard</div>
     <div class="nav-item" onclick="goTo('relatorios')" data-page="relatorios"><i class="ti ti-file-analytics"></i>Relatórios</div>
 
@@ -299,13 +386,13 @@ select option{background:var(--c-bg);}
       <div class="nav-item" onclick="openPessoas()" style="margin-bottom:6px;">
         <i class="ti ti-user-cog"></i>Colaboradores
       </div>
-      <div class="user-card">
-        <div class="av av-lg" style="background:rgba(79,110,247,.2);color:var(--c-accent);">JS</div>
+      <div class="user-card" id="user-card-display" onclick="doLogout()" title="Sair">
+        <div class="av av-lg" style="background:rgba(79,110,247,.2);color:var(--c-accent);" id="user-av">?</div>
         <div>
-          <div class="user-name">João Silva</div>
-          <div class="user-role">Vendas Pleno</div>
+          <div class="user-name" id="user-name-display">Usuário</div>
+          <div class="user-role" id="user-role-display">clique para sair</div>
         </div>
-        <i class="ti ti-settings" style="margin-left:auto;color:var(--c-muted);font-size:15px;"></i>
+        <i class="ti ti-logout" style="margin-left:auto;color:var(--c-muted);font-size:15px;"></i>
       </div>
     </div>
   </aside>
@@ -317,16 +404,15 @@ select option{background:var(--c-bg);}
     <header class="topbar">
       <div id="topbar-title">
         <div class="page-title">Minhas Tarefas</div>
-        <div class="page-sub">Segunda-feira, 12 de maio de 2025 &nbsp;<span class="pulse"></span>&nbsp; Em tempo real</div>
+        <div class="page-sub"><span class="pulse"></span>&nbsp; Pronto para começar</div>
       </div>
       <div class="topbar-right">
         <div class="search-box">
           <i class="ti ti-search" style="color:var(--c-muted);font-size:14px;"></i>
-          <input type="text" placeholder="Buscar tarefas..."/>
+          <input type="text" placeholder="Buscar tarefas..." oninput="searchTasks(this.value)"/>
         </div>
         <div class="icon-btn" onclick="toggleNotif()">
           <i class="ti ti-bell" style="font-size:17px;"></i>
-          <span class="notif-dot"></span>
         </div>
         <div class="icon-btn">
           <i class="ti ti-settings" style="font-size:17px;"></i>
@@ -347,18 +433,18 @@ select option{background:var(--c-bg);}
         </div>
 
         <div class="grid-4 mb-20">
-          <div class="kpi blue"><i class="ti ti-clipboard-list kpi-icon"></i><div class="kpi-label">Total hoje</div><div class="kpi-value" id="kpi-total">12</div><div class="kpi-sub">tarefas</div></div>
-          <div class="kpi green"><i class="ti ti-circle-check kpi-icon"></i><div class="kpi-label">Concluídas</div><div class="kpi-value" id="kpi-done">7</div><div class="kpi-sub"><span id="kpi-pct" style="color:var(--c-green);">58%</span> do dia</div></div>
-          <div class="kpi amber"><i class="ti ti-loader kpi-icon"></i><div class="kpi-label">Em andamento</div><div class="kpi-value">3</div><div class="kpi-sub">em progresso</div></div>
-          <div class="kpi red"><i class="ti ti-alert-triangle kpi-icon"></i><div class="kpi-label">Atrasadas</div><div class="kpi-value">2</div><div class="kpi-sub">urgente atenção</div></div>
+          <div class="kpi blue"><i class="ti ti-clipboard-list kpi-icon"></i><div class="kpi-label">Total hoje</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">tarefas</div></div>
+          <div class="kpi green"><i class="ti ti-circle-check kpi-icon"></i><div class="kpi-label">Concluídas</div><div class="kpi-value" id="kpi-done">0</div><div class="kpi-sub"><span id="kpi-pct" style="color:var(--c-green);">0%</span> do dia</div></div>
+          <div class="kpi amber"><i class="ti ti-loader kpi-icon"></i><div class="kpi-label">Em andamento</div><div class="kpi-value" id="kpi-prog">0</div><div class="kpi-sub">em progresso</div></div>
+          <div class="kpi red"><i class="ti ti-alert-triangle kpi-icon"></i><div class="kpi-label">Atrasadas</div><div class="kpi-value" id="kpi-late">0</div><div class="kpi-sub">urgente atenção</div></div>
         </div>
 
         <div class="chip-row">
-          <div class="chip active" onclick="filterTasks('todas',this)">Todas (12)</div>
+          <div class="chip active" onclick="filterTasks('todas',this)">Todas</div>
           <div class="chip" onclick="filterTasks('hoje',this)">Hoje</div>
           <div class="chip" onclick="filterTasks('amanha',this)">Amanhã</div>
           <div class="chip" onclick="filterTasks('semana',this)">Esta semana</div>
-          <div class="chip" onclick="filterTasks('atrasadas',this)">Atrasadas <span style="color:var(--c-red);">2</span></div>
+          <div class="chip" onclick="filterTasks('atrasadas',this)">Atrasadas</div>
           <div class="chip" onclick="filterTasks('concluidas',this)">Concluídas</div>
         </div>
 
@@ -376,19 +462,19 @@ select option{background:var(--c-bg);}
         </div>
         <div class="kanban">
           <div class="kb-col">
-            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-muted);">Pendente</span><span class="kb-count" id="kb-cnt-pendente">4</span></div>
+            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-muted);">Pendente</span><span class="kb-count" id="kb-cnt-pendente">0</span></div>
             <div id="kb-pendente"></div>
           </div>
           <div class="kb-col">
-            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-accent);">Em andamento</span><span class="kb-count" id="kb-cnt-progress">5</span></div>
+            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-accent);">Em andamento</span><span class="kb-count" id="kb-cnt-progress">0</span></div>
             <div id="kb-progress"></div>
           </div>
           <div class="kb-col">
-            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-red);">Bloqueada</span><span class="kb-count" id="kb-cnt-blocked">2</span></div>
+            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-red);">Bloqueada</span><span class="kb-count" id="kb-cnt-blocked">0</span></div>
             <div id="kb-blocked"></div>
           </div>
           <div class="kb-col">
-            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-green);">Concluída</span><span class="kb-count" id="kb-cnt-done">8</span></div>
+            <div class="kb-col-head"><span class="kb-col-title" style="color:var(--c-green);">Concluída</span><span class="kb-count" id="kb-cnt-done">0</span></div>
             <div id="kb-done"></div>
           </div>
         </div>
@@ -412,67 +498,15 @@ select option{background:var(--c-bg);}
         </div>
 
         <div class="grid-4 mb-20">
-          <div class="kpi blue"><div class="kpi-label">Total tarefas</div><div class="kpi-value">47</div><div class="kpi-sub">esta semana</div></div>
-          <div class="kpi green"><div class="kpi-label">Concluídas</div><div class="kpi-value">28</div><div class="kpi-sub"><span style="color:var(--c-green);">59.5%</span></div></div>
-          <div class="kpi red"><div class="kpi-label">Atrasadas</div><div class="kpi-value">6</div><div class="kpi-sub">ação requerida</div></div>
-          <div class="kpi purple"><div class="kpi-label">Bloqueadas</div><div class="kpi-value">3</div><div class="kpi-sub">aguardando</div></div>
+          <div class="kpi blue"><div class="kpi-label">Total tarefas</div><div class="kpi-value" id="eq-total">0</div><div class="kpi-sub">esta semana</div></div>
+          <div class="kpi green"><div class="kpi-label">Concluídas</div><div class="kpi-value" id="eq-done">0</div><div class="kpi-sub"><span id="eq-pct" style="color:var(--c-green);">0%</span></div></div>
+          <div class="kpi red"><div class="kpi-label">Atrasadas</div><div class="kpi-value" id="eq-late">0</div><div class="kpi-sub">ação requerida</div></div>
+          <div class="kpi purple"><div class="kpi-label">Bloqueadas</div><div class="kpi-value" id="eq-blocked">0</div><div class="kpi-sub">aguardando</div></div>
         </div>
 
-        <div class="grid-2 mb-16">
-          <div class="card">
-            <div class="sec-head"><span class="sec-title">Desempenho individual</span><span class="sec-link">ver todos</span></div>
-            <div class="person-row">
-              <div class="av av-xl" style="background:rgba(34,201,135,.15);color:var(--c-green);">MC</div>
-              <div class="person-info">
-                <div class="person-name">Maria Carvalho</div>
-                <div class="person-role">Vendas Sênior</div>
-                <div class="prog-bar-inline"><div class="prog-bar-inner" style="width:92%;background:var(--c-green);"></div></div>
-              </div>
-              <div class="person-stats"><div class="pstat"><strong style="color:var(--c-green);">92%</strong>conclusão</div><div class="pstat"><strong>11/12</strong>tarefas</div></div>
-            </div>
-            <div class="person-row">
-              <div class="av av-xl" style="background:rgba(79,110,247,.2);color:var(--c-accent);">JS</div>
-              <div class="person-info">
-                <div class="person-name">João Silva</div>
-                <div class="person-role">Vendas Pleno</div>
-                <div class="prog-bar-inline"><div class="prog-bar-inner" style="width:75%;background:var(--c-accent);"></div></div>
-              </div>
-              <div class="person-stats"><div class="pstat"><strong style="color:var(--c-accent);">75%</strong>conclusão</div><div class="pstat"><strong>9/12</strong>tarefas</div></div>
-            </div>
-            <div class="person-row">
-              <div class="av av-xl" style="background:rgba(245,166,35,.15);color:var(--c-amber);">FS</div>
-              <div class="person-info">
-                <div class="person-name">Felipe Santos</div>
-                <div class="person-role">Vendas Pleno</div>
-                <div class="prog-bar-inline"><div class="prog-bar-inner" style="width:58%;background:var(--c-amber);"></div></div>
-              </div>
-              <div class="person-stats"><div class="pstat"><strong style="color:var(--c-amber);">58%</strong>conclusão</div><div class="pstat"><strong>7/12</strong>tarefas</div></div>
-            </div>
-            <div class="person-row">
-              <div class="av av-xl" style="background:rgba(155,114,240,.15);color:var(--c-purple);">RP</div>
-              <div class="person-info">
-                <div class="person-name">Rafael Pereira</div>
-                <div class="person-role">Vendas Júnior</div>
-                <div class="prog-bar-inline"><div class="prog-bar-inner" style="width:41%;background:var(--c-red);"></div></div>
-              </div>
-              <div class="person-stats"><div class="pstat"><strong style="color:var(--c-red);">41%</strong>conclusão</div><div class="pstat"><strong>5/11</strong>tarefas</div></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="sec-head"><span class="sec-title">Alertas e gargalos</span></div>
-            <div class="alert-item red"><div style="font-size:18px;">⚠️</div><div><div class="alert-title">Rafael — 3 tarefas urgentes atrasadas</div><div class="alert-desc">Prazo crítico ultrapassado em 2+ dias</div></div></div>
-            <div class="alert-item amber"><div style="font-size:18px;">⏰</div><div><div class="alert-title">Felipe — Tarefa bloqueada há 3 dias</div><div class="alert-desc">Campanha aguardando conteúdo de marketing</div></div></div>
-            <div class="alert-item amber"><div style="font-size:18px;">📋</div><div><div class="alert-title">2 propostas aguardando aprovação</div><div class="alert-desc">Distribuidora Norte e ABC Ltda.</div></div></div>
-            <div class="alert-item green"><div style="font-size:18px;">🏆</div><div><div class="alert-title">Maria — 5 dias consecutivos acima de 90%</div><div class="alert-desc">Melhor desempenho da equipe na semana</div></div></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="sec-head"><span class="sec-title">Carga de trabalho</span></div>
-          <div class="bar-row"><div class="bar-label">Maria C.</div><div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--c-green);"></div></div><div class="bar-val" style="color:var(--c-green);">92%</div></div>
-          <div class="bar-row"><div class="bar-label">João S.</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--c-accent);"></div></div><div class="bar-val" style="color:var(--c-accent);">75%</div></div>
-          <div class="bar-row"><div class="bar-label">Felipe S.</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--c-amber);"></div></div><div class="bar-val" style="color:var(--c-amber);">58%</div></div>
-          <div class="bar-row"><div class="bar-label">Rafael P.</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:var(--c-red);"></div></div><div class="bar-val" style="color:var(--c-red);">41%</div></div>
+        <div class="card" id="equipe-content">
+          <div class="sec-head"><span class="sec-title">Desempenho individual</span></div>
+          <div id="equipe-pessoas"></div>
         </div>
       </div>
 
@@ -482,103 +516,46 @@ select option{background:var(--c-bg);}
           <button class="btn-ghost btn-sm"><i class="ti ti-file-export"></i>Exportar PDF</button>
           <button class="btn-ghost btn-sm"><i class="ti ti-table-export"></i>Excel</button>
           <div class="spacer"></div>
-          <button class="btn-ghost btn-sm"><i class="ti ti-calendar"></i>Semana 20</button>
         </div>
 
         <div class="grid-4 mb-20">
-          <div class="kpi green"><div class="kpi-label">Taxa de conclusão</div><div class="kpi-value">72%</div><div class="kpi-sub"><span style="color:var(--c-green);">↑ 8%</span> vs semana ant.</div></div>
-          <div class="kpi blue"><div class="kpi-label">Tarefas criadas</div><div class="kpi-value">61</div><div class="kpi-sub">esta semana</div></div>
-          <div class="kpi purple"><div class="kpi-label">Tempo médio</div><div class="kpi-value">1.4d</div><div class="kpi-sub">por tarefa</div></div>
-          <div class="kpi red"><div class="kpi-label">Tarefas críticas</div><div class="kpi-value">5</div><div class="kpi-sub">requerem ação</div></div>
+          <div class="kpi green"><div class="kpi-label">Taxa de conclusão</div><div class="kpi-value" id="dash-pct">0%</div><div class="kpi-sub">geral</div></div>
+          <div class="kpi blue"><div class="kpi-label">Tarefas criadas</div><div class="kpi-value" id="dash-total">0</div><div class="kpi-sub">total</div></div>
+          <div class="kpi purple"><div class="kpi-label">Em andamento</div><div class="kpi-value" id="dash-prog">0</div><div class="kpi-sub">ativas</div></div>
+          <div class="kpi red"><div class="kpi-label">Tarefas críticas</div><div class="kpi-value" id="dash-urgente">0</div><div class="kpi-sub">urgente/atrasadas</div></div>
         </div>
 
-        <div class="grid-2 mb-16">
-          <div class="card">
-            <div class="sec-head"><span class="sec-title">Tarefas concluídas por dia</span></div>
-            <div class="week-bars">
-              <div class="wday"><div class="wday-bar" style="height:28px;background:rgba(79,110,247,.45);"></div><div class="wday-label">Seg</div></div>
-              <div class="wday"><div class="wday-bar" style="height:42px;background:rgba(79,110,247,.6);"></div><div class="wday-label">Ter</div></div>
-              <div class="wday"><div class="wday-bar" style="height:54px;background:var(--c-accent);"></div><div class="wday-label">Qua</div></div>
-              <div class="wday"><div class="wday-bar" style="height:36px;background:rgba(79,110,247,.6);"></div><div class="wday-label">Qui</div></div>
-              <div class="wday"><div class="wday-bar" style="height:50px;background:var(--c-accent);"></div><div class="wday-label">Sex</div></div>
-              <div class="wday"><div class="wday-bar" style="height:20px;background:rgba(79,110,247,.3);"></div><div class="wday-label">Sáb</div></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="sec-head"><span class="sec-title">Distribuição de status</span></div>
-            <div class="donut-wrap">
-              <svg width="96" height="96" viewBox="0 0 96 96">
-                <circle cx="48" cy="48" r="34" fill="none" stroke="var(--c-border2)" stroke-width="14"/>
-                <circle cx="48" cy="48" r="34" fill="none" stroke="var(--c-green)" stroke-width="14" stroke-dasharray="154 60" stroke-dashoffset="24" stroke-linecap="round"/>
-                <circle cx="48" cy="48" r="34" fill="none" stroke="var(--c-accent)" stroke-width="14" stroke-dasharray="38 176" stroke-dashoffset="-130" stroke-linecap="round"/>
-                <circle cx="48" cy="48" r="34" fill="none" stroke="var(--c-red)" stroke-width="14" stroke-dasharray="22 192" stroke-dashoffset="-168" stroke-linecap="round"/>
-                <text x="48" y="44" text-anchor="middle" style="fill:var(--c-text);font-size:16px;font-weight:700;font-family:var(--font);">72%</text>
-                <text x="48" y="58" text-anchor="middle" style="fill:var(--c-muted);font-size:10px;font-family:var(--font);">concluído</text>
-              </svg>
-              <div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--c-green);"></div>Concluídas — 44</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--c-accent);"></div>Em andamento — 9</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--c-amber);"></div>Pendentes — 7</div>
-                <div class="legend-item"><div class="legend-dot" style="background:var(--c-red);"></div>Atrasadas — 6</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="sec-head"><span class="sec-title">Ranking de produtividade — semana</span></div>
-          <div class="rank-row">
-            <div class="rank-medal">🥇</div>
-            <div class="av av-lg" style="background:rgba(34,201,135,.15);color:var(--c-green);">MC</div>
-            <div class="rank-bar-wrap"><div style="font-size:13px;font-weight:500;margin-bottom:5px;">Maria Carvalho</div><div class="bar-track"><div class="bar-fill" style="width:92%;background:var(--c-green);"></div></div></div>
-            <div class="rank-score" style="color:var(--c-green);">92</div>
-          </div>
-          <div class="rank-row">
-            <div class="rank-medal">🥈</div>
-            <div class="av av-lg" style="background:rgba(79,110,247,.2);color:var(--c-accent);">JS</div>
-            <div class="rank-bar-wrap"><div style="font-size:13px;font-weight:500;margin-bottom:5px;">João Silva</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--c-accent);"></div></div></div>
-            <div class="rank-score" style="color:var(--c-accent);">75</div>
-          </div>
-          <div class="rank-row">
-            <div class="rank-medal">🥉</div>
-            <div class="av av-lg" style="background:rgba(245,166,35,.15);color:var(--c-amber);">FS</div>
-            <div class="rank-bar-wrap"><div style="font-size:13px;font-weight:500;margin-bottom:5px;">Felipe Santos</div><div class="bar-track"><div class="bar-fill" style="width:58%;background:var(--c-amber);"></div></div></div>
-            <div class="rank-score" style="color:var(--c-amber);">58</div>
-          </div>
-          <div class="rank-row">
-            <div class="rank-num">4</div>
-            <div class="av av-lg" style="background:rgba(155,114,240,.15);color:var(--c-purple);">RP</div>
-            <div class="rank-bar-wrap"><div style="font-size:13px;font-weight:500;margin-bottom:5px;">Rafael Pereira</div><div class="bar-track"><div class="bar-fill" style="width:41%;background:var(--c-red);"></div></div></div>
-            <div class="rank-score" style="color:var(--c-red);">41</div>
-          </div>
+        <div class="card" id="dashboard-content">
+          <div class="sec-head"><span class="sec-title">Ranking de produtividade</span></div>
+          <div id="dash-ranking"></div>
         </div>
       </div>
 
       <!-- ══════ PAGE: RELATÓRIOS ══════ -->
       <div id="page-relatorios" class="page">
         <div class="grid-2">
-          <div class="card" style="cursor:pointer;" onclick="alert('Exportando relatório diário...')">
+          <div class="card" style="cursor:pointer;" onclick="exportReport('diario')">
             <div style="display:flex;align-items:center;gap:14px;">
               <div style="width:44px;height:44px;background:var(--c-accent-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-calendar-event" style="font-size:22px;color:var(--c-accent);"></i></div>
               <div><div style="font-size:14px;font-weight:600;">Relatório Diário</div><div style="font-size:12px;color:var(--c-muted);">Tarefas e conclusões do dia</div></div>
               <i class="ti ti-download" style="margin-left:auto;color:var(--c-muted);"></i>
             </div>
           </div>
-          <div class="card" style="cursor:pointer;" onclick="alert('Exportando relatório semanal...')">
+          <div class="card" style="cursor:pointer;" onclick="exportReport('semanal')">
             <div style="display:flex;align-items:center;gap:14px;">
               <div style="width:44px;height:44px;background:var(--c-green-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-calendar-week" style="font-size:22px;color:var(--c-green);"></i></div>
-              <div><div style="font-size:14px;font-weight:600;">Relatório Semanal</div><div style="font-size:12px;color:var(--c-muted);">Consolidado da semana — sábado</div></div>
+              <div><div style="font-size:14px;font-weight:600;">Relatório Semanal</div><div style="font-size:12px;color:var(--c-muted);">Consolidado da semana</div></div>
               <i class="ti ti-download" style="margin-left:auto;color:var(--c-muted);"></i>
             </div>
           </div>
-          <div class="card" style="cursor:pointer;" onclick="alert('Exportando relatório mensal...')">
+          <div class="card" style="cursor:pointer;" onclick="exportReport('mensal')">
             <div style="display:flex;align-items:center;gap:14px;">
               <div style="width:44px;height:44px;background:var(--c-amber-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-chart-line" style="font-size:22px;color:var(--c-amber);"></i></div>
               <div><div style="font-size:14px;font-weight:600;">Relatório Mensal</div><div style="font-size:12px;color:var(--c-muted);">KPIs e tendências do mês</div></div>
               <i class="ti ti-download" style="margin-left:auto;color:var(--c-muted);"></i>
             </div>
           </div>
-          <div class="card" style="cursor:pointer;" onclick="alert('Exportando relatório por colaborador...')">
+          <div class="card" style="cursor:pointer;" onclick="exportReport('colaborador')">
             <div style="display:flex;align-items:center;gap:14px;">
               <div style="width:44px;height:44px;background:var(--c-purple-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-user-check" style="font-size:22px;color:var(--c-purple);"></i></div>
               <div><div style="font-size:14px;font-weight:600;">Por Colaborador</div><div style="font-size:12px;color:var(--c-muted);">Produtividade individual detalhada</div></div>
@@ -632,6 +609,7 @@ select option{background:var(--c-bg);}
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
+</div><!-- /main-app -->
 
 <!-- ══════ MODAL: NOVA TAREFA ══════ -->
 <div class="modal-overlay" id="modal-new">
@@ -662,7 +640,11 @@ select option{background:var(--c-bg);}
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Prazo</label>
-        <input type="text" id="new-date" placeholder="Ex: Hoje, Sexta, 20/05"/>
+        <input type="date" id="new-date" style="cursor:pointer;"/>
+        <label style="display:flex;align-items:center;gap:7px;margin-top:8px;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="new-no-date" onchange="toggleNoDate('new')" style="width:auto;accent-color:var(--c-accent);cursor:pointer;"/>
+          <span style="font-size:12px;color:var(--c-muted);">Sem prazo determinado</span>
+        </label>
       </div>
       <div class="form-group">
         <label class="form-label">Status</label>
@@ -713,7 +695,11 @@ select option{background:var(--c-bg);}
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Prazo</label>
-        <input type="text" id="edit-due" placeholder="Ex: Hoje, Sexta, 20/05"/>
+        <input type="date" id="edit-due" style="cursor:pointer;"/>
+        <label style="display:flex;align-items:center;gap:7px;margin-top:8px;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="edit-no-date" onchange="toggleNoDate('edit')" style="width:auto;accent-color:var(--c-accent);cursor:pointer;"/>
+          <span style="font-size:12px;color:var(--c-muted);">Sem prazo determinado</span>
+        </label>
       </div>
       <div class="form-group">
         <label class="form-label">Status</label>
@@ -787,121 +773,137 @@ select option{background:var(--c-bg);}
 <div class="notif-panel" id="notif-panel">
   <div class="notif-head">
     <div style="font-size:13px;font-weight:600;">Notificações</div>
-    <div style="font-size:11px;color:var(--c-accent);cursor:pointer;">Marcar todas como lidas</div>
+    <div style="font-size:11px;color:var(--c-accent);cursor:pointer;" onclick="clearNotifs()">Limpar</div>
   </div>
-  <div class="notif-item">
-    <div style="display:flex;gap:10px;">
-      <div class="notif-dot2" style="background:var(--c-red);margin-top:4px;"></div>
-      <div><div class="alert-title">Tarefa atrasada — Loja do Pedro</div><div class="alert-desc">2 dias de atraso · urgente</div></div>
-    </div>
-  </div>
-  <div class="notif-item">
-    <div style="display:flex;gap:10px;">
-      <div class="notif-dot2" style="background:var(--c-accent);margin-top:4px;"></div>
-      <div><div class="alert-title">Nova tarefa atribuída por Maria</div><div class="alert-desc">Prospectar clientes B2B · prazo amanhã</div></div>
-    </div>
-  </div>
-  <div class="notif-item">
-    <div style="display:flex;gap:10px;">
-      <div class="notif-dot2" style="background:var(--c-green);margin-top:4px;"></div>
-      <div><div class="alert-title">Resumo diário disponível</div><div class="alert-desc">7 de 12 tarefas concluídas hoje</div></div>
+  <div id="notif-list">
+    <div style="padding:24px;text-align:center;color:var(--c-muted);font-size:13px;">
+      <i class="ti ti-bell-off" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4;"></i>
+      Nenhuma notificação
     </div>
   </div>
 </div>
 
 <script>
 // ══════════════════════════════════════════
-// DADOS — edite aqui os colaboradores iniciais
+// LOGIN
 // ══════════════════════════════════════════
-const COLORS = [
-  {bg:'rgba(79,110,247,.2)',color:'var(--c-accent)'},
-  {bg:'rgba(34,201,135,.15)',color:'var(--c-green)'},
-  {bg:'rgba(245,166,35,.15)',color:'var(--c-amber)'},
-  {bg:'rgba(155,114,240,.15)',color:'var(--c-purple)'},
-  {bg:'rgba(240,82,82,.15)',color:'var(--c-red)'},
-  {bg:'rgba(79,110,247,.1)',color:'#a78bfa)'},
+const USERS = [
+  {email:'elias@goldtechjoias.com',  pass:'Elias105055@',  name:'Elias',  personKey:'EL'},
+  {email:'bruno@goldtechjoias.com',  pass:'Bruno105055@',  name:'Bruno',  personKey:'BR'},
 ];
 
-// ─── PEOPLE (editável via modal) ──────────────────────
+let currentUser = null;
+
+function togglePassVis(){
+  const inp  = document.getElementById('login-pass');
+  const icon = document.getElementById('eye-icon');
+  if(inp.type==='password'){
+    inp.type='text';
+    icon.className='ti ti-eye-off';
+  } else {
+    inp.type='password';
+    icon.className='ti ti-eye';
+  }
+}
+
+function doLogin(){
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-err');
+  const user  = USERS.find(u => u.email === email && u.pass === pass);
+  if(!user){
+    err.style.display='block';
+    const inp = document.getElementById('login-pass');
+    inp.style.borderColor='rgba(240,82,82,.6)';
+    inp.style.animation='shake .3s ease';
+    setTimeout(()=>{ inp.style.borderColor=''; inp.style.animation=''; },600);
+    return;
+  }
+  err.style.display='none';
+  currentUser = user;
+  // Salva sessão
+  sessionStorage.setItem('sf_user', JSON.stringify(user));
+  showApp(user);
+}
+
+function checkSession(){
+  const saved = sessionStorage.getItem('sf_user');
+  if(saved){
+    currentUser = JSON.parse(saved);
+    showApp(currentUser);
+  }
+}
+
+function showApp(user){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').style.display='flex';
+  // Atualiza user card com o usuário logado
+  const p = PEOPLE_LIST.find(x=>x.key===user.personKey)||PEOPLE_LIST[0];
+  if(p){
+    const c = COLORS[p.ci%COLORS.length];
+    document.getElementById('user-av').textContent       = initials(p.name);
+    document.getElementById('user-av').style.background = c.bg;
+    document.getElementById('user-av').style.color      = c.color;
+    document.getElementById('user-name-display').textContent = p.name;
+    document.getElementById('user-role-display').textContent = p.role;
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem('sf_user');
+  currentUser = null;
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-pass').value='';
+}
+
+// ══════════════════════════════════════════
+// CONFIGURAÇÃO INICIAL
+// ══════════════════════════════════════════
+
+const COLORS = [
+  {bg:'rgba(79,110,247,.2)',  color:'var(--c-accent)'},
+  {bg:'rgba(34,201,135,.15)', color:'var(--c-green)'},
+  {bg:'rgba(245,166,35,.15)', color:'var(--c-amber)'},
+  {bg:'rgba(155,114,240,.15)',color:'var(--c-purple)'},
+  {bg:'rgba(240,82,82,.15)',  color:'var(--c-red)'},
+  {bg:'rgba(79,110,247,.1)',  color:'#a78bfa'},
+];
+
+// ─── PEOPLE — lista fixa de colaboradores ─────────────
 let PEOPLE_LIST = [
-  {key:'JL', name:'Júlia Lima',    role:'Instagram / Conteúdo',  ci:1},
-  {key:'FD', name:'Fernanda/Dayane',role:'Vendas / Parceiros',   ci:2},
-  {key:'BJ', name:'Bruno Jr',      role:'JF Eternno / Marketing',ci:0},
-  {key:'HE', name:'Helton',        role:'Outlet / Descontos',    ci:3},
-  {key:'TH', name:'Thesco',        role:'JM / Métricas / Dev',   ci:4},
-  {key:'ED', name:'Eduardo',       role:'Gestão / Coordenação',  ci:5},
+  {key:'BR', name:'Bruno',     role:'Colaborador', ci:0},
+  {key:'EL', name:'Elias',     role:'Colaborador', ci:1},
+  {key:'MA', name:'Matheus',   role:'Colaborador', ci:2},
+  {key:'FR', name:'Francesco', role:'Colaborador', ci:3},
+  {key:'VI', name:'Vitor',     role:'Colaborador', ci:4},
+  {key:'FE', name:'Fernanda',  role:'Colaborador', ci:5},
+  {key:'CL', name:'Clara',     role:'Colaborador', ci:1},
 ];
 
 function getPeople(){
-  const saved = localStorage.getItem('sf_people');
-  if(saved) PEOPLE_LIST = JSON.parse(saved);
+  // A lista de colaboradores é fixa — não carrega do localStorage
   return PEOPLE_LIST;
 }
-function savePeople(){ localStorage.setItem('sf_people',JSON.stringify(PEOPLE_LIST)); }
+function savePeople(){ /* lista fixa, sem persistir */ }
 function getPeopleMap(){
   const m={};
-  getPeople().forEach((p,i)=>{ m[p.key]={name:p.name,role:p.role,bg:COLORS[p.ci%COLORS.length].bg,color:COLORS[p.ci%COLORS.length].color}; });
+  getPeople().forEach((p)=>{
+    m[p.key]={name:p.name,role:p.role,bg:COLORS[p.ci%COLORS.length].bg,color:COLORS[p.ci%COLORS.length].color};
+  });
   return m;
 }
-function initials(name){ return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function initials(name){
+  return name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
 
-// ─── TASKS ────────────────────────────────────────────
-let TASKS = [
-  // ── JF — JOIAS FABRICADAS ──
-  {id:1, title:'Pulseira Turmalina E8664 — acompanhar pedido UVM e registrar chegada', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:2, title:'Desapego — tentar vender a peça que ficou. Registrar status', person:'JL', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  {id:3, title:'Trizz — verificar outra peça que não foi pedida e definir destino', person:'ED', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  {id:4, title:'Instagram JF — chamar Júlia para registrar fabricação e criar conteúdo vinculado', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:5, title:'Olhar caixa de pedras e definir o que precisa fabricar', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:6, title:'Reciclagem JF — passar olho em joias encalhadas abaixo de R$10.000 e propor transformação', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  // ── MARKETING ──
-  {id:7, title:'Marketing — conteúdo mostrando transformação da pulseira em colar/brincos (assim que chegar)', person:'BJ', priority:'alta', status:'pendente', due:'Assim que pulseira chegar', late:0},
-  {id:8, title:'Colar Riviera esmeralda navete → pulseira + colar meia Riviera: fazer conteúdo', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  {id:9, title:'Voltar a postar JM/JF/Outlet no Instagram do Bruno', person:'BJ', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:10, title:'Curadoria — troca de pedras em joias antigas: criar conceito e conteúdo de comunicação', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  // ── FOTOGRAFIA ──
-  {id:11, title:'Teste de IA na edição de imagens — setor de desenvolvimento avaliar e implementar', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:12, title:'Alinhamento Fernanda/Dayane com fotografia — joias saírem do cadastro separadas por saquinho por dia', person:'FD', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:13, title:'Fotografia seguir ordem de saquinho para controlar engasgamento de fotos. Prioridade: vender', person:'FD', priority:'urgente', status:'pendente', due:'Imediato', late:0},
-  // ── JM — JOIAS MODIFICADAS ──
-  {id:14, title:'Sentar com equipe e analisar estoque JM — o que falta fabricar e o que tem em estoque', person:'TH', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:15, title:'Métricas JM — levantar dados e enviar para Thesco analisar', person:'ED', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:16, title:'Instagram JM — chamar Júlia para criar conteúdo vinculado à fabricação', person:'JL', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  {id:17, title:'Reciclagem JM — joias encalhadas abaixo de R$10.000: propor refabricação/modificação', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  {id:18, title:'Olhar caixa de pedras JM e definir o que fabricar/modificar', person:'TH', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  // ── FERNANDA / DAYANE ──
-  {id:19, title:'Eduardo — levantar média de venda de cada parceiro e enviar para Fernanda e Dayane', person:'ED', priority:'urgente', status:'pendente', due:'Esta semana', late:0},
-  {id:20, title:'Descontos para clientes — concentrar no Helton (não passar pelo Bruno)', person:'HE', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  // ── LEILÕES / SCRAP ──
-  {id:21, title:'Analisar leilões ativos — dias, quantidade de peças e desempenho', person:'ED', priority:'media', status:'pendente', due:'Sábado 10h', late:0},
-  {id:22, title:'Scrap para Second — analisar o que vendeu, onde vendeu e margens de lucro', person:'ED', priority:'media', status:'pendente', due:'Sábado 10h', late:0},
-  // ── HELTON / OUTLET ──
-  {id:23, title:'Outlet de joias — criar página e Instagram. Vender pelo peso, bandeja pós-polimento', person:'HE', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-  // ── PARCEIROS ──
-  {id:24, title:'Bruno — falar com Luciana (parceira nova)', person:'BJ', priority:'media', status:'pendente', due:'Esta semana', late:0},
-  {id:25, title:'Sábado — verificar vendas dos parceiros do quadro e checar se média está subindo', person:'ED', priority:'alta', status:'pendente', due:'Sábado 16/05', late:0},
-  {id:26, title:'Se média não subir: conversar com Dayane e Fernanda na reunião de segunda', person:'FD', priority:'media', status:'pendente', due:'Segunda 10h', late:0},
-  {id:27, title:'Itens abaixo de R$10.000 — reenviar para loucar e baixar o preço', person:'HE', priority:'alta', status:'pendente', due:'Esta semana', late:0},
-];
+// ─── TASKS — começa vazio ─────────────────────────────
+let TASKS = [];
 
-const KB_TASKS_BASE = [
-  {title:'Prospectar novos clientes B2B',person:'JS',priority:'media',col:'pendente'},
-  {title:'Criar planilha de metas Q2',person:'MC',priority:'baixa',col:'pendente'},
-  {title:'Treinamento novo colaborador',person:'RP',priority:'media',col:'pendente'},
-  {title:'Relatório de funil semanal',person:'FS',priority:'baixa',col:'pendente'},
-  {title:'Atualizar CRM — visitas semana',person:'JS',priority:'alta',col:'progress'},
-  {title:'Negociação Distribuidora Norte',person:'MC',priority:'urgente',col:'progress'},
-  {title:'Montar apresentação Q2',person:'RP',priority:'media',col:'progress'},
-  {title:'Follow-up leads quentes',person:'FS',priority:'alta',col:'progress'},
-  {title:'Ligar inadimplentes — Lista A',person:'JS',priority:'urgente',col:'progress'},
-  {title:'Envio proposta — aguardando aprovação',person:'RP',priority:'urgente',col:'blocked'},
-  {title:'Campanha email — aguardando mkt',person:'MC',priority:'media',col:'blocked'},
-  {title:'Enviar proposta Distribuidora XYZ',person:'JS',priority:'media',col:'done'},
-  {title:'Responder e-mails sexta-feira',person:'MC',priority:'alta',col:'done'},
-  {title:'Reunião kick-off novo cliente',person:'FS',priority:'alta',col:'done'},
-];
+// Kanban base — também zerado
+const KB_TASKS_BASE = [];
 
-// Carrega dados salvos no localStorage
 function loadData(){
   const t = localStorage.getItem('sf_tasks');
   if(t) TASKS = JSON.parse(t);
@@ -930,7 +932,9 @@ function goTo(name){
   document.getElementById('topbar-title').innerHTML =
     `<div class="page-title">${t.title}</div>`+
     (t.sub?`<div class="page-sub">${t.sub}</div>`:'');
-  if(name==='kanban') renderKanban();
+  if(name==='kanban')    renderKanban();
+  if(name==='equipe')    renderEquipe();
+  if(name==='dashboard') renderDashboard();
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -947,20 +951,45 @@ function statusLabel(s,late){
 function buildPersonOptions(selectId, selectedKey){
   const sel = document.getElementById(selectId);
   if(!sel) return;
-  sel.innerHTML = getPeople().map(p=>`<option value="${p.key}" ${p.key===selectedKey?'selected':''}>${p.name}</option>`).join('');
+  const people = getPeople();
+  if(!people.length){
+    sel.innerHTML='<option value="">— Nenhum colaborador —</option>';
+    return;
+  }
+  sel.innerHTML = people.map(p=>
+    `<option value="${p.key}" ${p.key===selectedKey?'selected':''}>${p.name}</option>`
+  ).join('');
+}
+
+// ─── EMPTY STATE ──────────────────────────────────────
+function emptyState(icon, title, sub, action){
+  return `<div class="empty-state">
+    <i class="ti ti-${icon}"></i>
+    <div class="empty-state-title">${title}</div>
+    <div class="empty-state-sub">${sub}</div>
+    ${action?`<button class="btn btn-sm" style="margin-top:8px;" onclick="${action.fn}">${action.label}</button>`:''}
+  </div>`;
 }
 
 // ─── TASK LIST ────────────────────────────────────────
 function renderTasks(list){
   const el = document.getElementById('task-list');
   const pm = getPeopleMap();
-  if(!list||!list.length){
-    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--c-muted);">Nenhuma tarefa encontrada.</div>';
-    updateKPIs(); return;
+
+  if(!list || !list.length){
+    el.innerHTML = emptyState(
+      'clipboard-list',
+      'Nenhuma tarefa aqui',
+      'Crie a primeira tarefa clicando em "Nova tarefa".',
+      {fn:"openNewTask()", label:'+ Nova tarefa'}
+    );
+    updateKPIs();
+    return;
   }
+
   el.innerHTML = list.map(t=>{
-    const p = pm[t.person]||{name:t.person,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
-    const ini = initials(p.name);
+    const p = pm[t.person]||{name:t.person||'—',bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+    const ini = t.person ? initials(p.name) : '?';
     return `
     <div class="task-item" id="task-row-${t.id}">
       <div class="task-check ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id})"></div>
@@ -990,30 +1019,44 @@ function toggleTask(id){
   if(!t) return;
   t.status = t.status==='done'?'pendente':'done';
   saveData();
-  renderTasks(TASKS);
+  applyFilter();
 }
 
 let currentFilter = 'todas';
+let searchQuery = '';
+
 function filterTasks(f, chip){
   currentFilter = f;
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   if(chip) chip.classList.add('active');
   applyFilter();
 }
+
+function searchTasks(q){
+  searchQuery = q.toLowerCase();
+  applyFilter();
+}
+
 function applyFilter(){
   let list = TASKS;
-  if(currentFilter==='atrasadas')  list = TASKS.filter(t=>t.late>0);
+  if(currentFilter==='atrasadas')   list = TASKS.filter(t=>t.late>0);
   else if(currentFilter==='concluidas') list = TASKS.filter(t=>t.status==='done');
-  else if(currentFilter==='hoje')  list = TASKS.filter(t=>t.due.toLowerCase().includes('hoje'));
+  else if(currentFilter==='hoje')   list = TASKS.filter(t=>t.due.toLowerCase().includes('hoje'));
   else if(currentFilter==='amanha') list = TASKS.filter(t=>t.due.toLowerCase().includes('amanh'));
+  else if(currentFilter==='semana') list = TASKS.filter(t=>t.due.toLowerCase().includes('semana'));
+  if(searchQuery) list = list.filter(t=>t.title.toLowerCase().includes(searchQuery)||t.due.toLowerCase().includes(searchQuery));
   renderTasks(list);
 }
 
 function updateKPIs(){
-  const done = TASKS.filter(t=>t.status==='done').length;
-  const total = TASKS.length;
+  const done    = TASKS.filter(t=>t.status==='done').length;
+  const prog    = TASKS.filter(t=>t.status==='progress').length;
+  const late    = TASKS.filter(t=>t.late>0).length;
+  const total   = TASKS.length;
   document.getElementById('kpi-total').textContent = total;
   document.getElementById('kpi-done').textContent  = done;
+  document.getElementById('kpi-prog').textContent  = prog;
+  document.getElementById('kpi-late').textContent  = late;
   document.getElementById('kpi-pct').textContent   = total>0 ? Math.round(done/total*100)+'%' : '0%';
 }
 
@@ -1021,35 +1064,153 @@ function updateKPIs(){
 function renderKanban(){
   const pm = getPeopleMap();
   const cols={pendente:[],progress:[],blocked:[],done:[]};
-  // Mistura KB_TASKS_BASE + TASKS adicionadas
-  const kbList = [...KB_TASKS_BASE, ...TASKS.filter(t=>!KB_TASKS_BASE.find(k=>k.title===t.title)).map(t=>({...t,col:t.status==='done'?'done':t.status==='progress'?'progress':t.status==='blocked'?'blocked':'pendente'}))];
-  kbList.forEach(t=>{ if(cols[t.col]) cols[t.col].push(t); });
+  TASKS.forEach(t=>{
+    const col = t.status==='done'?'done':t.status==='progress'?'progress':t.status==='blocked'?'blocked':'pendente';
+    cols[col].push(t);
+  });
   ['pendente','progress','blocked','done'].forEach(col=>{
     const el = document.getElementById('kb-'+col);
     if(!el) return;
-    el.innerHTML = cols[col].map(t=>{
-      const p = pm[t.person]||{name:t.person,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
-      return `<div class="kb-card" draggable="true">
-        <div class="kb-card-title">${t.title}</div>
-        <div class="kb-card-foot">
-          <span class="tag ${t.priority}">${cap(t.priority)}</span>
-          <div class="av" style="background:${p.bg};color:${p.color};font-size:9px;" title="${p.name}">${initials(p.name)}</div>
-        </div>
-      </div>`;
-    }).join('');
+    if(!cols[col].length){
+      el.innerHTML=`<div style="text-align:center;padding:20px 0;color:var(--c-muted2);font-size:12px;">Vazio</div>`;
+    } else {
+      el.innerHTML = cols[col].map(t=>{
+        const p = pm[t.person]||{name:t.person||'—',bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+        return `<div class="kb-card" draggable="true">
+          <div class="kb-card-title">${t.title}</div>
+          <div class="kb-card-foot">
+            <span class="tag ${t.priority}">${cap(t.priority)}</span>
+            <div class="av" style="background:${p.bg};color:${p.color};font-size:9px;" title="${p.name}">${initials(p.name)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
     const cnt = document.getElementById('kb-cnt-'+col);
     if(cnt) cnt.textContent = cols[col].length;
   });
 }
 
+// ─── EQUIPE ───────────────────────────────────────────
+function renderEquipe(){
+  const people = getPeople();
+  const done    = TASKS.filter(t=>t.status==='done').length;
+  const total   = TASKS.length;
+  const late    = TASKS.filter(t=>t.late>0).length;
+  const blocked = TASKS.filter(t=>t.status==='blocked').length;
+  document.getElementById('eq-total').textContent   = total;
+  document.getElementById('eq-done').textContent    = done;
+  document.getElementById('eq-late').textContent    = late;
+  document.getElementById('eq-blocked').textContent = blocked;
+  document.getElementById('eq-pct').textContent     = total>0?Math.round(done/total*100)+'%':'0%';
+
+  const el = document.getElementById('equipe-pessoas');
+  if(!people.length){
+    el.innerHTML = emptyState('users','Nenhum colaborador','Adicione colaboradores em "Gerenciar colaboradores" na barra lateral.',null);
+    return;
+  }
+  el.innerHTML = people.map(p=>{
+    const myTasks  = TASKS.filter(t=>t.person===p.key);
+    const myDone   = myTasks.filter(t=>t.status==='done').length;
+    const pct      = myTasks.length>0 ? Math.round(myDone/myTasks.length*100) : 0;
+    const c        = COLORS[p.ci%COLORS.length];
+    const barColor = pct>=80?'var(--c-green)':pct>=50?'var(--c-accent)':pct>=30?'var(--c-amber)':'var(--c-red)';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--c-border);">
+      <div class="av av-xl" style="background:${c.bg};color:${c.color};">${initials(p.name)}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${p.name}</div>
+        <div style="font-size:11px;color:var(--c-muted);">${p.role}</div>
+        <div class="prog-bar-inline"><div class="prog-bar-inner" style="width:${pct}%;background:${barColor};"></div></div>
+      </div>
+      <div style="display:flex;gap:16px;text-align:right;">
+        <div class="pstat"><strong style="color:${barColor};">${pct}%</strong>conclusão</div>
+        <div class="pstat"><strong>${myDone}/${myTasks.length}</strong>tarefas</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DASHBOARD ────────────────────────────────────────
+function renderDashboard(){
+  const people  = getPeople();
+  const done    = TASKS.filter(t=>t.status==='done').length;
+  const total   = TASKS.length;
+  const prog    = TASKS.filter(t=>t.status==='progress').length;
+  const urgente = TASKS.filter(t=>t.priority==='urgente'||t.late>0).length;
+  const pct     = total>0?Math.round(done/total*100):0;
+  document.getElementById('dash-pct').textContent    = pct+'%';
+  document.getElementById('dash-total').textContent  = total;
+  document.getElementById('dash-prog').textContent   = prog;
+  document.getElementById('dash-urgente').textContent= urgente;
+
+  const el = document.getElementById('dash-ranking');
+  if(!people.length || !total){
+    el.innerHTML = emptyState('chart-bar','Sem dados ainda','Adicione colaboradores e tarefas para ver o ranking.',null);
+    return;
+  }
+  const sorted = people.map(p=>{
+    const myTasks = TASKS.filter(t=>t.person===p.key);
+    const myDone  = myTasks.filter(t=>t.status==='done').length;
+    const score   = myTasks.length>0?Math.round(myDone/myTasks.length*100):0;
+    return {...p, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = sorted.map((p,i)=>{
+    const c = COLORS[p.ci%COLORS.length];
+    const barColor = p.score>=80?'var(--c-green)':p.score>=50?'var(--c-accent)':p.score>=30?'var(--c-amber)':'var(--c-red)';
+    return `<div class="rank-row">
+      ${i<3?`<div class="rank-medal">${medals[i]}</div>`:`<div class="rank-num">${i+1}</div>`}
+      <div class="av av-lg" style="background:${c.bg};color:${c.color};">${initials(p.name)}</div>
+      <div class="rank-bar-wrap">
+        <div style="font-size:13px;font-weight:500;margin-bottom:5px;">${p.name}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${p.score}%;background:${barColor};"></div></div>
+      </div>
+      <div class="rank-score" style="color:${barColor};">${p.score}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DATE HELPERS ─────────────────────────────────────
+function todayISO(){
+  return new Date().toISOString().split('T')[0];
+}
+function fmtDate(iso){
+  if(!iso || iso==='Sem prazo') return 'Sem prazo';
+  // iso = YYYY-MM-DD
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function toggleNoDate(prefix){
+  const cb  = document.getElementById(prefix+'-no-date');
+  const inp = document.getElementById(prefix === 'new' ? 'new-date' : 'edit-due');
+  if(cb.checked){
+    inp.disabled = true;
+    inp.style.opacity = '0.35';
+    inp.value = '';
+  } else {
+    inp.disabled = false;
+    inp.style.opacity = '1';
+    if(!inp.value) inp.value = todayISO();
+  }
+}
+
 // ─── NOVA TAREFA ──────────────────────────────────────
 function openNewTask(){
-  buildPersonOptions('new-person','JS');
-  document.getElementById('new-title').value='';
-  document.getElementById('new-desc').value='';
-  document.getElementById('new-date').value='Hoje';
-  document.getElementById('new-prio').value='media';
-  document.getElementById('new-status').value='pendente';
+  const people = getPeople();
+  if(!people.length){
+    toast('Adicione ao menos um colaborador antes de criar tarefas.','amber');
+    openPessoas();
+    return;
+  }
+  buildPersonOptions('new-person', people[0].key);
+  document.getElementById('new-title').value   = '';
+  document.getElementById('new-desc').value    = '';
+  document.getElementById('new-date').value    = todayISO();
+  document.getElementById('new-date').disabled = false;
+  document.getElementById('new-date').style.opacity = '1';
+  document.getElementById('new-no-date').checked = false;
+  document.getElementById('new-prio').value    = 'media';
+  document.getElementById('new-status').value  = 'pendente';
   openModal('modal-new');
 }
 
@@ -1067,8 +1228,9 @@ function saveNewTask(){
   };
   TASKS.unshift(newTask);
   saveData();
-  renderTasks(TASKS);
+  applyFilter();
   closeModal('modal-new');
+  toast('Tarefa criada!');
 }
 
 // ─── EDITAR TAREFA ────────────────────────────────────
@@ -1101,7 +1263,7 @@ function saveEditTask(){
   saveData();
   applyFilter();
   closeModal('modal-edit');
-  toast('Tarefa atualizada com sucesso!');
+  toast('Tarefa atualizada!');
 }
 
 // ─── EXCLUIR COM SENHA ────────────────────────────────
@@ -1138,6 +1300,10 @@ function openPessoas(){
 function renderPessoasList(){
   const el = document.getElementById('pessoas-list');
   const people = getPeople();
+  if(!people.length){
+    el.innerHTML=`<div style="text-align:center;padding:16px;color:var(--c-muted);font-size:13px;">Nenhum colaborador ainda. Adicione abaixo.</div>`;
+    return;
+  }
   el.innerHTML = people.map((p,i)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--c-border);">
       <div class="av av-lg" style="background:${COLORS[p.ci%COLORS.length].bg};color:${COLORS[p.ci%COLORS.length].color};">${initials(p.name)}</div>
@@ -1145,15 +1311,31 @@ function renderPessoasList(){
         <input type="text" value="${p.name}" style="margin-bottom:4px;" onchange="updatePessoa(${i},'name',this.value)"/>
         <input type="text" value="${p.role}" style="font-size:12px;" onchange="updatePessoa(${i},'role',this.value)"/>
       </div>
-      <button class="btn-ghost btn-sm" style="color:var(--c-red);border-color:var(--c-red-dim);" onclick="removePessoa(${i})" title="Remover colaborador">
+      <button class="btn-ghost btn-sm" style="color:var(--c-red);border-color:var(--c-red-dim);" onclick="removePessoa(${i})" title="Remover">
         <i class="ti ti-trash"></i>
       </button>
     </div>`).join('');
 }
 
+function updateUserCard(){
+  const people = getPeople();
+  if(people.length){
+    const p = people[0];
+    const c = COLORS[p.ci%COLORS.length];
+    document.getElementById('user-av').textContent       = initials(p.name);
+    document.getElementById('user-av').style.background = c.bg;
+    document.getElementById('user-av').style.color      = c.color;
+    document.getElementById('user-name-display').textContent = p.name;
+    document.getElementById('user-role-display').textContent = p.role;
+    // badge equipe
+    const badge = document.getElementById('badge-equipe');
+    badge.textContent = people.length;
+    badge.style.display = 'inline';
+  }
+}
+
 function updatePessoa(i, field, val){
   PEOPLE_LIST[i][field] = val;
-  // Atualiza key se for o nome
   if(field==='name'){
     const newKey = initials(val);
     const oldKey = PEOPLE_LIST[i].key;
@@ -1164,13 +1346,14 @@ function updatePessoa(i, field, val){
     PEOPLE_LIST[i].key = newKey;
   }
   savePeople();
+  updateUserCard();
 }
 
 function removePessoa(i){
-  if(PEOPLE_LIST.length<=1){ toast('Deve haver ao menos 1 colaborador.','amber'); return; }
   PEOPLE_LIST.splice(i,1);
   savePeople();
   renderPessoasList();
+  updateUserCard();
 }
 
 function addPessoa(){
@@ -1184,6 +1367,7 @@ function addPessoa(){
   document.getElementById('np-nome').value='';
   document.getElementById('np-cargo').value='';
   renderPessoasList();
+  updateUserCard();
   toast('Colaborador adicionado!');
 }
 
@@ -1191,27 +1375,17 @@ function addPessoa(){
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 
-// Fecha ao clicar fora
 document.addEventListener('click',function(e){
-  ['modal-new','modal-edit','modal-senha','modal-pessoas','notif-panel'].forEach(id=>{
+  ['modal-new','modal-edit','modal-senha','modal-pessoas'].forEach(id=>{
     const el = document.getElementById(id);
-    if(!el) return;
-    if(el.classList.contains('open') && !el.contains(e.target)){
-      const isOverlay = e.target===el;
-      if(isOverlay) closeModal(id);
-    }
+    if(el && el.classList.contains('open') && e.target===el) closeModal(id);
   });
-});
-
-// Fecha notif ao clicar fora
-document.addEventListener('click',function(e){
   const panel = document.getElementById('notif-panel');
   if(panel && panel.classList.contains('open') && !panel.contains(e.target) && !e.target.closest('.icon-btn')){
     panel.classList.remove('open');
   }
 });
 
-// Shake animation para campos inválidos
 function shake(id){
   const el = document.getElementById(id);
   if(!el) return;
@@ -1220,9 +1394,8 @@ function shake(id){
   setTimeout(()=>{ el.style.borderColor=''; el.style.animation=''; },600);
 }
 
-// Toast feedback
 function toast(msg, type='green'){
-  const colors = {green:'var(--c-green)',red:'var(--c-red)',amber:'var(--c-amber)'};
+  const colors={green:'var(--c-green)',red:'var(--c-red)',amber:'var(--c-amber)'};
   const t = document.createElement('div');
   t.style.cssText=`position:fixed;bottom:24px;right:24px;background:var(--c-surface);border:1px solid ${colors[type]||colors.green};border-radius:10px;padding:12px 18px;font-size:13px;font-weight:500;color:${colors[type]||colors.green};z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeUp .2s ease;`;
   t.textContent = msg;
@@ -1233,6 +1406,17 @@ function toast(msg, type='green'){
 // ─── NOTIFICATIONS ────────────────────────────────────
 function toggleNotif(){
   document.getElementById('notif-panel').classList.toggle('open');
+}
+function clearNotifs(){
+  document.getElementById('notif-list').innerHTML=`<div style="padding:24px;text-align:center;color:var(--c-muted);font-size:13px;"><i class="ti ti-bell-off" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4;"></i>Nenhuma notificação</div>`;
+}
+
+// ─── RELATÓRIOS ───────────────────────────────────────
+function exportReport(tipo){
+  const labels={diario:'Diário',semanal:'Semanal',mensal:'Mensal',colaborador:'Por Colaborador'};
+  const done  = TASKS.filter(t=>t.status==='done').length;
+  const total = TASKS.length;
+  toast(`Relatório ${labels[tipo]}: ${done}/${total} tarefas concluídas`);
 }
 
 // ─── IA ───────────────────────────────────────────────
@@ -1246,38 +1430,39 @@ Felipe precisa fechar o relatório de metas do mês com urgência — prazo: ama
 
 Decidimos que Rafael vai prospectar pelo menos 15 novos leads via LinkedIn até o final desta semana.`;
 
-const EXTRACTED_DEMO = [
-  {title:'Atualizar controle de estoque',person:'JS',personName:'João Silva',deadline:'Quarta-feira',priority:'alta',tag:'alta',reason:'Divergências nos registros do sistema'},
-  {title:'Ligar para clientes inadimplentes da lista B',person:'MC',personName:'Maria Carvalho',deadline:'Sexta-feira',priority:'alta',tag:'alta',reason:'Negociar prazos de pagamento'},
-  {title:'Fechar relatório de metas do mês',person:'FS',personName:'Felipe Santos',deadline:'Amanhã, 18h',priority:'urgente',tag:'urgente',reason:'Prazo urgente definido em reunião'},
-  {title:'Prospectar 15 novos leads via LinkedIn',person:'RP',personName:'Rafael Pereira',deadline:'Esta semana',priority:'media',tag:'media',reason:'Meta de prospecção definida'}
-];
-
 function loadExample(){ document.getElementById('meeting-input').value=EXAMPLE_TEXT; }
 
 function processIA(){
   const txt = document.getElementById('meeting-input').value.trim();
   if(!txt){ shake('meeting-input'); return; }
+  const people = getPeople();
   document.getElementById('ai-loading').classList.add('show');
   document.getElementById('ai-results').style.display='none';
   setTimeout(()=>{
     document.getElementById('ai-loading').classList.remove('show');
-    renderAITasks(EXTRACTED_DEMO);
+    // Gera tarefas de demonstração
+    const demo = [
+      {title:'Atualizar controle de estoque',priority:'alta',tag:'alta',deadline:'Quarta-feira',reason:'Divergências nos registros do sistema'},
+      {title:'Ligar para clientes inadimplentes da lista B',priority:'alta',tag:'alta',deadline:'Sexta-feira',reason:'Negociar prazos de pagamento'},
+      {title:'Fechar relatório de metas do mês',priority:'urgente',tag:'urgente',deadline:'Amanhã, 18h',reason:'Prazo urgente definido em reunião'},
+      {title:'Prospectar 15 novos leads via LinkedIn',priority:'media',tag:'media',deadline:'Esta semana',reason:'Meta de prospecção definida'},
+    ];
+    renderAITasks(demo);
     document.getElementById('ai-results').style.display='block';
   },2400);
 }
 
 function renderAITasks(tasks){
   const pm = getPeopleMap();
+  const people = getPeople();
   document.getElementById('ai-count').textContent = tasks.length+' tarefas';
   document.getElementById('ai-task-list').innerHTML = tasks.map((t,i)=>{
-    const p = pm[t.person]||{name:t.personName,bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
+    const firstPerson = people[0]||{key:'',name:'—'};
     return `<div class="ai-task-card">
       <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
-        <div class="av av-lg" style="background:${p.bg};color:${p.color};">${initials(p.name)}</div>
         <div style="flex:1;">
           <div style="font-size:13px;font-weight:600;margin-bottom:3px;">${t.title}</div>
-          <div style="font-size:11px;color:var(--c-muted);">${t.personName} &nbsp;·&nbsp; <i class="ti ti-calendar" style="font-size:11px;"></i> ${t.deadline}</div>
+          <div style="font-size:11px;color:var(--c-muted);"><i class="ti ti-calendar" style="font-size:11px;"></i> ${t.deadline}</div>
           <div style="font-size:11px;color:var(--c-muted2);margin-top:3px;font-style:italic;">"${t.reason}"</div>
         </div>
         <span class="tag ${t.tag}">${cap(t.priority)}</span>
@@ -1292,7 +1477,9 @@ function renderAITasks(tasks){
         </select>
         <span style="font-size:11px;color:var(--c-muted2);">Responsável:</span>
         <select id="ai-person-${i}" style="width:auto;padding:4px 10px;font-size:12px;">
-          ${getPeople().map(pp=>`<option value="${pp.key}" ${pp.key===t.person?'selected':''}>${pp.name}</option>`).join('')}
+          ${people.length
+            ? people.map(pp=>`<option value="${pp.key}">${pp.name}</option>`).join('')
+            : `<option value="">— Nenhum —</option>`}
         </select>
       </div>
     </div>`;
@@ -1306,7 +1493,7 @@ function renderAITasks(tasks){
 function confirmIA(){
   for(let i=0;i<window._aiTaskCount;i++){
     const p  = document.getElementById('ai-prio-'+i)?.value || 'media';
-    const pp = document.getElementById('ai-person-'+i)?.value || 'JS';
+    const pp = document.getElementById('ai-person-'+i)?.value || '';
     const card = document.getElementById('ai-task-list').children[i];
     const title = card?.querySelector('div[style*="font-weight:600"]')?.textContent||'Nova tarefa';
     TASKS.unshift({id:Date.now()+i,title,person:pp,priority:p,status:'pendente',due:'Esta semana',late:0});
@@ -1314,6 +1501,7 @@ function confirmIA(){
   saveData();
   document.getElementById('ai-confirm-msg').style.display='inline-flex';
   const btn=document.querySelector('.btn-green'); btn.disabled=true; btn.style.opacity='.5';
+  applyFilter();
   toast('Tarefas criadas com sucesso!');
 }
 
@@ -1329,8 +1517,9 @@ ks.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}25%{transform
 document.head.appendChild(ks);
 
 // ─── INIT ─────────────────────────────────────────────
-loadData();
-renderTasks(TASKS);
+loadData();        // carrega tarefas do localStorage
+renderTasks([]);   // renderiza lista vazia
+checkSession();    // verifica se já tem sessão ativa (recarregamento de página)
 </script>
 </body>
 </html>
