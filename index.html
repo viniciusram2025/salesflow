@@ -10,11 +10,14 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script type="module">
 // ══════════════════════════════════════════
-// FIREBASE CONFIG
+// FIREBASE CONFIG + AUTH
 // ══════════════════════════════════════════
-import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged }                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc,
-         deleteDoc, onSnapshot, query, orderBy }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+         getDoc, deleteDoc, onSnapshot,
+         query, orderBy }                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyDwOPD8Cl3vFIs64Xte2h3O9-q7M8JP3fI",
@@ -26,26 +29,70 @@ const firebaseConfig = {
 };
 
 const fireApp = initializeApp(firebaseConfig);
+const auth    = getAuth(fireApp);
 const db      = getFirestore(fireApp);
 
-// ── Expõe funções de DB para o escopo global ──────────
-window._db = db;
-window._fbModules = { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy };
+// Expõe para o escopo global
+window._db   = db;
+window._auth = auth;
+window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy };
+
+// ── Login via Firebase Auth ───────────────────────────
+window._doFirebaseLogin = async function(email, pass){
+  const err = document.getElementById('login-err');
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = 'Entrando...';
+  btn.disabled = true;
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    // Busca perfil do usuário no Firestore
+    const snap = await getDoc(doc(db, 'usuarios', email));
+    if(!snap.exists()){
+      err.textContent = 'Usuário sem perfil configurado.';
+      err.style.display = 'block';
+      await signOut(auth);
+      return;
+    }
+    const profile = snap.data();
+    const user = { email, name: profile.name, personKey: profile.personKey, role: profile.role };
+    currentUser = user;
+    sessionStorage.setItem('sf_user', JSON.stringify(user));
+    err.style.display = 'none';
+    showApp(user);
+  } catch(e) {
+    err.textContent = 'E-mail ou senha incorretos.';
+    err.style.display = 'block';
+    const inp = document.getElementById('login-pass');
+    inp.style.borderColor = 'rgba(240,82,82,.6)';
+    inp.style.animation   = 'shake .3s ease';
+    setTimeout(()=>{ inp.style.borderColor=''; inp.style.animation=''; }, 600);
+  } finally {
+    btn.textContent = 'Entrar';
+    btn.disabled = false;
+  }
+};
+
+// ── Logout via Firebase Auth ──────────────────────────
+window._doFirebaseLogout = async function(){
+  await signOut(auth);
+};
 
 // ── Listeners em tempo real ───────────────────────────
+let _listenersStarted = false;
 window._initFirebaseListeners = function(){
+  if(_listenersStarted) return;
+  _listenersStarted = true;
   const { collection, onSnapshot, query, orderBy } = window._fbModules;
 
   // TASKS
   onSnapshot(query(collection(db,'tasks'), orderBy('createdAt','desc')), snap => {
-    TASKS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    TASKS = snap.docs.map(d => ({...d.data(), id: d.id}));
     applyFilter();
   });
 
   // METAIS
   onSnapshot(query(collection(db,'metais'), orderBy('createdAt','desc')), snap => {
-    METAIS = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    // Atualiza página de metais se estiver aberta
+    METAIS = snap.docs.map(d => ({...d.data(), id: d.id}));
     const pg = document.getElementById('page-metais');
     if(pg && pg.classList.contains('active')){
       renderMetalKPIs();
@@ -986,26 +1033,17 @@ tbody tr:last-child{border-bottom:none;}
 
 <script>
 // ══════════════════════════════════════════
-// LOGIN
+// LOGIN — Firebase Authentication
 // ══════════════════════════════════════════
-const USERS = [
-  {email:'elias@goldtechjoias.com',     pass:'Elias105055@',  name:'Elias',     personKey:'EL', role:'admin'},
-  {email:'bruno@goldtechjoias.com',     pass:'Bruno105055@',  name:'Bruno',     personKey:'BR', role:'admin'},
-  {email:'vitor@goldtechjoias.com',     pass:'Vitor105055@',  name:'Vitor',     personKey:'VI', role:'metais'},
-  {email:'francesco@goldtechjoias.com', pass:'Thesco105055@', name:'Francesco', personKey:'FR', role:'metais'},
-];
-
 let currentUser = null;
 
 function togglePassVis(){
   const inp  = document.getElementById('login-pass');
   const icon = document.getElementById('eye-icon');
   if(inp.type==='password'){
-    inp.type='text';
-    icon.className='ti ti-eye-off';
+    inp.type='text'; icon.className='ti ti-eye-off';
   } else {
-    inp.type='password';
-    icon.className='ti ti-eye';
+    inp.type='password'; icon.className='ti ti-eye';
   }
 }
 
@@ -1013,28 +1051,19 @@ function doLogin(){
   const email = document.getElementById('login-email').value.trim().toLowerCase();
   const pass  = document.getElementById('login-pass').value;
   const err   = document.getElementById('login-err');
-  const user  = USERS.find(u => u.email === email && u.pass === pass);
-  if(!user){
-    err.style.display='block';
-    const inp = document.getElementById('login-pass');
-    inp.style.borderColor='rgba(240,82,82,.6)';
-    inp.style.animation='shake .3s ease';
-    setTimeout(()=>{ inp.style.borderColor=''; inp.style.animation=''; },600);
-    return;
+  if(!email || !pass){
+    err.textContent='Preencha e-mail e senha.'; err.style.display='block'; return;
   }
-  err.style.display='none';
-  currentUser = user;
-  // Salva sessão
-  sessionStorage.setItem('sf_user', JSON.stringify(user));
-  showApp(user);
+  if(typeof window._doFirebaseLogin === 'function'){
+    window._doFirebaseLogin(email, pass);
+  } else {
+    setTimeout(()=>doLogin(), 500);
+  }
 }
 
 function checkSession(){
   const saved = sessionStorage.getItem('sf_user');
-  if(saved){
-    currentUser = JSON.parse(saved);
-    showApp(currentUser);
-  }
+  if(saved){ currentUser = JSON.parse(saved); showApp(currentUser); }
 }
 
 function showApp(user){
@@ -1080,14 +1109,14 @@ function showApp(user){
 function doLogout(){
   sessionStorage.removeItem('sf_user');
   currentUser = null;
-  // Reseta visibilidade do menu para não vazar entre logins
+  if(typeof window._doFirebaseLogout === 'function') window._doFirebaseLogout();
   document.querySelectorAll('.nav-section, .nav-item').forEach(el => el.style.display = '');
-  document.getElementById('main-app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('login-email').value='';
-  document.getElementById('login-pass').value='';
-  document.getElementById('login-pass').type='password';
-  document.getElementById('eye-icon').className='ti ti-eye';
+  document.getElementById('main-app').style.display      = 'none';
+  document.getElementById('login-screen').style.display  = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pass').value  = '';
+  document.getElementById('login-pass').type   = 'password';
+  document.getElementById('eye-icon').className = 'ti ti-eye';
 }
 
 // ══════════════════════════════════════════
