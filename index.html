@@ -2500,10 +2500,7 @@ async function confirmarCadastroMetal(){
   };
   const { doc, setDoc } = window._fbModules;
   await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
-  document.getElementById('cadastro-peso').value = '';
-  document.getElementById('metal-obs').value     = '';
-  document.getElementById('cadastro-preview-resta').textContent = '— g';
-  updateCadastroDispo();
+  resetMetalForm();
   toast('Cadastro registrado!','green');
 }
 
@@ -2529,11 +2526,7 @@ async function confirmarBaixaAntigo(){
   const { doc, setDoc } = window._fbModules;
   await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
   // Reset form
-  document.getElementById('antigo-peso').value = '';
-  document.getElementById('metal-obs').value   = '';
-  document.getElementById('antigo-preview-resta').textContent = '— g';
-  document.getElementById('antigo-preview-resta').style.color = 'var(--c-green)';
-  updateAntigoDispo();
+  resetMetalForm();
   toast('Saída para Antigo registrada!','amber');
 }
 
@@ -2570,10 +2563,7 @@ function salvarEntradaMetal(){
   const { doc, setDoc } = window._fbModules;
   setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
 
-  document.getElementById('metal-chegou').value    = '';
-  document.getElementById('metal-cadastrado').value= '';
-  document.getElementById('metal-obs').value       = '';
-  document.getElementById('metal-sobrou-preview').textContent = '— g';
+  resetMetalForm();
   toast('Entrada registrada!');
 }
 
@@ -2842,9 +2832,30 @@ function renderMetalChart(metal){
 }
 
 // ── Init da página de metais ──
+function resetMetalForm(){
+  // Zera todos os campos incluindo data e metal
+  document.getElementById('metal-date').value    = '';
+  document.getElementById('metal-tipo').value    = 'ouro';
+  document.getElementById('metal-origem').value  = 'second';
+  document.getElementById('metal-chegou').value  = '';
+  document.getElementById('metal-cadastrado').value = '';
+  document.getElementById('metal-obs').value     = '';
+  const cp = document.getElementById('cadastro-peso');  if(cp) cp.value='';
+  const ap = document.getElementById('antigo-peso');    if(ap) ap.value='';
+  const co = document.getElementById('cadastro-origem');if(co) co.value='second';
+  const sp = document.getElementById('metal-sobrou-preview');
+  if(sp){ sp.textContent='— g'; sp.style.color='var(--c-green)'; }
+  const cr = document.getElementById('cadastro-preview-resta');
+  if(cr){ cr.textContent='— g'; cr.style.color='var(--c-green)'; }
+  const ar = document.getElementById('antigo-preview-resta');
+  if(ar){ ar.textContent='— g'; ar.style.color='var(--c-green)'; }
+  const sd = document.getElementById('antigo-saldo-disp');   if(sd) sd.textContent='— g';
+  const cd = document.getElementById('cadastro-saldo-disp'); if(cd) cd.textContent='— g';
+}
+
 function initMetaisPage(){
-  document.getElementById('metal-date').value = todayISO();
-  setMetalFormTipo('entrada'); // garante estado inicial correto
+  resetMetalForm();
+  setMetalFormTipo('entrada');
   renderMetalKPIs();
   renderMetalHistorico();
   renderMetalChart('ouro');
