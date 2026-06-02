@@ -8,6 +8,53 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="module">
+// ══════════════════════════════════════════
+// FIREBASE CONFIG
+// ══════════════════════════════════════════
+import { initializeApp }                          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc,
+         deleteDoc, onSnapshot, query, orderBy }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyDwOPD8Cl3vFIs64Xte2h3O9-q7M8JP3fI",
+  authDomain:        "salesflow-goldtech.firebaseapp.com",
+  projectId:         "salesflow-goldtech",
+  storageBucket:     "salesflow-goldtech.firebasestorage.app",
+  messagingSenderId: "673844856609",
+  appId:             "1:673844856609:web:2cd067a86bc976a74c2060"
+};
+
+const fireApp = initializeApp(firebaseConfig);
+const db      = getFirestore(fireApp);
+
+// ── Expõe funções de DB para o escopo global ──────────
+window._db = db;
+window._fbModules = { collection, doc, setDoc, deleteDoc, onSnapshot, query, orderBy };
+
+// ── Listeners em tempo real ───────────────────────────
+window._initFirebaseListeners = function(){
+  const { collection, onSnapshot, query, orderBy } = window._fbModules;
+
+  // TASKS
+  onSnapshot(query(collection(db,'tasks'), orderBy('createdAt','desc')), snap => {
+    TASKS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    applyFilter();
+  });
+
+  // METAIS
+  onSnapshot(query(collection(db,'metais'), orderBy('createdAt','desc')), snap => {
+    METAIS = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    // Atualiza página de metais se estiver aberta
+    const pg = document.getElementById('page-metais');
+    if(pg && pg.classList.contains('active')){
+      renderMetalKPIs();
+      renderMetalHistorico();
+      renderMetalChart(activeChartMetal);
+    }
+  });
+};
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -437,8 +484,8 @@ tbody tr:last-child{border-bottom:none;}
         <div class="icon-btn" onclick="toggleNotif()">
           <i class="ti ti-bell" style="font-size:17px;"></i>
         </div>
-        <div class="icon-btn">
-          <i class="ti ti-settings" style="font-size:17px;"></i>
+        <div class="icon-btn" id="sync-btn" title="Sincronizado com Firebase" style="cursor:default;">
+          <i class="ti ti-cloud-check" style="font-size:17px;color:var(--c-green);"></i>
         </div>
       </div>
     </header>
@@ -994,6 +1041,11 @@ function showApp(user){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='flex';
 
+  // Inicia listeners Firebase
+  if(typeof window._initFirebaseListeners === 'function'){
+    window._initFirebaseListeners();
+  }
+
   // Controla visibilidade do menu conforme role
   if(user.role === 'metais'){
     // Esconde todas as seções exceto Estoque
@@ -1084,12 +1136,15 @@ let TASKS = [];
 // Kanban base — também zerado
 const KB_TASKS_BASE = [];
 
-function loadData(){
-  const t = localStorage.getItem('sf_tasks');
-  if(t) TASKS = JSON.parse(t);
-  getPeople();
+function loadData(){ /* dados carregados via listener Firestore em _initFirebaseListeners */ }
+function saveData(){
+  // Salva todas as tasks no Firestore
+  const { collection, doc, setDoc } = window._fbModules;
+  TASKS.forEach(t => {
+    if(!t.createdAt) t.createdAt = t.id;
+    setDoc(doc(window._db,'tasks', String(t.id)), t);
+  });
 }
-function saveData(){ localStorage.setItem('sf_tasks',JSON.stringify(TASKS)); }
 
 // ─── NAV ──────────────────────────────────────────────
 const PAGE_TITLES = {
@@ -1201,8 +1256,8 @@ function toggleTask(id){
   const t = TASKS.find(x=>x.id===id);
   if(!t) return;
   t.status = t.status==='done'?'pendente':'done';
-  saveData();
-  applyFilter();
+  const { doc, setDoc } = window._fbModules;
+  setDoc(doc(window._db,'tasks', String(t.id)), t);
 }
 
 let currentFilter = 'todas';
@@ -1407,15 +1462,16 @@ function saveNewTask(){
   const newTask = {
     id: Date.now(),
     title,
-    person:   document.getElementById('new-person').value,
-    priority: document.getElementById('new-prio').value,
-    status:   document.getElementById('new-status').value,
+    person:    document.getElementById('new-person').value,
+    priority:  document.getElementById('new-prio').value,
+    status:    document.getElementById('new-status').value,
     due,
-    late: 0
+    late:      0,
+    createdAt: Date.now()
   };
-  TASKS.unshift(newTask);
-  saveData();
-  applyFilter();
+  // Salva direto no Firestore — listener vai atualizar TASKS automaticamente
+  const { doc, setDoc } = window._fbModules;
+  setDoc(doc(window._db,'tasks', String(newTask.id)), newTask);
   closeModal('modal-new');
   toast('Tarefa criada!');
 }
@@ -1465,8 +1521,8 @@ function saveEditTask(){
   t.status   = document.getElementById('edit-status').value;
   t.due      = noDate ? 'Sem prazo' : fmtDate(dateVal);
   t.desc     = document.getElementById('edit-desc').value.trim();
-  saveData();
-  applyFilter();
+  const { doc, setDoc } = window._fbModules;
+  setDoc(doc(window._db,'tasks', String(t.id)), t);
   closeModal('modal-edit');
   toast('Tarefa atualizada!');
 }
@@ -1488,9 +1544,8 @@ function confirmDelete(){
     shake('senha-input');
     return;
   }
-  TASKS = TASKS.filter(x=>x.id!==editingId);
-  saveData();
-  applyFilter();
+  const { doc, deleteDoc } = window._fbModules;
+  deleteDoc(doc(window._db,'tasks', String(editingId)));
   closeModal('modal-senha');
   editingId = null;
   toast('Tarefa excluída.', 'red');
@@ -1729,11 +1784,14 @@ let METAIS = [];           // array de entradas
 let metalChart = null;     // instância do Chart.js
 let activeChartMetal = 'ouro';
 
-function loadMetais(){
-  const saved = localStorage.getItem('sf_metais');
-  if(saved) METAIS = JSON.parse(saved);
+function loadMetais(){ /* dados carregados via listener Firestore em _initFirebaseListeners */ }
+function saveMetais(){
+  const { collection, doc, setDoc } = window._fbModules;
+  METAIS.forEach(m => {
+    if(!m.createdAt) m.createdAt = m.id;
+    setDoc(doc(window._db,'metais', String(m.id)), m);
+  });
 }
-function saveMetais(){ localStorage.setItem('sf_metais', JSON.stringify(METAIS)); }
 
 // config visual por tipo
 const METAL_CFG = {
@@ -1781,20 +1839,17 @@ function salvarEntradaMetal(){
     .filter(e => e.metal===metal && e.origem===origem && e.data < data)
     .reduce((acc, e) => acc + e.chegou - e.cadastrado, 0);
 
-  const sobrou = chegou + saldoAnterior - cadastrado;
+  const sobrou = chegou - cadastrado;
+  const entrada = { id: Date.now(), data, metal, origem, chegou, cadastrado, sobrou, obs, createdAt: Date.now() };
 
-  METAIS.unshift({ id: Date.now(), data, metal, origem, chegou, cadastrado, sobrou: chegou - cadastrado, obs });
-  saveMetais();
+  const { doc, setDoc } = window._fbModules;
+  setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
 
   // Limpa form mantendo data/metal/origem
   document.getElementById('metal-chegou').value    = '';
   document.getElementById('metal-cadastrado').value= '';
   document.getElementById('metal-obs').value       = '';
   document.getElementById('metal-sobrou-preview').textContent = '— g';
-
-  renderMetalKPIs();
-  renderMetalHistorico();
-  renderMetalChart(activeChartMetal);
   toast('Entrada registrada!');
 }
 
@@ -1875,11 +1930,8 @@ function renderMetalHistorico(){
 // ── Deletar entrada ──
 function deletarEntradaMetal(id){
   if(!confirm('Remover esta entrada?')) return;
-  METAIS = METAIS.filter(e=>e.id!==id);
-  saveMetais();
-  renderMetalKPIs();
-  renderMetalHistorico();
-  renderMetalChart(activeChartMetal);
+  const { doc, deleteDoc } = window._fbModules;
+  deleteDoc(doc(window._db,'metais', String(id)));
   toast('Entrada removida.','red');
 }
 
@@ -1995,10 +2047,15 @@ function initMetaisPage(){
 }
 
 // ─── INIT ─────────────────────────────────────────────
-loadData();        // carrega tarefas do localStorage
-loadMetais();      // carrega metais do localStorage
-renderTasks([]);   // renderiza lista vazia
-checkSession();    // verifica se já tem sessão ativa (recarregamento de página)
+renderTasks([]);   // renderiza lista vazia enquanto Firebase carrega
+checkSession();    // verifica sessão — se logado, mostra app e inicia listeners
+
+// Inicia listeners Firebase após módulos carregados
+window.addEventListener('load', () => {
+  if(typeof window._initFirebaseListeners === 'function'){
+    window._initFirebaseListeners();
+  }
+});
 </script>
 </body>
 </html>
