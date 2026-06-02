@@ -822,12 +822,16 @@ tbody tr:last-child{border-bottom:none;}
             <!-- Seletor de tipo -->
             <div style="display:flex;gap:0;margin-bottom:18px;background:var(--c-bg);border-radius:var(--r);padding:3px;border:1px solid var(--c-border);">
               <button id="btn-tipo-entrada" onclick="setMetalFormTipo('entrada')"
-                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--c-accent);color:#fff;">
+                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--c-accent);color:#fff;">
                 <i class="ti ti-arrow-down-circle"></i> Entrada
               </button>
+              <button id="btn-tipo-cadastro" onclick="setMetalFormTipo('cadastro')"
+                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--c-muted);">
+                <i class="ti ti-clipboard-check"></i> Cadastro
+              </button>
               <button id="btn-tipo-antigo" onclick="setMetalFormTipo('antigo')"
-                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--c-muted);">
-                <i class="ti ti-flame"></i> Saída — Antigo
+                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--c-muted);">
+                <i class="ti ti-flame"></i> Antigo
               </button>
             </div>
 
@@ -873,6 +877,27 @@ tbody tr:last-child{border-bottom:none;}
                   <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
                     <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Sobrou</span>
                     <span id="metal-sobrou-preview" style="font-weight:700;color:var(--c-green);">— g</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campos só de CADASTRO -->
+            <div id="fields-cadastro" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">Saldo disponível (chegou mas ainda não cadastrado)</label>
+                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="cadastro-saldo-disp">— g</div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Quantidade cadastrada agora (g)</label>
+                  <input type="number" id="cadastro-peso" placeholder="0.00" min="0.01" step="0.01"
+                    style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateCadastroPreview()"/>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                  <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
+                    <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Ainda por cadastrar</span>
+                    <span id="cadastro-preview-resta" style="font-weight:700;color:var(--c-green);">— g</span>
                   </div>
                 </div>
               </div>
@@ -943,7 +968,8 @@ tbody tr:last-child{border-bottom:none;}
                 <option value="todos">Todas as origens</option>
                 <option value="second">Second Hand</option>
                 <option value="scrap">Scrap</option>
-                <option value="antigo">→ Antigo</option>
+                <option value="cadastro">✓ Cadastro</option>
+                <option value="antigo">🔥 Antigo</option>
               </select>
             </div>
           </div>
@@ -956,10 +982,10 @@ tbody tr:last-child{border-bottom:none;}
                   <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Metal</th>
                   <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Tipo / Origem</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Chegou</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-green);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Sobrou</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">→ Antigo</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Saldo acum.</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-amber);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">→ Antigo</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-accent);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Saldo acum.</th>
                   <th style="padding:8px 10px;"></th>
                 </tr>
               </thead>
@@ -2291,27 +2317,40 @@ const ORIGEM_CFG = {
   scrap: {label:'Scrap',       cls:'origem-scrap'},
 };
 
-// ── Calc saldo acumulado por metal (todas origens, menos baixas antigo) até data ──
+// ══════════════════════════════════════════
+// CÁLCULOS DE SALDO
+// Tipos de registro:
+//   'entrada'  → chegou (peso bruto, origem: second/scrap)
+//   'cadastro' → abate do saldo (foi pro sistema)
+//   'antigo'   → abate do saldo (foi pro fogo/fundição)
+// ══════════════════════════════════════════
+
 function calcSaldo(metal, origem, ateData){
-  if(origem){
-    // Soma entradas da origem específica
-    return METAIS
-      .filter(e => e.metal===metal && e.origem===origem && e.data <= ateData)
-      .reduce((acc, e) => acc + (e.chegou||0) - (e.cadastrado||0), 0);
+  const registros = METAIS.filter(e => e.metal===metal && e.data <= ateData);
+
+  if(origem && origem !== 'all'){
+    // Saldo de uma origem específica de entrada
+    return registros
+      .filter(e => e.tipo==='entrada' && e.origem===origem)
+      .reduce((acc, e) => acc + (e.chegou||0), 0);
   }
-  // Saldo total = todas entradas - todas baixas antigo
-  const entradas = METAIS
-    .filter(e => e.metal===metal && e.origem!=='antigo' && e.data <= ateData)
-    .reduce((acc, e) => acc + (e.chegou||0) - (e.cadastrado||0), 0);
-  const baixas = METAIS
-    .filter(e => e.metal===metal && e.origem==='antigo' && e.data <= ateData)
-    .reduce((acc, e) => acc + (e.peso||0), 0);
-  return entradas - baixas;
+
+  // Saldo total = entradas - cadastros - antigos
+  const entradas  = registros.filter(e=>e.tipo==='entrada').reduce((a,e)=>a+(e.chegou||0),0);
+  const cadastros = registros.filter(e=>e.tipo==='cadastro').reduce((a,e)=>a+(e.peso||0),0);
+  const antigos   = registros.filter(e=>e.tipo==='antigo').reduce((a,e)=>a+(e.peso||0),0);
+  return entradas - cadastros - antigos;
 }
 
 function calcSaldoTotal(metal){
   const hoje = new Date().toISOString().split('T')[0];
-  return calcSaldo(metal, null, hoje);
+  return calcSaldo(metal, 'all', hoje);
+}
+
+// Quanto chegou mas ainda não foi cadastrado nem foi pro antigo
+function calcPorCadastrar(metal){
+  const hoje = new Date().toISOString().split('T')[0];
+  return calcSaldoTotal(metal);
 }
 
 // ══════════════════════════════════════════
@@ -2322,45 +2361,61 @@ let metalFormTipo = 'entrada'; // 'entrada' | 'antigo'
 
 function setMetalFormTipo(tipo){
   metalFormTipo = tipo;
-  const isEntrada = tipo === 'entrada';
 
-  // Toggle visual dos botões
-  document.getElementById('btn-tipo-entrada').style.background = isEntrada ? 'var(--c-accent)' : 'transparent';
-  document.getElementById('btn-tipo-entrada').style.color      = isEntrada ? '#fff' : 'var(--c-muted)';
-  document.getElementById('btn-tipo-antigo').style.background  = !isEntrada ? 'var(--c-amber)' : 'transparent';
-  document.getElementById('btn-tipo-antigo').style.color       = !isEntrada ? '#fff' : 'var(--c-muted)';
+  // Cores por tipo
+  const CORES = {
+    entrada:  {bg:'var(--c-accent)',  txt:'#fff', border:'var(--c-accent)'},
+    cadastro: {bg:'var(--c-green)',   txt:'#fff', border:'var(--c-green)'},
+    antigo:   {bg:'var(--c-amber)',   txt:'#fff', border:'var(--c-amber)'},
+  };
+
+  // Reset todos os botões
+  ['entrada','cadastro','antigo'].forEach(t => {
+    const btn = document.getElementById('btn-tipo-'+t);
+    if(!btn) return;
+    btn.style.background = tipo===t ? CORES[t].bg : 'transparent';
+    btn.style.color      = tipo===t ? CORES[t].txt : 'var(--c-muted)';
+  });
 
   // Toggle campos
-  document.getElementById('fields-entrada').style.display = isEntrada ? '' : 'none';
-  document.getElementById('fields-antigo').style.display  = !isEntrada ? '' : 'none';
+  document.getElementById('fields-entrada').style.display  = tipo==='entrada'  ? '' : 'none';
+  document.getElementById('fields-cadastro').style.display = tipo==='cadastro' ? '' : 'none';
+  document.getElementById('fields-antigo').style.display   = tipo==='antigo'   ? '' : 'none';
 
   // Borda do card
-  document.getElementById('metal-form-card').style.borderTop = isEntrada
-    ? '2px solid var(--c-accent)'
-    : '2px solid var(--c-amber)';
+  document.getElementById('metal-form-card').style.borderTop = `2px solid ${CORES[tipo].bg}`;
 
-  // Botão de submit
+  // Botão submit
   const btn = document.getElementById('metal-submit-btn');
-  btn.style.background = isEntrada ? 'var(--c-accent)' : 'var(--c-amber)';
-  btn.innerHTML = isEntrada
-    ? '<i class="ti ti-arrow-down-circle"></i> Confirmar entrada'
-    : '<i class="ti ti-flame"></i> Confirmar saída — Antigo';
+  btn.style.background = CORES[tipo].bg;
+  const labels = {
+    entrada:  '<i class="ti ti-arrow-down-circle"></i> Confirmar entrada',
+    cadastro: '<i class="ti ti-clipboard-check"></i> Confirmar cadastro',
+    antigo:   '<i class="ti ti-flame"></i> Confirmar saída — Antigo',
+  };
+  btn.innerHTML = labels[tipo];
 
-  // Observação placeholder
-  document.getElementById('metal-obs').placeholder = isEntrada
-    ? 'Ex: lote da Luciana, anéis antigos...'
-    : 'Ex: colar feio, pulseira danificada...';
+  // Placeholder observação
+  const placeholders = {
+    entrada:  'Ex: lote da Luciana, anéis antigos...',
+    cadastro: 'Ex: anéis lote 3, pulseiras...',
+    antigo:   'Ex: colar feio, pulseira danificada...',
+  };
+  document.getElementById('metal-obs').placeholder = placeholders[tipo];
 
-  if(!isEntrada) updateAntigoDispo();
+  if(tipo==='antigo')   updateAntigoDispo();
+  if(tipo==='cadastro') updateCadastroDispo();
 }
 
 function metalTipoChanged(){
-  if(metalFormTipo === 'antigo') updateAntigoDispo();
+  if(metalFormTipo === 'antigo')   updateAntigoDispo();
+  if(metalFormTipo === 'cadastro') updateCadastroDispo();
 }
 
 function submitMetalForm(){
-  if(metalFormTipo === 'entrada') salvarEntradaMetal();
-  else confirmarBaixaAntigo();
+  if(metalFormTipo === 'entrada')  salvarEntradaMetal();
+  if(metalFormTipo === 'cadastro') confirmarCadastroMetal();
+  if(metalFormTipo === 'antigo')   confirmarBaixaAntigo();
 }
 
 // ── Saída Antigo ─────────────────────────────────────
@@ -2380,6 +2435,57 @@ function updateAntigoPreview(){
   document.getElementById('antigo-preview-baixa').textContent = peso > 0 ? peso.toFixed(2)+'g' : '— g';
   document.getElementById('antigo-preview-resta').textContent = peso > 0 ? resta.toFixed(2)+'g' : '— g';
   document.getElementById('antigo-preview-resta').style.color = resta < 0 ? 'var(--c-red)' : 'var(--c-green)';
+}
+
+// ── Cadastro (abate do saldo) ─────────────────────────
+function updateCadastroDispo(){
+  const metal = document.getElementById('metal-tipo').value;
+  const saldo = calcSaldoTotal(metal);
+  const el    = document.getElementById('cadastro-saldo-disp');
+  if(!el) return;
+  el.textContent = saldo.toFixed(2) + 'g';
+  el.style.color = saldo > 0 ? 'var(--c-green)' : 'var(--c-red)';
+  updateCadastroPreview();
+}
+
+function updateCadastroPreview(){
+  const metal = document.getElementById('metal-tipo').value;
+  const saldo = calcSaldoTotal(metal);
+  const peso  = parseFloat(document.getElementById('cadastro-peso')?.value) || 0;
+  const resta = saldo - peso;
+  const el    = document.getElementById('cadastro-preview-resta');
+  if(!el) return;
+  el.textContent = peso > 0 ? resta.toFixed(2)+'g' : '— g';
+  el.style.color = resta < 0 ? 'var(--c-red)' : 'var(--c-green)';
+}
+
+async function confirmarCadastroMetal(){
+  const data  = document.getElementById('metal-date').value;
+  const metal = document.getElementById('metal-tipo').value;
+  const peso  = parseFloat(document.getElementById('cadastro-peso').value);
+  const obs   = document.getElementById('metal-obs').value.trim();
+  const saldo = calcSaldoTotal(metal);
+
+  if(!data)               { shake('metal-date');     toast('Selecione a data.','amber'); return; }
+  if(isNaN(peso)||peso<=0){ shake('cadastro-peso');  toast('Informe o peso cadastrado.','amber'); return; }
+  if(peso > saldo)        { shake('cadastro-peso');  toast(`Saldo insuficiente. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
+
+  const entrada = {
+    id: Date.now(), data, metal,
+    tipo: 'cadastro',
+    origem: 'cadastro',
+    peso,
+    chegou: 0, cadastrado: 0, sobrou: 0,
+    obs: obs || 'Cadastro no sistema',
+    createdAt: Date.now()
+  };
+  const { doc, setDoc } = window._fbModules;
+  await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
+  document.getElementById('cadastro-peso').value = '';
+  document.getElementById('metal-obs').value     = '';
+  document.getElementById('cadastro-preview-resta').textContent = '— g';
+  updateCadastroDispo();
+  toast('Cadastro registrado!','green');
 }
 
 async function confirmarBaixaAntigo(){
@@ -2433,15 +2539,14 @@ function salvarEntradaMetal(){
 
   if(!data)          { shake('metal-date');    toast('Selecione a data.','amber');           return; }
   if(isNaN(chegou) || chegou <= 0) { shake('metal-chegou'); toast('Informe o peso que chegou.','amber'); return; }
-  if(cadastrado > chegou){ shake('metal-cadastrado'); toast('Cadastrado não pode ser maior que o que chegou.','amber'); return; }
 
-  // Busca saldo do dia anterior (mesmo metal+origem, data < data atual)
-  const saldoAnterior = METAIS
-    .filter(e => e.metal===metal && e.origem===origem && e.data < data)
-    .reduce((acc, e) => acc + e.chegou - e.cadastrado, 0);
-
-  const sobrou = chegou - cadastrado;
-  const entrada = { id: Date.now(), data, metal, origem, chegou, cadastrado, sobrou, obs, createdAt: Date.now() };
+  const entrada = {
+    id: Date.now(), data, metal, origem,
+    tipo: 'entrada',
+    chegou, peso: chegou,
+    cadastrado: 0, sobrou: chegou,
+    obs, createdAt: Date.now()
+  };
 
   const { doc, setDoc } = window._fbModules;
   setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
@@ -2453,17 +2558,18 @@ function salvarEntradaMetal(){
   toast('Entrada registrada!');
 }
 
+
 // ── KPIs: saldo atual por metal ──
 function renderMetalKPIs(){
   const metais = ['ouro','prata','platina'];
   const el = document.getElementById('metal-kpis');
 
   const cards = metais.map(m => {
-    const cfg        = METAL_CFG[m];
-    const saldo      = calcSaldoTotal(m);
-    const secondSaldo= METAIS.filter(e=>e.metal===m&&e.origem==='second').reduce((a,e)=>a+(e.chegou||0)-(e.cadastrado||0),0);
-    const scrapSaldo = METAIS.filter(e=>e.metal===m&&e.origem==='scrap').reduce((a,e)=>a+(e.chegou||0)-(e.cadastrado||0),0);
-    const antigoTotal= METAIS.filter(e=>e.metal===m&&e.origem==='antigo').reduce((a,e)=>a+(e.peso||0),0);
+    const cfg         = METAL_CFG[m];
+    const saldo       = calcSaldoTotal(m);
+    const totalChegou = METAIS.filter(e=>e.metal===m&&e.tipo==='entrada').reduce((a,e)=>a+(e.chegou||0),0);
+    const totalCad    = METAIS.filter(e=>e.metal===m&&e.tipo==='cadastro').reduce((a,e)=>a+(e.peso||0),0);
+    const totalAntigo = METAIS.filter(e=>e.metal===m&&e.tipo==='antigo').reduce((a,e)=>a+(e.peso||0),0);
     return `<div class="kpi" style="border-top:2px solid ${cfg.dot};">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div class="kpi-label">${cfg.label}</div>
@@ -2471,9 +2577,9 @@ function renderMetalKPIs(){
       </div>
       <div class="kpi-value" style="font-size:26px;">${saldo.toFixed(2)}<span style="font-size:14px;font-weight:400;color:var(--c-muted);margin-left:4px;">g</span></div>
       <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:11px;color:var(--c-muted);">Second: <strong style="color:var(--c-accent);">${secondSaldo.toFixed(2)}g</strong></span>
-        <span style="font-size:11px;color:var(--c-muted);">Scrap: <strong style="color:var(--c-green);">${scrapSaldo.toFixed(2)}g</strong></span>
-        ${antigoTotal>0?`<span style="font-size:11px;color:var(--c-muted);">Antigo: <strong style="color:var(--c-amber);">${antigoTotal.toFixed(2)}g</strong></span>`:''}
+        <span style="font-size:11px;color:var(--c-muted);">Chegou: <strong style="color:var(--c-text);">${totalChegou.toFixed(2)}g</strong></span>
+        <span style="font-size:11px;color:var(--c-muted);">Cadastrado: <strong style="color:var(--c-accent);">${totalCad.toFixed(2)}g</strong></span>
+        ${totalAntigo>0?`<span style="font-size:11px;color:var(--c-muted);">Antigo: <strong style="color:var(--c-amber);">${totalAntigo.toFixed(2)}g</strong></span>`:''}
       </div>
       <div class="kpi-sub" style="margin-top:4px;">saldo em estoque</div>
     </div>`;
@@ -2488,8 +2594,12 @@ function renderMetalHistorico(){
   const filterOrigem = document.getElementById('metal-filter-origem')?.value || 'todos';
 
   let lista = [...METAIS].sort((a,b)=> a.data > b.data ? -1 : 1);
-  if(filterTipo   !== 'todos') lista = lista.filter(e=>e.metal  ===filterTipo);
-  if(filterOrigem !== 'todos') lista = lista.filter(e=>e.origem===filterOrigem);
+  if(filterTipo   !== 'todos') lista = lista.filter(e=>e.metal===filterTipo);
+  if(filterOrigem !== 'todos'){
+    if(filterOrigem==='cadastro') lista = lista.filter(e=>e.tipo==='cadastro');
+    else if(filterOrigem==='antigo') lista = lista.filter(e=>e.tipo==='antigo');
+    else lista = lista.filter(e=>e.origem===filterOrigem && e.tipo==='entrada');
+  }
 
   const tbody = document.getElementById('metal-tbody');
   const empty = document.getElementById('metal-empty');
@@ -2513,42 +2623,50 @@ function renderMetalHistorico(){
     const [y,m,d]   = e.data.split('-');
     const dataFmt   = `${d}/${m}/${y}`;
 
-    if(isAntigo){
+    const tipo = e.tipo || (isAntigo ? 'antigo' : 'entrada');
+    const deleteBtn = `<button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;"><i class="ti ti-trash" style="font-size:13px;"></i></button>`;
+    const obsRow = e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : '';
+
+    if(tipo === 'antigo'){
       return `<tr style="background:rgba(245,166,35,.04);">
-        <td class="td-cell" style="color:var(--c-text);white-space:nowrap;">${dataFmt}</td>
+        <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
         <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
-        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(245,166,35,.15);color:var(--c-amber);">🔥 ANTIGO</span></td>
+        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(245,166,35,.15);color:var(--c-amber);">🔥 Antigo</span></td>
         <td class="td-num" style="color:var(--c-muted);">—</td>
         <td class="td-num" style="color:var(--c-muted);">—</td>
         <td class="td-num" style="color:var(--c-muted);">—</td>
         <td class="td-num" style="color:var(--c-amber);font-weight:700;">-${(e.peso||0).toFixed(2)}g</td>
         <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
-        <td class="td-cell" style="text-align:right;">
-          <button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;">
-            <i class="ti ti-trash" style="font-size:13px;"></i>
-          </button>
-        </td>
-      </tr>
-      ${e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
+        <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
+      </tr>${obsRow}`;
     }
 
-    const sobrouColor = e.sobrou < 0 ? 'var(--c-red)' : e.sobrou === 0 ? 'var(--c-muted)' : 'var(--c-green)';
+    if(tipo === 'cadastro'){
+      return `<tr style="background:rgba(34,201,135,.04);">
+        <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
+        <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
+        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(34,201,135,.15);color:var(--c-green);">✓ Cadastro</span></td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-green);font-weight:700;">${(e.peso||0).toFixed(2)}g</td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
+        <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
+      </tr>${obsRow}`;
+    }
+
+    // Entrada
     return `<tr>
-      <td class="td-cell" style="color:var(--c-text);white-space:nowrap;">${dataFmt}</td>
+      <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
       <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
       <td class="td-cell"><span class="origem-tag ${ocfg.cls}">${ocfg.label||e.origem}</span></td>
-      <td class="td-num">${(e.chegou||0).toFixed(2)}g</td>
-      <td class="td-num">${(e.cadastrado||0).toFixed(2)}g</td>
-      <td class="td-num" style="color:${sobrouColor};font-weight:600;">${(e.sobrou||0).toFixed(2)}g</td>
+      <td class="td-num">${(e.chegou||e.peso||0).toFixed(2)}g</td>
+      <td class="td-num" style="color:var(--c-muted);">—</td>
+      <td class="td-num" style="color:var(--c-muted);">—</td>
       <td class="td-num" style="color:var(--c-muted);">—</td>
       <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
-      <td class="td-cell" style="text-align:right;">
-        <button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;">
-          <i class="ti ti-trash" style="font-size:13px;"></i>
-        </button>
-      </td>
-    </tr>
-    ${e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
+      <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
+    </tr>${obsRow}`;
   }).join('');
 }
 
