@@ -848,6 +848,7 @@ tbody tr:last-child{border-bottom:none;}
               <div class="form-group">
                 <label class="form-label">Metal</label>
                 <select id="metal-tipo" onchange="metalTipoChanged()">
+                  <option value="" disabled selected>Selecione</option>
                   <option value="ouro">Ouro</option>
                   <option value="prata">Prata</option>
                   <option value="platina">Platina</option>
@@ -861,6 +862,7 @@ tbody tr:last-child{border-bottom:none;}
                 <div class="form-group">
                   <label class="form-label">Origem</label>
                   <select id="metal-origem">
+                    <option value="" disabled selected>Selecione</option>
                     <option value="second">Second Hand</option>
                     <option value="scrap">Scrap</option>
                   </select>
@@ -892,6 +894,7 @@ tbody tr:last-child{border-bottom:none;}
                 <div class="form-group">
                   <label class="form-label">Origem do que foi cadastrado</label>
                   <select id="cadastro-origem" onchange="updateCadastroDispo()">
+                    <option value="" disabled selected>Selecione</option>
                     <option value="second">Second Hand</option>
                     <option value="scrap">Scrap</option>
                   </select>
@@ -2486,6 +2489,8 @@ async function confirmarCadastroMetal(){
   const saldo  = calcSaldoPorOrigem(metal, origem);
 
   if(!data)               { shake('metal-date');    toast('Selecione a data.','amber'); return; }
+  if(!metal)             { shake('metal-tipo');    toast('Selecione o metal.','amber'); return; }
+  if(!origem)            { shake('cadastro-origem'); toast('Selecione a origem.','amber'); return; }
   if(isNaN(peso)||peso<=0){ shake('cadastro-peso'); toast('Informe o peso cadastrado.','amber'); return; }
   if(peso > saldo)        { shake('cadastro-peso'); toast(`Saldo insuficiente de ${origem==='second'?'Second Hand':'Scrap'}. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
 
@@ -2511,7 +2516,8 @@ async function confirmarBaixaAntigo(){
   const obs   = document.getElementById('metal-obs').value.trim(); // campo compartilhado
   const saldo = calcSaldoTotal(metal);
 
-  if(!data)              { shake('antigo-date'); toast('Selecione a data.','amber'); return; }
+  if(!data)              { shake('metal-date'); toast('Selecione a data.','amber'); return; }
+  if(!metal)             { shake('metal-tipo'); toast('Selecione o metal.','amber'); return; }
   if(isNaN(peso)||peso<=0){ shake('antigo-peso'); toast('Informe o peso.','amber'); return; }
   if(peso > saldo)       { shake('antigo-peso'); toast(`Saldo insuficiente. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
 
@@ -2549,7 +2555,9 @@ function salvarEntradaMetal(){
   const cadastrado= parseFloat(document.getElementById('metal-cadastrado').value) || 0;
   const obs       = document.getElementById('metal-obs').value.trim(); // campo compartilhado
 
-  if(!data)          { shake('metal-date');    toast('Selecione a data.','amber');           return; }
+  if(!data)          { shake('metal-date');    toast('Selecione a data.','amber'); return; }
+  if(!metal)         { shake('metal-tipo');    toast('Selecione o metal.','amber'); return; }
+  if(!origem)        { shake('metal-origem');  toast('Selecione a origem.','amber'); return; }
   if(isNaN(chegou) || chegou <= 0) { shake('metal-chegou'); toast('Informe o peso que chegou.','amber'); return; }
 
   const entrada = {
@@ -2848,14 +2856,14 @@ function renderMetalChart(metal){
 function resetMetalForm(){
   // Zera todos os campos incluindo data e metal
   document.getElementById('metal-date').value    = '';
-  document.getElementById('metal-tipo').value    = 'ouro';
-  document.getElementById('metal-origem').value  = 'second';
+  document.getElementById('metal-tipo').value    = '';
+  document.getElementById('metal-origem').value  = '';
   document.getElementById('metal-chegou').value  = '';
   document.getElementById('metal-cadastrado').value = '';
   document.getElementById('metal-obs').value     = '';
   const cp = document.getElementById('cadastro-peso');  if(cp) cp.value='';
   const ap = document.getElementById('antigo-peso');    if(ap) ap.value='';
-  const co = document.getElementById('cadastro-origem');if(co) co.value='second';
+  const co = document.getElementById('cadastro-origem');if(co) co.value='';
   const sp = document.getElementById('metal-sobrou-preview');
   if(sp){ sp.textContent='— g'; sp.style.color='var(--c-green)'; }
   const cr = document.getElementById('cadastro-preview-resta');
