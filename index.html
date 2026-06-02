@@ -813,7 +813,7 @@ tbody tr:last-child{border-bottom:none;}
       <div id="page-metais" class="page">
 
         <!-- KPIs saldo atual por metal -->
-        <div class="grid-3 mb-20" id="metal-kpis"></div>
+        <div id="metal-kpis" class="mb-20" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:start;"></div>
 
         <div class="grid-2 mb-20">
 
@@ -907,6 +907,7 @@ tbody tr:last-child{border-bottom:none;}
                 <option value="todos">Todas as origens</option>
                 <option value="second">Second Hand</option>
                 <option value="scrap">Scrap</option>
+                <option value="antigo">→ Antigo</option>
               </select>
             </div>
           </div>
@@ -921,6 +922,7 @@ tbody tr:last-child{border-bottom:none;}
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Chegou</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Sobrou</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">→ Antigo</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Saldo acum.</th>
                   <th style="padding:8px 10px;"></th>
                 </tr>
@@ -950,6 +952,64 @@ tbody tr:last-child{border-bottom:none;}
   </div><!-- /main -->
 </div><!-- /app -->
 </div><!-- /main-app -->
+
+<!-- ══════ MODAL: BAIXA ANTIGO ══════ -->
+<div class="modal-overlay" id="modal-antigo">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-flame" style="color:var(--c-amber);"></i> Baixa para Antigo</div>
+      <button class="modal-close" onclick="closeModal('modal-antigo')">&times;</button>
+    </div>
+    <div style="font-size:13px;color:var(--c-muted);margin-bottom:16px;">
+      Registra a saída de metal do estoque para o antigo — fundição ou fabricação de novas joias.
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Data</label>
+        <input type="date" id="antigo-date" style="cursor:pointer;"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Metal</label>
+        <select id="antigo-tipo" onchange="updateAntigoDispo()">
+          <option value="ouro">Ouro</option>
+          <option value="prata">Prata</option>
+          <option value="platina">Platina</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Saldo disponível em estoque</label>
+      <div style="background:var(--c-border);border-radius:var(--r);padding:10px 14px;font-size:14px;font-weight:700;" id="antigo-saldo-disp">— g</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Peso enviado para o Antigo (g) *</label>
+      <input type="number" id="antigo-peso" placeholder="0.00" min="0.01" step="0.01"
+        style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"
+        oninput="updateAntigoPreview()"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observação (opcional)</label>
+      <input type="text" id="antigo-obs" placeholder="Ex: colar feio, pulseira danificada..."/>
+    </div>
+    <!-- preview saldo restante -->
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div style="flex:1;background:var(--c-red-dim);border:1px solid rgba(240,82,82,.2);border-radius:var(--r);padding:10px 14px;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">Vai para o Antigo</div>
+        <div style="font-size:16px;font-weight:700;color:var(--c-red);" id="antigo-preview-baixa">— g</div>
+      </div>
+      <div style="flex:1;background:var(--c-green-dim);border:1px solid rgba(34,201,135,.2);border-radius:var(--r);padding:10px 14px;">
+        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">Restante em estoque</div>
+        <div style="font-size:16px;font-weight:700;color:var(--c-green);" id="antigo-preview-resta">— g</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn-ghost" onclick="closeModal('modal-antigo')">Cancelar</button>
+      <button class="btn" style="background:var(--c-amber);" onclick="confirmarBaixaAntigo()">
+        <i class="ti ti-flame"></i>Confirmar baixa
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════ MODAL: USUÁRIO ══════ -->
 <div class="modal-overlay" id="modal-usuario">
@@ -2253,11 +2313,79 @@ const ORIGEM_CFG = {
   scrap: {label:'Scrap',       cls:'origem-scrap'},
 };
 
-// ── Calc saldo acumulado por metal+origem até uma data ──
+// ── Calc saldo acumulado por metal (todas origens, menos baixas antigo) até data ──
 function calcSaldo(metal, origem, ateData){
-  return METAIS
-    .filter(e => e.metal===metal && e.origem===origem && e.data <= ateData)
-    .reduce((acc, e) => acc + e.chegou - e.cadastrado, 0);
+  if(origem){
+    // Soma entradas da origem específica
+    return METAIS
+      .filter(e => e.metal===metal && e.origem===origem && e.data <= ateData)
+      .reduce((acc, e) => acc + (e.chegou||0) - (e.cadastrado||0), 0);
+  }
+  // Saldo total = todas entradas - todas baixas antigo
+  const entradas = METAIS
+    .filter(e => e.metal===metal && e.origem!=='antigo' && e.data <= ateData)
+    .reduce((acc, e) => acc + (e.chegou||0) - (e.cadastrado||0), 0);
+  const baixas = METAIS
+    .filter(e => e.metal===metal && e.origem==='antigo' && e.data <= ateData)
+    .reduce((acc, e) => acc + (e.peso||0), 0);
+  return entradas - baixas;
+}
+
+function calcSaldoTotal(metal){
+  const hoje = new Date().toISOString().split('T')[0];
+  return calcSaldo(metal, null, hoje);
+}
+
+// ── Modal Baixa Antigo ──────────────────────────────
+function openBaixaAntigo(){
+  document.getElementById('antigo-date').value = todayISO();
+  document.getElementById('antigo-peso').value = '';
+  document.getElementById('antigo-obs').value  = '';
+  updateAntigoDispo();
+  openModal('modal-antigo');
+}
+
+function updateAntigoDispo(){
+  const metal = document.getElementById('antigo-tipo').value;
+  const saldo = calcSaldoTotal(metal);
+  document.getElementById('antigo-saldo-disp').textContent = saldo.toFixed(2) + 'g';
+  document.getElementById('antigo-saldo-disp').style.color = saldo > 0 ? 'var(--c-green)' : 'var(--c-red)';
+  updateAntigoPreview();
+}
+
+function updateAntigoPreview(){
+  const metal  = document.getElementById('antigo-tipo').value;
+  const saldo  = calcSaldoTotal(metal);
+  const peso   = parseFloat(document.getElementById('antigo-peso').value) || 0;
+  const resta  = saldo - peso;
+  document.getElementById('antigo-preview-baixa').textContent = peso > 0 ? peso.toFixed(2)+'g' : '— g';
+  document.getElementById('antigo-preview-resta').textContent = peso > 0 ? resta.toFixed(2)+'g' : '— g';
+  document.getElementById('antigo-preview-resta').style.color = resta < 0 ? 'var(--c-red)' : 'var(--c-green)';
+}
+
+async function confirmarBaixaAntigo(){
+  const data  = document.getElementById('antigo-date').value;
+  const metal = document.getElementById('antigo-tipo').value;
+  const peso  = parseFloat(document.getElementById('antigo-peso').value);
+  const obs   = document.getElementById('antigo-obs').value.trim();
+  const saldo = calcSaldoTotal(metal);
+
+  if(!data)              { shake('antigo-date'); toast('Selecione a data.','amber'); return; }
+  if(isNaN(peso)||peso<=0){ shake('antigo-peso'); toast('Informe o peso.','amber'); return; }
+  if(peso > saldo)       { shake('antigo-peso'); toast(`Saldo insuficiente. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
+
+  const entrada = {
+    id: Date.now(), data, metal,
+    origem: 'antigo',
+    peso,       // campo específico de baixa
+    chegou: 0, cadastrado: 0, sobrou: 0,
+    obs: obs || 'Baixa para Antigo',
+    createdAt: Date.now()
+  };
+  const { doc, setDoc } = window._fbModules;
+  await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
+  closeModal('modal-antigo');
+  toast('Baixa para Antigo registrada!','amber');
 }
 
 // ── Preview do campo "sobrou" ──
@@ -2305,29 +2433,38 @@ function salvarEntradaMetal(){
 // ── KPIs: saldo atual por metal ──
 function renderMetalKPIs(){
   const metais = ['ouro','prata','platina'];
-  const origensLabel = {second:'Second', scrap:'Scrap'};
   const el = document.getElementById('metal-kpis');
 
-  el.innerHTML = metais.map(m => {
-    const cfg = METAL_CFG[m];
-    const totalChegou = METAIS.filter(e=>e.metal===m).reduce((a,e)=>a+e.chegou,0);
-    const totalCad    = METAIS.filter(e=>e.metal===m).reduce((a,e)=>a+e.cadastrado,0);
-    const saldo       = totalChegou - totalCad;
-    const secondSaldo = METAIS.filter(e=>e.metal===m&&e.origem==='second').reduce((a,e)=>a+(e.chegou-e.cadastrado),0);
-    const scrapSaldo  = METAIS.filter(e=>e.metal===m&&e.origem==='scrap').reduce((a,e)=>a+(e.chegou-e.cadastrado),0);
+  const cards = metais.map(m => {
+    const cfg        = METAL_CFG[m];
+    const saldo      = calcSaldoTotal(m);
+    const secondSaldo= METAIS.filter(e=>e.metal===m&&e.origem==='second').reduce((a,e)=>a+(e.chegou||0)-(e.cadastrado||0),0);
+    const scrapSaldo = METAIS.filter(e=>e.metal===m&&e.origem==='scrap').reduce((a,e)=>a+(e.chegou||0)-(e.cadastrado||0),0);
+    const antigoTotal= METAIS.filter(e=>e.metal===m&&e.origem==='antigo').reduce((a,e)=>a+(e.peso||0),0);
     return `<div class="kpi" style="border-top:2px solid ${cfg.dot};">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div class="kpi-label">${cfg.label}</div>
         <span class="metal-tag ${cfg.cls}">${cfg.label.toUpperCase()}</span>
       </div>
       <div class="kpi-value" style="font-size:26px;">${saldo.toFixed(2)}<span style="font-size:14px;font-weight:400;color:var(--c-muted);margin-left:4px;">g</span></div>
-      <div style="margin-top:8px;display:flex;gap:12px;">
+      <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;">
         <span style="font-size:11px;color:var(--c-muted);">Second: <strong style="color:var(--c-accent);">${secondSaldo.toFixed(2)}g</strong></span>
         <span style="font-size:11px;color:var(--c-muted);">Scrap: <strong style="color:var(--c-green);">${scrapSaldo.toFixed(2)}g</strong></span>
+        ${antigoTotal>0?`<span style="font-size:11px;color:var(--c-muted);">Antigo: <strong style="color:var(--c-amber);">${antigoTotal.toFixed(2)}g</strong></span>`:''}
       </div>
       <div class="kpi-sub" style="margin-top:4px;">saldo em estoque</div>
     </div>`;
   }).join('');
+
+  // Botão de baixa separado no canto
+  const btnBaixa = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:0 4px;">
+    <button class="btn" style="background:var(--c-amber);white-space:nowrap;flex-direction:column;gap:4px;padding:14px 18px;" onclick="openBaixaAntigo()">
+      <i class="ti ti-flame" style="font-size:20px;"></i>
+      <span style="font-size:11px;font-weight:600;">Baixa<br>Antigo</span>
+    </button>
+  </div>`;
+
+  el.innerHTML = cards + btnBaixa;
 }
 
 // ── Tabela de histórico ──
@@ -2352,19 +2489,43 @@ function renderMetalHistorico(){
   // Calcula saldo acumulado por metal+origem em ordem cronológica
   // Para exibir, recalcula saldo acum para cada linha
   tbody.innerHTML = lista.map(e => {
-    const cfg  = METAL_CFG[e.metal]   || {};
-    const ocfg = ORIGEM_CFG[e.origem] || {};
-    const saldoAcum = calcSaldo(e.metal, e.origem, e.data);
+    const cfg     = METAL_CFG[e.metal]   || {};
+    const isAntigo= e.origem === 'antigo';
+    const ocfg    = isAntigo
+      ? {label:'→ Antigo', cls:''}
+      : (ORIGEM_CFG[e.origem] || {label:e.origem, cls:''});
+    const saldoAcum = calcSaldo(e.metal, null, e.data);
     const [y,m,d]   = e.data.split('-');
     const dataFmt   = `${d}/${m}/${y}`;
+
+    if(isAntigo){
+      return `<tr style="background:rgba(245,166,35,.04);">
+        <td class="td-cell" style="color:var(--c-text);white-space:nowrap;">${dataFmt}</td>
+        <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
+        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(245,166,35,.15);color:var(--c-amber);">🔥 ANTIGO</span></td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-muted);">—</td>
+        <td class="td-num" style="color:var(--c-amber);font-weight:700;">-${(e.peso||0).toFixed(2)}g</td>
+        <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
+        <td class="td-cell" style="text-align:right;">
+          <button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;">
+            <i class="ti ti-trash" style="font-size:13px;"></i>
+          </button>
+        </td>
+      </tr>
+      ${e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
+    }
+
     const sobrouColor = e.sobrou < 0 ? 'var(--c-red)' : e.sobrou === 0 ? 'var(--c-muted)' : 'var(--c-green)';
     return `<tr>
       <td class="td-cell" style="color:var(--c-text);white-space:nowrap;">${dataFmt}</td>
       <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
       <td class="td-cell"><span class="origem-tag ${ocfg.cls}">${ocfg.label||e.origem}</span></td>
-      <td class="td-num">${e.chegou.toFixed(2)}g</td>
-      <td class="td-num">${e.cadastrado.toFixed(2)}g</td>
-      <td class="td-num" style="color:${sobrouColor};font-weight:600;">${e.sobrou.toFixed(2)}g</td>
+      <td class="td-num">${(e.chegou||0).toFixed(2)}g</td>
+      <td class="td-num">${(e.cadastrado||0).toFixed(2)}g</td>
+      <td class="td-num" style="color:${sobrouColor};font-weight:600;">${(e.sobrou||0).toFixed(2)}g</td>
+      <td class="td-num" style="color:var(--c-muted);">—</td>
       <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
       <td class="td-cell" style="text-align:right;">
         <button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;">
@@ -2372,7 +2533,7 @@ function renderMetalHistorico(){
         </button>
       </td>
     </tr>
-    ${e.obs ? `<tr style="border-bottom:none;"><td colspan="8" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
+    ${e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
   }).join('');
 }
 
@@ -2406,7 +2567,8 @@ function renderMetalChart(metal){
 
   const secondData  = days.map(d => calcSaldo(metal,'second',d));
   const scrapData   = days.map(d => calcSaldo(metal,'scrap',d));
-  const hasData     = secondData.some(v=>v>0) || scrapData.some(v=>v>0);
+  const totalData   = days.map(d => calcSaldo(metal, null, d));
+  const hasData     = secondData.some(v=>v>0) || scrapData.some(v=>v>0) || totalData.some(v=>v>0);
 
   if(!hasData){
     canvas.style.display='none';
@@ -2424,6 +2586,19 @@ function renderMetalChart(metal){
     data:{
       labels,
       datasets:[
+        {
+          label:'Saldo total',
+          data: totalData,
+          borderColor:'rgba(245,166,35,.8)',
+          backgroundColor:'rgba(245,166,35,.04)',
+          borderWidth:2,
+          borderDash:[5,4],
+          pointRadius:3,
+          pointHoverRadius:5,
+          pointBackgroundColor:'var(--c-amber)',
+          fill:false,
+          tension:.35,
+        },
         {
           label:'Second Hand',
           data: secondData,
