@@ -817,11 +817,21 @@ tbody tr:last-child{border-bottom:none;}
 
         <div class="grid-2 mb-20">
 
-          <!-- FORMULÁRIO DE ENTRADA -->
-          <div class="card" style="border-top:2px solid var(--c-accent);">
-            <div class="sec-head">
-              <span class="sec-title"><i class="ti ti-arrow-down-circle" style="color:var(--c-accent);margin-right:6px;"></i>Registrar entrada</span>
+          <!-- FORMULÁRIO ÚNICO -->
+          <div class="card" id="metal-form-card">
+            <!-- Seletor de tipo -->
+            <div style="display:flex;gap:0;margin-bottom:18px;background:var(--c-bg);border-radius:var(--r);padding:3px;border:1px solid var(--c-border);">
+              <button id="btn-tipo-entrada" onclick="setMetalFormTipo('entrada')"
+                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--c-accent);color:#fff;">
+                <i class="ti ti-arrow-down-circle"></i> Entrada
+              </button>
+              <button id="btn-tipo-antigo" onclick="setMetalFormTipo('antigo')"
+                style="flex:1;padding:8px;border:none;border-radius:7px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--c-muted);">
+                <i class="ti ti-flame"></i> Saída — Antigo
+              </button>
             </div>
+
+            <!-- Campos comuns -->
             <div class="form-row">
               <div class="form-group">
                 <label class="form-label">Data</label>
@@ -829,102 +839,77 @@ tbody tr:last-child{border-bottom:none;}
               </div>
               <div class="form-group">
                 <label class="form-label">Metal</label>
-                <select id="metal-tipo">
+                <select id="metal-tipo" onchange="metalTipoChanged()">
                   <option value="ouro">Ouro</option>
                   <option value="prata">Prata</option>
                   <option value="platina">Platina</option>
                 </select>
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Origem</label>
-                <select id="metal-origem">
-                  <option value="second">Second Hand</option>
-                  <option value="scrap">Scrap</option>
-                </select>
+
+            <!-- Campos só de ENTRADA -->
+            <div id="fields-entrada">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Origem</label>
+                  <select id="metal-origem">
+                    <option value="second">Second Hand</option>
+                    <option value="scrap">Scrap</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Chegou (g)</label>
+                  <input type="number" id="metal-chegou" placeholder="0.00" min="0" step="0.01"
+                    style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateSobrouPreview()"/>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Chegou (g)</label>
-                <input type="number" id="metal-chegou" placeholder="0.00" min="0" step="0.01"
-                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"/>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Cadastrado no sistema (g)</label>
-                <input type="number" id="metal-cadastrado" placeholder="0.00" min="0" step="0.01"
-                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"/>
-              </div>
-              <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
-                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;font-size:13px;">
-                  <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Sobrou</span>
-                  <span id="metal-sobrou-preview" style="font-weight:700;color:var(--c-green);">— g</span>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Cadastrado no sistema (g)</label>
+                  <input type="number" id="metal-cadastrado" placeholder="0.00" min="0" step="0.01"
+                    style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateSobrouPreview()"/>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                  <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
+                    <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Sobrou</span>
+                    <span id="metal-sobrou-preview" style="font-weight:700;color:var(--c-green);">— g</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Observação (opcional)</label>
-              <input type="text" id="metal-obs" placeholder="Ex: lote da Luciana, anéis antigos..."/>
-            </div>
-            <button class="btn" onclick="salvarEntradaMetal()" style="width:100%;justify-content:center;background:var(--c-accent);">
-              <i class="ti ti-arrow-down-circle"></i>Confirmar entrada
-            </button>
-          </div>
 
-          <!-- FORMULÁRIO DE SAÍDA ANTIGO -->
-          <div class="card" style="border-top:2px solid var(--c-amber);">
-            <div class="sec-head">
-              <span class="sec-title"><i class="ti ti-flame" style="color:var(--c-amber);margin-right:6px;"></i>Saída para Antigo</span>
-            </div>
-            <div style="font-size:12px;color:var(--c-muted);margin-bottom:14px;line-height:1.5;">
-              Metal que vai para fundição ou fabricação de novas joias — não volta ao estoque.
-            </div>
-            <div class="form-row">
+            <!-- Campos só de ANTIGO -->
+            <div id="fields-antigo" style="display:none;">
               <div class="form-group">
-                <label class="form-label">Data</label>
-                <input type="date" id="antigo-date" style="cursor:pointer;"/>
+                <label class="form-label">Saldo disponível em estoque</label>
+                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="antigo-saldo-disp">— g</div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Metal</label>
-                <select id="antigo-tipo" onchange="updateAntigoDispo()">
-                  <option value="ouro">Ouro</option>
-                  <option value="prata">Prata</option>
-                  <option value="platina">Platina</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Saldo disponível em estoque</label>
-              <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="antigo-saldo-disp">— g</div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Peso enviado para Antigo (g) *</label>
-                <input type="number" id="antigo-peso" placeholder="0.00" min="0.01" step="0.01"
-                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"
-                  oninput="updateAntigoPreview()"/>
-              </div>
-              <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
-                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;font-size:13px;">
-                  <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Restante</span>
-                  <span id="antigo-preview-resta" style="font-weight:700;color:var(--c-green);">— g</span>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Peso enviado para Antigo (g)</label>
+                  <input type="number" id="antigo-peso" placeholder="0.00" min="0.01" step="0.01"
+                    style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateAntigoPreview()"/>
+                </div>
+                <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                  <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
+                    <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Restante</span>
+                    <span id="antigo-preview-resta" style="font-weight:700;color:var(--c-green);">— g</span>
+                  </div>
                 </div>
               </div>
             </div>
+
             <div class="form-group">
               <label class="form-label">Observação (opcional)</label>
-              <input type="text" id="antigo-obs" placeholder="Ex: colar feio, pulseira danificada..."/>
+              <input type="text" id="metal-obs" placeholder="Ex: lote da Luciana, colar danificado..."/>
             </div>
-            <button class="btn" onclick="confirmarBaixaAntigo()" style="width:100%;justify-content:center;background:var(--c-amber);">
-              <i class="ti ti-flame"></i>Confirmar saída para Antigo
+            <button class="btn" id="metal-submit-btn" onclick="submitMetalForm()" style="width:100%;justify-content:center;">
+              <i class="ti ti-check"></i>Confirmar
             </button>
           </div>
-        </div>
 
-        <!-- GRÁFICO -->
-        <div class="grid-2 mb-20"><div style="display:none;"></div>
-          <div class="card" style="grid-column:1/-1;">
+          <!-- GRÁFICO -->
+          <div class="card">
             <div class="sec-head">
               <span class="sec-title">Saldo acumulado — últimos 14 dias</span>
               <div style="display:flex;gap:6px;">
@@ -939,7 +924,7 @@ tbody tr:last-child{border-bottom:none;}
               Nenhum dado registrado ainda
             </div>
           </div>
-        </div><!-- /chart grid -->
+        </div>
 
         <!-- HISTÓRICO -->
         <div class="card">
@@ -2329,9 +2314,58 @@ function calcSaldoTotal(metal){
   return calcSaldo(metal, null, hoje);
 }
 
-// ── Saída Antigo (inline form) ───────────────────────
+// ══════════════════════════════════════════
+// FORMULÁRIO ÚNICO DE METAL
+// ══════════════════════════════════════════
+
+let metalFormTipo = 'entrada'; // 'entrada' | 'antigo'
+
+function setMetalFormTipo(tipo){
+  metalFormTipo = tipo;
+  const isEntrada = tipo === 'entrada';
+
+  // Toggle visual dos botões
+  document.getElementById('btn-tipo-entrada').style.background = isEntrada ? 'var(--c-accent)' : 'transparent';
+  document.getElementById('btn-tipo-entrada').style.color      = isEntrada ? '#fff' : 'var(--c-muted)';
+  document.getElementById('btn-tipo-antigo').style.background  = !isEntrada ? 'var(--c-amber)' : 'transparent';
+  document.getElementById('btn-tipo-antigo').style.color       = !isEntrada ? '#fff' : 'var(--c-muted)';
+
+  // Toggle campos
+  document.getElementById('fields-entrada').style.display = isEntrada ? '' : 'none';
+  document.getElementById('fields-antigo').style.display  = !isEntrada ? '' : 'none';
+
+  // Borda do card
+  document.getElementById('metal-form-card').style.borderTop = isEntrada
+    ? '2px solid var(--c-accent)'
+    : '2px solid var(--c-amber)';
+
+  // Botão de submit
+  const btn = document.getElementById('metal-submit-btn');
+  btn.style.background = isEntrada ? 'var(--c-accent)' : 'var(--c-amber)';
+  btn.innerHTML = isEntrada
+    ? '<i class="ti ti-arrow-down-circle"></i> Confirmar entrada'
+    : '<i class="ti ti-flame"></i> Confirmar saída — Antigo';
+
+  // Observação placeholder
+  document.getElementById('metal-obs').placeholder = isEntrada
+    ? 'Ex: lote da Luciana, anéis antigos...'
+    : 'Ex: colar feio, pulseira danificada...';
+
+  if(!isEntrada) updateAntigoDispo();
+}
+
+function metalTipoChanged(){
+  if(metalFormTipo === 'antigo') updateAntigoDispo();
+}
+
+function submitMetalForm(){
+  if(metalFormTipo === 'entrada') salvarEntradaMetal();
+  else confirmarBaixaAntigo();
+}
+
+// ── Saída Antigo ─────────────────────────────────────
 function updateAntigoDispo(){
-  const metal = document.getElementById('antigo-tipo').value;
+  const metal = document.getElementById('metal-tipo').value;
   const saldo = calcSaldoTotal(metal);
   document.getElementById('antigo-saldo-disp').textContent = saldo.toFixed(2) + 'g';
   document.getElementById('antigo-saldo-disp').style.color = saldo > 0 ? 'var(--c-green)' : 'var(--c-red)';
@@ -2339,7 +2373,7 @@ function updateAntigoDispo(){
 }
 
 function updateAntigoPreview(){
-  const metal  = document.getElementById('antigo-tipo').value;
+  const metal  = document.getElementById('metal-tipo').value;
   const saldo  = calcSaldoTotal(metal);
   const peso   = parseFloat(document.getElementById('antigo-peso').value) || 0;
   const resta  = saldo - peso;
@@ -2349,10 +2383,10 @@ function updateAntigoPreview(){
 }
 
 async function confirmarBaixaAntigo(){
-  const data  = document.getElementById('antigo-date').value;
-  const metal = document.getElementById('antigo-tipo').value;
+  const data  = document.getElementById('metal-date').value;   // campo compartilhado
+  const metal = document.getElementById('metal-tipo').value;   // campo compartilhado
   const peso  = parseFloat(document.getElementById('antigo-peso').value);
-  const obs   = document.getElementById('antigo-obs').value.trim();
+  const obs   = document.getElementById('metal-obs').value.trim(); // campo compartilhado
   const saldo = calcSaldoTotal(metal);
 
   if(!data)              { shake('antigo-date'); toast('Selecione a data.','amber'); return; }
@@ -2371,7 +2405,7 @@ async function confirmarBaixaAntigo(){
   await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
   // Reset form
   document.getElementById('antigo-peso').value = '';
-  document.getElementById('antigo-obs').value  = '';
+  document.getElementById('metal-obs').value   = '';
   document.getElementById('antigo-preview-resta').textContent = '— g';
   document.getElementById('antigo-preview-resta').style.color = 'var(--c-green)';
   updateAntigoDispo();
@@ -2395,7 +2429,7 @@ function salvarEntradaMetal(){
   const origem    = document.getElementById('metal-origem').value;
   const chegou    = parseFloat(document.getElementById('metal-chegou').value);
   const cadastrado= parseFloat(document.getElementById('metal-cadastrado').value) || 0;
-  const obs       = document.getElementById('metal-obs').value.trim();
+  const obs       = document.getElementById('metal-obs').value.trim(); // campo compartilhado
 
   if(!data)          { shake('metal-date');    toast('Selecione a data.','amber');           return; }
   if(isNaN(chegou) || chegou <= 0) { shake('metal-chegou'); toast('Informe o peso que chegou.','amber'); return; }
@@ -2412,7 +2446,6 @@ function salvarEntradaMetal(){
   const { doc, setDoc } = window._fbModules;
   setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
 
-  // Limpa form mantendo data/metal/origem
   document.getElementById('metal-chegou').value    = '';
   document.getElementById('metal-cadastrado').value= '';
   document.getElementById('metal-obs').value       = '';
@@ -2642,23 +2675,8 @@ function renderMetalChart(metal){
 
 // ── Init da página de metais ──
 function initMetaisPage(){
-  // Entrada form
   document.getElementById('metal-date').value = todayISO();
-  ['metal-chegou','metal-cadastrado'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el && !el._listenerAdded){
-      el.addEventListener('input', updateSobrouPreview);
-      el._listenerAdded = true;
-    }
-  });
-  // Saída antigo form
-  document.getElementById('antigo-date').value = todayISO();
-  const antigoTipo = document.getElementById('antigo-tipo');
-  if(antigoTipo && !antigoTipo._listenerAdded){
-    antigoTipo.addEventListener('change', updateAntigoDispo);
-    antigoTipo._listenerAdded = true;
-  }
-  updateAntigoDispo();
+  setMetalFormTipo('entrada'); // garante estado inicial correto
   renderMetalKPIs();
   renderMetalHistorico();
   renderMetalChart('ouro');
