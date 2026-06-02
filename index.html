@@ -400,6 +400,10 @@ select option{background:var(--c-bg);}
 .origem-second{background:rgba(79,110,247,.12);color:var(--c-accent);}
 .origem-scrap {background:rgba(34,201,135,.12);color:var(--c-green);}
 .metal-chart-btn{transition:all .15s;}
+.th-sort{cursor:pointer;user-select:none;transition:color .15s;}
+.th-sort:hover{color:var(--c-text) !important;}
+.th-sort.asc::after{content:' ↑';font-size:10px;}
+.th-sort.desc::after{content:' ↓';font-size:10px;}
 .active-chart-btn{border-color:var(--c-accent)!important;color:var(--c-accent)!important;background:var(--c-accent-dim)!important;}
 input[type=number]{-moz-appearance:textfield;}
 input[type=number]::-webkit-inner-spin-button,
@@ -884,9 +888,18 @@ tbody tr:last-child{border-bottom:none;}
 
             <!-- Campos só de CADASTRO -->
             <div id="fields-cadastro" style="display:none;">
-              <div class="form-group">
-                <label class="form-label">Saldo disponível (chegou mas ainda não cadastrado)</label>
-                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="cadastro-saldo-disp">— g</div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Origem do que foi cadastrado</label>
+                  <select id="cadastro-origem" onchange="updateCadastroDispo()">
+                    <option value="second">Second Hand</option>
+                    <option value="scrap">Scrap</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Saldo disponível dessa origem</label>
+                  <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="cadastro-saldo-disp">— g</div>
+                </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
@@ -977,17 +990,7 @@ tbody tr:last-child{border-bottom:none;}
           <div style="overflow-x:auto;">
             <table id="metal-table" style="width:100%;border-collapse:collapse;font-size:13px;">
               <thead>
-                <tr style="border-bottom:1px solid var(--c-border2);">
-                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Data</th>
-                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Metal</th>
-                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Tipo / Origem</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Chegou</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-green);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Sobrou</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-amber);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">→ Antigo</th>
-                  <th style="text-align:right;padding:8px 10px;color:var(--c-accent);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Saldo acum.</th>
-                  <th style="padding:8px 10px;"></th>
-                </tr>
+                <tr style="border-bottom:1px solid var(--c-border2);" id="metal-thead"></tr>
               </thead>
               <tbody id="metal-tbody"></tbody>
             </table>
@@ -2329,10 +2332,12 @@ function calcSaldo(metal, origem, ateData){
   const registros = METAIS.filter(e => e.metal===metal && e.data <= ateData);
 
   if(origem && origem !== 'all'){
-    // Saldo de uma origem específica de entrada
-    return registros
-      .filter(e => e.tipo==='entrada' && e.origem===origem)
-      .reduce((acc, e) => acc + (e.chegou||0), 0);
+    // Entradas dessa origem menos cadastros dessa origem menos antigos
+    const entradas  = registros.filter(e=>e.tipo==='entrada'  && e.origem===origem).reduce((a,e)=>a+(e.chegou||0),0);
+    const cadastros = registros.filter(e=>e.tipo==='cadastro' && e.origem===origem).reduce((a,e)=>a+(e.peso||0),0);
+    const antigos   = registros.filter(e=>e.tipo==='antigo').reduce((a,e)=>a+(e.peso||0),0);
+    // Antigo é global — desconta proporcionalmente só do total, não por origem
+    return entradas - cadastros;
   }
 
   // Saldo total = entradas - cadastros - antigos
@@ -2347,10 +2352,9 @@ function calcSaldoTotal(metal){
   return calcSaldo(metal, 'all', hoje);
 }
 
-// Quanto chegou mas ainda não foi cadastrado nem foi pro antigo
-function calcPorCadastrar(metal){
+function calcSaldoPorOrigem(metal, origem){
   const hoje = new Date().toISOString().split('T')[0];
-  return calcSaldoTotal(metal);
+  return calcSaldo(metal, origem, hoje);
 }
 
 // ══════════════════════════════════════════
@@ -2439,9 +2443,10 @@ function updateAntigoPreview(){
 
 // ── Cadastro (abate do saldo) ─────────────────────────
 function updateCadastroDispo(){
-  const metal = document.getElementById('metal-tipo').value;
-  const saldo = calcSaldoTotal(metal);
-  const el    = document.getElementById('cadastro-saldo-disp');
+  const metal  = document.getElementById('metal-tipo').value;
+  const origem = document.getElementById('cadastro-origem')?.value || 'second';
+  const saldo  = calcSaldoPorOrigem(metal, origem);
+  const el     = document.getElementById('cadastro-saldo-disp');
   if(!el) return;
   el.textContent = saldo.toFixed(2) + 'g';
   el.style.color = saldo > 0 ? 'var(--c-green)' : 'var(--c-red)';
@@ -2449,8 +2454,9 @@ function updateCadastroDispo(){
 }
 
 function updateCadastroPreview(){
-  const metal = document.getElementById('metal-tipo').value;
-  const saldo = calcSaldoTotal(metal);
+  const metal  = document.getElementById('metal-tipo').value;
+  const origem = document.getElementById('cadastro-origem')?.value || 'second';
+  const saldo  = calcSaldoPorOrigem(metal, origem);
   const peso  = parseFloat(document.getElementById('cadastro-peso')?.value) || 0;
   const resta = saldo - peso;
   const el    = document.getElementById('cadastro-preview-resta');
@@ -2460,23 +2466,24 @@ function updateCadastroPreview(){
 }
 
 async function confirmarCadastroMetal(){
-  const data  = document.getElementById('metal-date').value;
-  const metal = document.getElementById('metal-tipo').value;
-  const peso  = parseFloat(document.getElementById('cadastro-peso').value);
-  const obs   = document.getElementById('metal-obs').value.trim();
-  const saldo = calcSaldoTotal(metal);
+  const data   = document.getElementById('metal-date').value;
+  const metal  = document.getElementById('metal-tipo').value;
+  const origem = document.getElementById('cadastro-origem')?.value || 'second';
+  const peso   = parseFloat(document.getElementById('cadastro-peso').value);
+  const obs    = document.getElementById('metal-obs').value.trim();
+  const saldo  = calcSaldoPorOrigem(metal, origem);
 
-  if(!data)               { shake('metal-date');     toast('Selecione a data.','amber'); return; }
-  if(isNaN(peso)||peso<=0){ shake('cadastro-peso');  toast('Informe o peso cadastrado.','amber'); return; }
-  if(peso > saldo)        { shake('cadastro-peso');  toast(`Saldo insuficiente. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
+  if(!data)               { shake('metal-date');    toast('Selecione a data.','amber'); return; }
+  if(isNaN(peso)||peso<=0){ shake('cadastro-peso'); toast('Informe o peso cadastrado.','amber'); return; }
+  if(peso > saldo)        { shake('cadastro-peso'); toast(`Saldo insuficiente de ${origem==='second'?'Second Hand':'Scrap'}. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
 
   const entrada = {
     id: Date.now(), data, metal,
     tipo: 'cadastro',
-    origem: 'cadastro',
+    origem,   // second ou scrap
     peso,
-    chegou: 0, cadastrado: 0, sobrou: 0,
-    obs: obs || 'Cadastro no sistema',
+    chegou: 0, cadastrado: peso, sobrou: 0,
+    obs: obs || `Cadastro ${origem==='second'?'Second Hand':'Scrap'}`,
     createdAt: Date.now()
   };
   const { doc, setDoc } = window._fbModules;
@@ -2588,6 +2595,44 @@ function renderMetalKPIs(){
   el.innerHTML = cards;
 }
 
+// ── Sort state do histórico ──────────────────────────
+let metalSortField = 'data';
+let metalSortDir   = 'desc';
+
+function setMetalSort(field){
+  if(metalSortField === field){
+    metalSortDir = metalSortDir==='asc'?'desc':'asc';
+  } else {
+    metalSortField = field;
+    metalSortDir   = field==='data' ? 'desc' : 'asc';
+  }
+  renderMetalHistorico();
+}
+
+function renderMetalThead(){
+  const th = (label, field, align='left', color='var(--c-muted)') => {
+    const active = metalSortField===field;
+    const dir    = active ? metalSortDir : '';
+    return `<th onclick="setMetalSort('${field}')"
+      class="th-sort ${dir}"
+      style="text-align:${align};padding:8px 10px;color:${active?'var(--c-text)':color};font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">
+      ${label}
+    </th>`;
+  };
+  const el = document.getElementById('metal-thead');
+  if(!el) return;
+  el.innerHTML =
+    th('Data',       'data')      +
+    th('Metal',      'metal')     +
+    th('Tipo/Origem','tipo')      +
+    th('Chegou',     'chegou',  'right') +
+    th('Cadastrado', 'cadastrado','right','var(--c-green)') +
+    th('Sobrou',     'sobrou',  'right') +
+    th('→ Antigo',   'antigo',  'right','var(--c-amber)') +
+    th('Saldo acum.','saldo',   'right','var(--c-accent)') +
+    `<th style="padding:8px 10px;"></th>`;
+}
+
 // ── Tabela de histórico ──
 function renderMetalHistorico(){
   const filterTipo   = document.getElementById('metal-filter-tipo')?.value   || 'todos';
@@ -2601,6 +2646,7 @@ function renderMetalHistorico(){
     else lista = lista.filter(e=>e.origem===filterOrigem && e.tipo==='entrada');
   }
 
+  renderMetalThead();
   const tbody = document.getElementById('metal-tbody');
   const empty = document.getElementById('metal-empty');
 
@@ -2610,6 +2656,22 @@ function renderMetalHistorico(){
     return;
   }
   empty.style.display='none';
+
+  // Ordenação
+  lista.sort((a,b)=>{
+    let va, vb;
+    const f = metalSortField;
+    if(f==='data')       { va=a.data||''; vb=b.data||''; }
+    else if(f==='metal') { va=a.metal||''; vb=b.metal||''; }
+    else if(f==='tipo')  { va=a.tipo||''; vb=b.tipo||''; }
+    else if(f==='chegou'){ va=a.chegou||0; vb=b.chegou||0; }
+    else if(f==='cadastrado'){ va=(a.tipo==='cadastro'?a.peso:0); vb=(b.tipo==='cadastro'?b.peso:0); }
+    else if(f==='antigo'){ va=(a.tipo==='antigo'?a.peso:0); vb=(b.tipo==='antigo'?b.peso:0); }
+    else                 { va=a[f]||0; vb=b[f]||0; }
+    if(va<vb) return metalSortDir==='asc'?-1:1;
+    if(va>vb) return metalSortDir==='asc'?1:-1;
+    return 0;
+  });
 
   // Calcula saldo acumulado por metal+origem em ordem cronológica
   // Para exibir, recalcula saldo acum para cada linha
@@ -2642,10 +2704,14 @@ function renderMetalHistorico(){
     }
 
     if(tipo === 'cadastro'){
+      const ocfgCad = ORIGEM_CFG[e.origem] || {label: e.origem==='second'?'Second Hand':'Scrap', cls: e.origem==='second'?'origem-second':'origem-scrap'};
       return `<tr style="background:rgba(34,201,135,.04);">
         <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
         <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
-        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(34,201,135,.15);color:var(--c-green);">✓ Cadastro</span></td>
+        <td class="td-cell">
+          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(34,201,135,.15);color:var(--c-green);">✓ Cadastro</span>
+          <span class="origem-tag ${ocfgCad.cls}" style="margin-left:4px;">${ocfgCad.label}</span>
+        </td>
         <td class="td-num" style="color:var(--c-muted);">—</td>
         <td class="td-num" style="color:var(--c-green);font-weight:700;">${(e.peso||0).toFixed(2)}g</td>
         <td class="td-num" style="color:var(--c-muted);">—</td>
