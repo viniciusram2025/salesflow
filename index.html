@@ -86,13 +86,20 @@ window._initFirebaseListeners = function(){
 
   // TASKS
   onSnapshot(query(collection(db,'tasks'), orderBy('createdAt','desc')), snap => {
-    TASKS = snap.docs.map(d => ({...d.data(), id: d.id}));
+    TASKS = snap.docs.map(d => {
+      const data = d.data();
+      // id pode estar salvo como número — normaliza para número para compatibilidade
+      return {...data, id: isNaN(data.id) ? d.id : Number(data.id)};
+    });
     applyFilter();
   });
 
   // METAIS
   onSnapshot(query(collection(db,'metais'), orderBy('createdAt','desc')), snap => {
-    METAIS = snap.docs.map(d => ({...d.data(), id: d.id}));
+    METAIS = snap.docs.map(d => {
+      const data = d.data();
+      return {...data, id: isNaN(data.id) ? d.id : Number(data.id)};
+    });
     const pg = document.getElementById('page-metais');
     if(pg && pg.classList.contains('active')){
       renderMetalKPIs();
@@ -1166,14 +1173,7 @@ let TASKS = [];
 const KB_TASKS_BASE = [];
 
 function loadData(){ /* dados carregados via listener Firestore em _initFirebaseListeners */ }
-function saveData(){
-  // Salva todas as tasks no Firestore
-  const { collection, doc, setDoc } = window._fbModules;
-  TASKS.forEach(t => {
-    if(!t.createdAt) t.createdAt = t.id;
-    setDoc(doc(window._db,'tasks', String(t.id)), t);
-  });
-}
+function saveData(){ /* substituído por gravações individuais */ }
 
 // ─── NAV ──────────────────────────────────────────────
 const PAGE_TITLES = {
