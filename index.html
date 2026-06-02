@@ -813,14 +813,14 @@ tbody tr:last-child{border-bottom:none;}
       <div id="page-metais" class="page">
 
         <!-- KPIs saldo atual por metal -->
-        <div id="metal-kpis" class="mb-20" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:start;"></div>
+        <div id="metal-kpis" class="grid-3 mb-20"></div>
 
         <div class="grid-2 mb-20">
 
           <!-- FORMULÁRIO DE ENTRADA -->
-          <div class="card">
+          <div class="card" style="border-top:2px solid var(--c-accent);">
             <div class="sec-head">
-              <span class="sec-title"><i class="ti ti-plus-circle" style="color:var(--c-accent);margin-right:6px;"></i>Registrar entrada</span>
+              <span class="sec-title"><i class="ti ti-arrow-down-circle" style="color:var(--c-accent);margin-right:6px;"></i>Registrar entrada</span>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -845,7 +845,7 @@ tbody tr:last-child{border-bottom:none;}
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">Chegou hoje (g)</label>
+                <label class="form-label">Chegou (g)</label>
                 <input type="number" id="metal-chegou" placeholder="0.00" min="0" step="0.01"
                   style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"/>
               </div>
@@ -867,13 +867,64 @@ tbody tr:last-child{border-bottom:none;}
               <label class="form-label">Observação (opcional)</label>
               <input type="text" id="metal-obs" placeholder="Ex: lote da Luciana, anéis antigos..."/>
             </div>
-            <button class="btn" onclick="salvarEntradaMetal()" style="width:100%;justify-content:center;">
-              <i class="ti ti-check"></i>Confirmar entrada
+            <button class="btn" onclick="salvarEntradaMetal()" style="width:100%;justify-content:center;background:var(--c-accent);">
+              <i class="ti ti-arrow-down-circle"></i>Confirmar entrada
             </button>
           </div>
 
-          <!-- GRÁFICO -->
-          <div class="card">
+          <!-- FORMULÁRIO DE SAÍDA ANTIGO -->
+          <div class="card" style="border-top:2px solid var(--c-amber);">
+            <div class="sec-head">
+              <span class="sec-title"><i class="ti ti-flame" style="color:var(--c-amber);margin-right:6px;"></i>Saída para Antigo</span>
+            </div>
+            <div style="font-size:12px;color:var(--c-muted);margin-bottom:14px;line-height:1.5;">
+              Metal que vai para fundição ou fabricação de novas joias — não volta ao estoque.
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Data</label>
+                <input type="date" id="antigo-date" style="cursor:pointer;"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Metal</label>
+                <select id="antigo-tipo" onchange="updateAntigoDispo()">
+                  <option value="ouro">Ouro</option>
+                  <option value="prata">Prata</option>
+                  <option value="platina">Platina</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Saldo disponível em estoque</label>
+              <div style="background:var(--c-border);border-radius:var(--r);padding:9px 14px;font-size:14px;font-weight:700;" id="antigo-saldo-disp">— g</div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Peso enviado para Antigo (g) *</label>
+                <input type="number" id="antigo-peso" placeholder="0.00" min="0.01" step="0.01"
+                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"
+                  oninput="updateAntigoPreview()"/>
+              </div>
+              <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;font-size:13px;">
+                  <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Restante</span>
+                  <span id="antigo-preview-resta" style="font-weight:700;color:var(--c-green);">— g</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observação (opcional)</label>
+              <input type="text" id="antigo-obs" placeholder="Ex: colar feio, pulseira danificada..."/>
+            </div>
+            <button class="btn" onclick="confirmarBaixaAntigo()" style="width:100%;justify-content:center;background:var(--c-amber);">
+              <i class="ti ti-flame"></i>Confirmar saída para Antigo
+            </button>
+          </div>
+        </div>
+
+        <!-- GRÁFICO -->
+        <div class="grid-2 mb-20"><div style="display:none;"></div>
+          <div class="card" style="grid-column:1/-1;">
             <div class="sec-head">
               <span class="sec-title">Saldo acumulado — últimos 14 dias</span>
               <div style="display:flex;gap:6px;">
@@ -888,12 +939,12 @@ tbody tr:last-child{border-bottom:none;}
               Nenhum dado registrado ainda
             </div>
           </div>
-        </div>
+        </div><!-- /chart grid -->
 
         <!-- HISTÓRICO -->
         <div class="card">
           <div class="sec-head">
-            <span class="sec-title">Histórico de entradas</span>
+            <span class="sec-title">Histórico — Entradas & Saídas</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <select id="metal-filter-tipo" onchange="renderMetalHistorico()"
                 style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:8px;padding:5px 10px;color:var(--c-text);font-size:12px;outline:none;">
@@ -918,7 +969,7 @@ tbody tr:last-child{border-bottom:none;}
                 <tr style="border-bottom:1px solid var(--c-border2);">
                   <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Data</th>
                   <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Metal</th>
-                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Origem</th>
+                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Tipo / Origem</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Chegou</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
                   <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Sobrou</th>
@@ -952,64 +1003,6 @@ tbody tr:last-child{border-bottom:none;}
   </div><!-- /main -->
 </div><!-- /app -->
 </div><!-- /main-app -->
-
-<!-- ══════ MODAL: BAIXA ANTIGO ══════ -->
-<div class="modal-overlay" id="modal-antigo">
-  <div class="modal" style="max-width:400px;">
-    <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-flame" style="color:var(--c-amber);"></i> Baixa para Antigo</div>
-      <button class="modal-close" onclick="closeModal('modal-antigo')">&times;</button>
-    </div>
-    <div style="font-size:13px;color:var(--c-muted);margin-bottom:16px;">
-      Registra a saída de metal do estoque para o antigo — fundição ou fabricação de novas joias.
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Data</label>
-        <input type="date" id="antigo-date" style="cursor:pointer;"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Metal</label>
-        <select id="antigo-tipo" onchange="updateAntigoDispo()">
-          <option value="ouro">Ouro</option>
-          <option value="prata">Prata</option>
-          <option value="platina">Platina</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Saldo disponível em estoque</label>
-      <div style="background:var(--c-border);border-radius:var(--r);padding:10px 14px;font-size:14px;font-weight:700;" id="antigo-saldo-disp">— g</div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Peso enviado para o Antigo (g) *</label>
-      <input type="number" id="antigo-peso" placeholder="0.00" min="0.01" step="0.01"
-        style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"
-        oninput="updateAntigoPreview()"/>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Observação (opcional)</label>
-      <input type="text" id="antigo-obs" placeholder="Ex: colar feio, pulseira danificada..."/>
-    </div>
-    <!-- preview saldo restante -->
-    <div style="display:flex;gap:12px;margin-bottom:16px;">
-      <div style="flex:1;background:var(--c-red-dim);border:1px solid rgba(240,82,82,.2);border-radius:var(--r);padding:10px 14px;">
-        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">Vai para o Antigo</div>
-        <div style="font-size:16px;font-weight:700;color:var(--c-red);" id="antigo-preview-baixa">— g</div>
-      </div>
-      <div style="flex:1;background:var(--c-green-dim);border:1px solid rgba(34,201,135,.2);border-radius:var(--r);padding:10px 14px;">
-        <div style="font-size:11px;color:var(--c-muted);margin-bottom:3px;">Restante em estoque</div>
-        <div style="font-size:16px;font-weight:700;color:var(--c-green);" id="antigo-preview-resta">— g</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-ghost" onclick="closeModal('modal-antigo')">Cancelar</button>
-      <button class="btn" style="background:var(--c-amber);" onclick="confirmarBaixaAntigo()">
-        <i class="ti ti-flame"></i>Confirmar baixa
-      </button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════ MODAL: USUÁRIO ══════ -->
 <div class="modal-overlay" id="modal-usuario">
@@ -2336,15 +2329,7 @@ function calcSaldoTotal(metal){
   return calcSaldo(metal, null, hoje);
 }
 
-// ── Modal Baixa Antigo ──────────────────────────────
-function openBaixaAntigo(){
-  document.getElementById('antigo-date').value = todayISO();
-  document.getElementById('antigo-peso').value = '';
-  document.getElementById('antigo-obs').value  = '';
-  updateAntigoDispo();
-  openModal('modal-antigo');
-}
-
+// ── Saída Antigo (inline form) ───────────────────────
 function updateAntigoDispo(){
   const metal = document.getElementById('antigo-tipo').value;
   const saldo = calcSaldoTotal(metal);
@@ -2384,8 +2369,13 @@ async function confirmarBaixaAntigo(){
   };
   const { doc, setDoc } = window._fbModules;
   await setDoc(doc(window._db,'metais', String(entrada.id)), entrada);
-  closeModal('modal-antigo');
-  toast('Baixa para Antigo registrada!','amber');
+  // Reset form
+  document.getElementById('antigo-peso').value = '';
+  document.getElementById('antigo-obs').value  = '';
+  document.getElementById('antigo-preview-resta').textContent = '— g';
+  document.getElementById('antigo-preview-resta').style.color = 'var(--c-green)';
+  updateAntigoDispo();
+  toast('Saída para Antigo registrada!','amber');
 }
 
 // ── Preview do campo "sobrou" ──
@@ -2456,15 +2446,7 @@ function renderMetalKPIs(){
     </div>`;
   }).join('');
 
-  // Botão de baixa separado no canto
-  const btnBaixa = `<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:0 4px;">
-    <button class="btn" style="background:var(--c-amber);white-space:nowrap;flex-direction:column;gap:4px;padding:14px 18px;" onclick="openBaixaAntigo()">
-      <i class="ti ti-flame" style="font-size:20px;"></i>
-      <span style="font-size:11px;font-weight:600;">Baixa<br>Antigo</span>
-    </button>
-  </div>`;
-
-  el.innerHTML = cards + btnBaixa;
+  el.innerHTML = cards;
 }
 
 // ── Tabela de histórico ──
@@ -2660,11 +2642,23 @@ function renderMetalChart(metal){
 
 // ── Init da página de metais ──
 function initMetaisPage(){
+  // Entrada form
   document.getElementById('metal-date').value = todayISO();
-  // live preview sobrou
   ['metal-chegou','metal-cadastrado'].forEach(id=>{
-    document.getElementById(id).addEventListener('input', updateSobrouPreview);
+    const el = document.getElementById(id);
+    if(el && !el._listenerAdded){
+      el.addEventListener('input', updateSobrouPreview);
+      el._listenerAdded = true;
+    }
   });
+  // Saída antigo form
+  document.getElementById('antigo-date').value = todayISO();
+  const antigoTipo = document.getElementById('antigo-tipo');
+  if(antigoTipo && !antigoTipo._listenerAdded){
+    antigoTipo.addEventListener('change', updateAntigoDispo);
+    antigoTipo._listenerAdded = true;
+  }
+  updateAntigoDispo();
   renderMetalKPIs();
   renderMetalHistorico();
   renderMetalChart('ouro');
