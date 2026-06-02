@@ -1373,10 +1373,11 @@ function renderTasks(list){
       'Crie a primeira tarefa clicando em "Nova tarefa".',
       {fn:"openNewTask()", label:'+ Nova tarefa'}
     );
-    updateKPIs();
+    updateKPIs([]);
     return;
   }
 
+  updateKPIs(list);
   el.innerHTML = list.map(t=>{
     const p = pm[t.person]||{name:t.person||'—',bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
     const ini = t.person ? initials(p.name) : '?';
@@ -1402,7 +1403,6 @@ function renderTasks(list){
       </button>
     </div>`;
   }).join('');
-  updateKPIs();
 }
 
 function toggleTask(id){
@@ -1477,11 +1477,13 @@ function applyFilter(){
   renderTasks(list);
 }
 
-function updateKPIs(){
-  const done    = TASKS.filter(t=>t.status==='done').length;
-  const prog    = TASKS.filter(t=>t.status==='progress').length;
-  const late    = TASKS.filter(t=>t.late>0).length;
-  const total   = TASKS.length;
+function updateKPIs(list){
+  // Usa a lista filtrada se fornecida, senão usa tudo
+  const src  = list || TASKS;
+  const done = src.filter(t=>t.status==='done').length;
+  const prog = src.filter(t=>t.status==='progress').length;
+  const late = src.filter(t=>t.late>0).length;
+  const total= src.length;
   document.getElementById('kpi-total').textContent = total;
   document.getElementById('kpi-done').textContent  = done;
   document.getElementById('kpi-prog').textContent  = prog;
