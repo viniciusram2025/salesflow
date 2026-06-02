@@ -2671,15 +2671,28 @@ function renderMetalHistorico(){
     return 0;
   });
 
-  // Calcula saldo acumulado por metal+origem em ordem cronológica
-  // Para exibir, recalcula saldo acum para cada linha
+  // Calcula saldo acumulado progressivo em ordem cronológica
+  // Ordena por data ASC para calcular progressão, depois mantém ordem da lista para exibir
+  const listaOrdenada = [...lista].sort((a,b)=> a.data<b.data?-1:a.data>b.data?1:(a.createdAt||0)-(b.createdAt||0));
+  
+  // Calcula saldo acumulado ponto a ponto
+  const saldoMap = new Map();
+  const saldoCorrente = {}; // por metal
+  listaOrdenada.forEach(e => {
+    if(!saldoCorrente[e.metal]) saldoCorrente[e.metal] = 0;
+    if(e.tipo==='entrada')  saldoCorrente[e.metal] += (e.chegou||e.peso||0);
+    if(e.tipo==='cadastro') saldoCorrente[e.metal] -= (e.peso||0);
+    if(e.tipo==='antigo')   saldoCorrente[e.metal] -= (e.peso||0);
+    saldoMap.set(e.id, saldoCorrente[e.metal]);
+  });
+
   tbody.innerHTML = lista.map(e => {
     const cfg     = METAL_CFG[e.metal]   || {};
     const isAntigo= e.origem === 'antigo';
     const ocfg    = isAntigo
       ? {label:'→ Antigo', cls:''}
       : (ORIGEM_CFG[e.origem] || {label:e.origem, cls:''});
-    const saldoAcum = calcSaldo(e.metal, null, e.data);
+    const saldoAcum = saldoMap.get(e.id) ?? 0;
     const [y,m,d]   = e.data.split('-');
     const dataFmt   = `${d}/${m}/${y}`;
 
