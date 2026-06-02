@@ -107,6 +107,21 @@ window._initFirebaseListeners = function(){
       renderMetalChart(activeChartMetal);
     }
   });
+
+  // USUARIOS
+  onSnapshot(collection(db,'usuarios'), snap => {
+    usuariosCache = snap.docs.map(d=>({email:d.id, ...d.data()}));
+    // Sincroniza PEOPLE_LIST com usuarios do Firestore
+    usuariosCache.forEach(u => {
+      if(!u.personKey) return;
+      const idx = PEOPLE_LIST.findIndex(p=>p.key===u.personKey);
+      const ci  = idx>=0 ? PEOPLE_LIST[idx].ci : PEOPLE_LIST.length % COLORS.length;
+      if(idx>=0) PEOPLE_LIST[idx] = {key:u.personKey, name:u.name||u.email, role:u.cargo||'Colaborador', ci};
+      else       PEOPLE_LIST.push({key:u.personKey, name:u.name||u.email, role:u.cargo||'Colaborador', ci});
+    });
+    const pg = document.getElementById('page-usuarios');
+    if(pg && pg.classList.contains('active')) renderUsuariosPage();
+  });
 };
 </script>
 <style>
@@ -242,6 +257,7 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .btn:hover{background:var(--c-accent2);transform:translateY(-1px);}
 .btn-ghost{background:transparent;color:var(--c-text);border:1px solid var(--c-border2);border-radius:var(--r);padding:8px 14px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-ghost:hover{border-color:var(--c-border);background:var(--c-border);}
+.btn-ghost.active{border-color:var(--c-accent);color:var(--c-accent);background:var(--c-accent-dim);}
 .btn-green{background:rgba(34,201,135,.15);color:var(--c-green);border:1px solid rgba(34,201,135,.3);border-radius:var(--r);padding:9px 18px;font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-green:hover{background:rgba(34,201,135,.25);}
 .btn-sm{padding:6px 12px;font-size:12px;}
@@ -394,6 +410,19 @@ tbody tr{border-bottom:1px solid var(--c-border);transition:background .1s;}
 tbody tr:hover{background:rgba(255,255,255,.02);}
 tbody tr:last-child{border-bottom:none;}
 
+/* ── USUARIOS / PERMISSOES ── */
+.user-profile-card{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-lg);padding:20px;transition:border .2s;cursor:pointer;}
+.user-profile-card:hover{border-color:var(--c-border2);}
+.perm-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border-radius:5px;background:var(--c-accent-dim);color:var(--c-accent);font-weight:600;margin:2px;}
+.perm-chip.off{background:rgba(107,114,128,.1);color:var(--c-muted2);}
+.perm-check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--c-surface2);border:1px solid var(--c-border);border-radius:var(--r);cursor:pointer;transition:border .15s;user-select:none;}
+.perm-check-item:hover{border-color:var(--c-border2);}
+.perm-check-item input{accent-color:var(--c-accent);cursor:pointer;width:15px;height:15px;}
+.perm-check-item label{font-size:13px;cursor:pointer;flex:1;}
+/* ── FILTER PANEL ── */
+.filter-panel{background:var(--c-surface);border:1px solid var(--c-border2);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:16px;display:none;}
+.filter-panel.open{display:block;}
+
 /* ── LOGIN SCREEN ── */
 #login-screen{
   position:fixed;inset:0;background:var(--c-bg);z-index:200;
@@ -506,6 +535,9 @@ tbody tr:last-child{border-bottom:none;}
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
 
+    <div class="nav-section nav-admin-only">Admin</div>
+    <div class="nav-item nav-admin-only" onclick="goTo('usuarios')" data-page="usuarios"><i class="ti ti-shield-check"></i>Usuários & Acesso</div>
+
     <div class="sidebar-bottom">
       <div class="nav-item" onclick="openPessoas()" style="margin-bottom:6px;">
         <i class="ti ti-user-cog"></i>Colaboradores
@@ -552,8 +584,55 @@ tbody tr:last-child{border-bottom:none;}
         <div class="row-gap mb-20">
           <button class="btn" onclick="openNewTask()"><i class="ti ti-plus"></i>Nova tarefa</button>
           <div class="spacer"></div>
-          <button class="btn-ghost btn-sm"><i class="ti ti-filter"></i>Filtrar</button>
-          <button class="btn-ghost btn-sm"><i class="ti ti-sort-ascending"></i>Ordenar</button>
+          <button class="btn-ghost btn-sm" onclick="toggleFilterPanel()" id="btn-filtrar"><i class="ti ti-filter"></i>Filtrar</button>
+          <button class="btn-ghost btn-sm" onclick="toggleSortPanel()" id="btn-ordenar"><i class="ti ti-sort-ascending"></i>Ordenar</button>
+        </div>
+
+        <!-- FILTER PANEL -->
+        <div class="filter-panel" id="filter-panel">
+          <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+            <div>
+              <div class="form-label">Responsável</div>
+              <select id="filter-person" onchange="applyFilter()" style="width:160px;">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Prioridade</div>
+              <select id="filter-priority" onchange="applyFilter()" style="width:140px;">
+                <option value="">Todas</option>
+                <option value="urgente">Urgente</option>
+                <option value="alta">Alta</option>
+                <option value="media">Média</option>
+                <option value="baixa">Baixa</option>
+              </select>
+            </div>
+            <div>
+              <div class="form-label">Status</div>
+              <select id="filter-status" onchange="applyFilter()" style="width:140px;">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="progress">Em andamento</option>
+                <option value="blocked">Bloqueada</option>
+                <option value="done">Concluída</option>
+              </select>
+            </div>
+            <button class="btn-ghost btn-sm" onclick="clearFilters()" style="margin-bottom:1px;"><i class="ti ti-x"></i>Limpar filtros</button>
+          </div>
+        </div>
+        <!-- SORT PANEL -->
+        <div class="filter-panel" id="sort-panel">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:12px;color:var(--c-muted);font-weight:500;">Ordenar por:</span>
+            <button class="btn-ghost btn-sm sort-btn" onclick="setSort('due',this)"><i class="ti ti-calendar"></i>Prazo</button>
+            <button class="btn-ghost btn-sm sort-btn" onclick="setSort('priority',this)"><i class="ti ti-alert-triangle"></i>Prioridade</button>
+            <button class="btn-ghost btn-sm sort-btn" onclick="setSort('person',this)"><i class="ti ti-user"></i>Responsável</button>
+            <button class="btn-ghost btn-sm sort-btn" onclick="setSort('status',this)"><i class="ti ti-loader"></i>Status</button>
+            <button class="btn-ghost btn-sm sort-btn" onclick="setSort('title',this)"><i class="ti ti-sort-az"></i>Título A-Z</button>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+              <button class="btn-ghost btn-sm" id="sort-dir-btn" onclick="toggleSortDir()"><i class="ti ti-arrow-up"></i>Crescente</button>
+            </div>
+          </div>
         </div>
 
         <div class="grid-4 mb-20">
@@ -857,10 +936,69 @@ tbody tr:last-child{border-bottom:none;}
         </div>
       </div>
 
+      <!-- ══════ PAGE: USUÁRIOS ══════ -->
+      <div id="page-usuarios" class="page">
+        <div class="row-gap mb-20">
+          <div style="font-size:13px;color:var(--c-muted);">Gerencie quem tem acesso ao sistema e o que cada pessoa pode ver.</div>
+          <div class="spacer"></div>
+          <button class="btn" onclick="openModalNovoUsuario()"><i class="ti ti-user-plus"></i>Novo usuário</button>
+        </div>
+        <div id="usuarios-list" class="grid-2"></div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
 </div><!-- /main-app -->
+
+<!-- ══════ MODAL: USUÁRIO ══════ -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-usuario-title">Novo Usuário</div>
+      <button class="modal-close" onclick="closeModal('modal-usuario')">&times;</button>
+    </div>
+    <input type="hidden" id="uu-email-original"/>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome *</label>
+        <input type="text" id="uu-nome" placeholder="Ex: Ana Lima"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cargo / Função</label>
+        <input type="text" id="uu-cargo" placeholder="Ex: Vendas Pleno"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">E-mail *</label>
+        <input type="text" id="uu-email" placeholder="nome@goldtechjoias.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sigla (2 letras) *</label>
+        <input type="text" id="uu-sigla" placeholder="Ex: AL" maxlength="3" style="text-transform:uppercase;"/>
+      </div>
+    </div>
+
+    <!-- PERMISSÕES -->
+    <div style="margin-top:4px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--c-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Permissões de acesso</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;" id="perm-checkboxes"></div>
+    </div>
+
+    <div style="background:var(--c-surface2);border:1px solid var(--c-border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--c-muted);margin-bottom:6px;"><i class="ti ti-info-circle"></i> Para definir a senha do usuário, acesse o <strong style="color:var(--c-text);">Firebase Console → Authentication</strong> e adicione o e-mail manualmente.</div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;">
+      <button class="btn" id="uu-delete-btn" style="background:var(--c-red);display:none;" onclick="deletarUsuario()"><i class="ti ti-trash"></i>Remover</button>
+      <div style="display:flex;gap:10px;margin-left:auto;">
+        <button class="btn-ghost" onclick="closeModal('modal-usuario')">Cancelar</button>
+        <button class="btn" onclick="salvarUsuario()"><i class="ti ti-check"></i>Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══════ MODAL: NOVA TAREFA ══════ -->
 <div class="modal-overlay" id="modal-new">
@@ -1082,35 +1220,19 @@ function showApp(user){
     window._initFirebaseListeners();
   }
 
-  // Controla visibilidade do menu conforme role
-  if(user.role === 'metais'){
-    // Esconde todas as seções exceto Estoque
-    document.querySelectorAll('.nav-section').forEach(s => {
-      s.style.display = s.textContent.trim() === 'Estoque' ? '' : 'none';
-    });
-    document.querySelectorAll('.nav-item[data-page]').forEach(n => {
-      n.style.display = n.dataset.page === 'metais' ? '' : 'none';
-    });
-    // Esconde o botão Colaboradores
-    document.querySelector('.nav-item:not([data-page])').style.display = 'none';
-    // Vai direto para metais
-    goTo('metais');
-  } else {
-    // Admin — mostra tudo
-    document.querySelectorAll('.nav-section').forEach(s => s.style.display = '');
-    document.querySelectorAll('.nav-item').forEach(n => n.style.display = '');
-  }
+  // Aplica permissões baseadas no perfil do Firestore
+  applyPermissions(user);
 
   // Atualiza user card
-  const p = PEOPLE_LIST.find(x=>x.key===user.personKey) || PEOPLE_LIST[0];
-  if(p){
-    const c = COLORS[p.ci%COLORS.length];
-    document.getElementById('user-av').textContent        = initials(p.name);
-    document.getElementById('user-av').style.background  = c.bg;
-    document.getElementById('user-av').style.color       = c.color;
-    document.getElementById('user-name-display').textContent = p.name;
-    document.getElementById('user-role-display').textContent = user.role === 'metais' ? 'Controle de Metais' : 'Administrador';
-  }
+  const p = PEOPLE_LIST.find(x=>x.key===user.personKey);
+  const ci = p ? COLORS[p.ci%COLORS.length] : COLORS[0];
+  document.getElementById('user-av').textContent        = initials(user.name||user.email);
+  document.getElementById('user-av').style.background  = ci.bg;
+  document.getElementById('user-av').style.color       = ci.color;
+  document.getElementById('user-name-display').textContent = user.name||user.email;
+  document.getElementById('user-role-display').textContent = user.role==='admin'?'Administrador': (user.cargo||'Usuário');
+  // Se admin navega para minhas tarefas, senão applyPermissions já navegou
+  if(user.role==='admin') goTo('minhas');
 }
 
 function doLogout(){
@@ -1184,7 +1306,8 @@ const PAGE_TITLES = {
   dashboard:{title:'Dashboard executivo',sub:'Relatório consolidado'},
   relatorios:{title:'Relatórios',sub:'Exportar dados e análises'},
   ia:{title:'IA de Reuniões',sub:'Extração automática de tarefas via inteligência artificial'},
-  metais:{title:'Controle de Metais',sub:'Ouro · Prata · Platina — Second Hand & Scrap'}
+  metais:{title:'Controle de Metais',sub:'Ouro · Prata · Platina — Second Hand & Scrap'},
+  usuarios:{title:'Usuários & Acesso',sub:'Gerencie a equipe e as permissões de cada pessoa'}
 };
 
 function goTo(name){
@@ -1201,6 +1324,7 @@ function goTo(name){
   if(name==='equipe')    renderEquipe();
   if(name==='dashboard') renderDashboard();
   if(name==='metais')    initMetaisPage();
+  if(name==='usuarios')  renderUsuariosPage();
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -1304,14 +1428,52 @@ function searchTasks(q){
   applyFilter();
 }
 
+// Prioridade para ordenação
+const PRIO_ORDER = {urgente:0,alta:1,media:2,baixa:3};
+
 function applyFilter(){
-  let list = TASKS;
-  if(currentFilter==='atrasadas')   list = TASKS.filter(t=>t.late>0);
-  else if(currentFilter==='concluidas') list = TASKS.filter(t=>t.status==='done');
-  else if(currentFilter==='hoje')   list = TASKS.filter(t=>t.due.toLowerCase().includes('hoje'));
-  else if(currentFilter==='amanha') list = TASKS.filter(t=>t.due.toLowerCase().includes('amanh'));
-  else if(currentFilter==='semana') list = TASKS.filter(t=>t.due.toLowerCase().includes('semana'));
-  if(searchQuery) list = list.filter(t=>t.title.toLowerCase().includes(searchQuery)||t.due.toLowerCase().includes(searchQuery));
+  let list = [...TASKS];
+
+  // Filtro por chip de data
+  if(currentFilter==='atrasadas')    list = list.filter(t=>t.late>0);
+  else if(currentFilter==='concluidas')  list = list.filter(t=>t.status==='done');
+  else if(currentFilter==='hoje')    list = list.filter(t=>(t.due||'').toLowerCase().includes('hoje'));
+  else if(currentFilter==='amanha')  list = list.filter(t=>(t.due||'').toLowerCase().includes('amanh'));
+  else if(currentFilter==='semana')  list = list.filter(t=>(t.due||'').toLowerCase().includes('semana'));
+
+  // Filtros do painel
+  const fp = (document.getElementById('filter-person')?.value)   || filterPerson;
+  const fpr= (document.getElementById('filter-priority')?.value) || filterPriority;
+  const fs = (document.getElementById('filter-status')?.value)   || filterStatus;
+  if(fp)  list = list.filter(t=>t.person===fp);
+  if(fpr) list = list.filter(t=>t.priority===fpr);
+  if(fs)  list = list.filter(t=>t.status===fs);
+
+  // Busca
+  if(searchQuery) list = list.filter(t=>
+    (t.title||'').toLowerCase().includes(searchQuery) ||
+    (t.due||'').toLowerCase().includes(searchQuery)
+  );
+
+  // Ordenação
+  if(sortField){
+    const pm = getPeopleMap();
+    list.sort((a,b)=>{
+      let va, vb;
+      if(sortField==='priority'){ va=PRIO_ORDER[a.priority]??9; vb=PRIO_ORDER[b.priority]??9; }
+      else if(sortField==='person'){ va=(pm[a.person]?.name||''); vb=(pm[b.person]?.name||''); }
+      else if(sortField==='due'){
+        // converte dd/mm/yyyy para comparação
+        const toDate = s => { if(!s||s==='Sem prazo') return '9999'; const p=s.split('/'); return p.length===3?`${p[2]}-${p[1]}-${p[0]}`:s; };
+        va=toDate(a.due); vb=toDate(b.due);
+      }
+      else { va=(a[sortField]||''); vb=(b[sortField]||''); }
+      if(va<vb) return sortDir==='asc'?-1:1;
+      if(va>vb) return sortDir==='asc'?1:-1;
+      return 0;
+    });
+  }
+
   renderTasks(list);
 }
 
@@ -1798,6 +1960,262 @@ function resetIA(){
   document.getElementById('ai-results').style.display='none';
   document.getElementById('meeting-input').value='';
   document.getElementById('ai-confirm-msg').style.display='none';
+}
+
+// ══════════════════════════════════════════
+// SISTEMA DE PERMISSÕES
+// ══════════════════════════════════════════
+
+const ALL_PAGES = [
+  {key:'minhas',    label:'Minhas Tarefas',    icon:'ti-home-2'},
+  {key:'kanban',    label:'Kanban',             icon:'ti-layout-kanban'},
+  {key:'calendario',label:'Calendário',         icon:'ti-calendar'},
+  {key:'equipe',    label:'Equipe',             icon:'ti-users'},
+  {key:'dashboard', label:'Dashboard',          icon:'ti-chart-bar'},
+  {key:'relatorios',label:'Relatórios',         icon:'ti-file-analytics'},
+  {key:'metais',    label:'Controle de Metais', icon:'ti-weight'},
+  {key:'ia',        label:'IA de Reuniões',     icon:'ti-brain'},
+];
+
+// Aplica permissões no menu lateral conforme perfil do usuário
+function applyPermissions(user){
+  const isAdmin = user.role === 'admin';
+  const perms   = user.permissions || [];
+
+  // Admin vê tudo sempre
+  if(isAdmin){
+    document.querySelectorAll('.nav-section').forEach(s => s.style.display = '');
+    document.querySelectorAll('.nav-item').forEach(n => n.style.display = '');
+    // Garante que seção admin aparece
+    document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = '');
+    return;
+  }
+
+  // Esconde seção admin para não-admin
+  document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = 'none');
+
+  // Aplica permissões por página
+  document.querySelectorAll('.nav-item[data-page]').forEach(n => {
+    const page = n.dataset.page;
+    n.style.display = perms.includes(page) ? '' : 'none';
+  });
+
+  // Esconde botão Colaboradores para não-admin
+  document.querySelectorAll('.nav-item:not([data-page])').forEach(n => n.style.display = 'none');
+
+  // Esconde seções que ficaram sem itens visíveis
+  document.querySelectorAll('.nav-section:not(.nav-admin-only)').forEach(sec => {
+    let next = sec.nextElementSibling;
+    let hasVisible = false;
+    while(next && !next.classList.contains('nav-section')){
+      if(next.style.display !== 'none' && next.classList.contains('nav-item')) hasVisible = true;
+      next = next.nextElementSibling;
+    }
+    sec.style.display = hasVisible ? '' : 'none';
+  });
+
+  // Navega para primeira página permitida
+  const firstPage = perms[0] || 'minhas';
+  goTo(firstPage);
+}
+
+// ══════════════════════════════════════════
+// GERENCIAMENTO DE USUÁRIOS
+// ══════════════════════════════════════════
+
+let usuariosCache = [];
+let editingUsuarioEmail = null;
+
+function renderUsuariosPage(){
+  const el = document.getElementById('usuarios-list');
+  if(!el) return;
+  if(!usuariosCache.length){
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--c-muted);">
+      <i class="ti ti-users" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3;"></i>
+      <div style="font-size:15px;font-weight:600;color:var(--c-text);margin-bottom:6px;">Nenhum usuário cadastrado</div>
+      <div style="font-size:13px;">Clique em "Novo usuário" para adicionar</div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = usuariosCache.map(u => {
+    const isAdmin = u.role === 'admin';
+    const perms   = u.permissions || [];
+    const permLabels = isAdmin
+      ? ALL_PAGES.map(p=>`<span class="perm-chip">${p.label}</span>`).join('')
+      : ALL_PAGES.map(p=>`<span class="perm-chip ${perms.includes(p.key)?'':'off'}">${p.label}</span>`).join('');
+    const ci = COLORS[Math.abs(u.personKey?.charCodeAt(0)||0) % COLORS.length];
+    return `<div class="user-profile-card" onclick="openModalEditarUsuario('${u.email}')">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+        <div class="av av-xl" style="background:${ci.bg};color:${ci.color};">${initials(u.name||u.email)}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;">${u.name||'—'}</div>
+          <div style="font-size:12px;color:var(--c-muted);">${u.cargo||''} · ${u.email}</div>
+        </div>
+        <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:${isAdmin?'var(--c-accent-dim)':'var(--c-green-dim)'};color:${isAdmin?'var(--c-accent)':'var(--c-green)'};">${isAdmin?'ADMIN':'USUÁRIO'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--c-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Acesso</div>
+      <div>${permLabels}</div>
+    </div>`;
+  }).join('');
+}
+
+function openModalNovoUsuario(){
+  editingUsuarioEmail = null;
+  document.getElementById('modal-usuario-title').textContent = 'Novo Usuário';
+  document.getElementById('uu-nome').value  = '';
+  document.getElementById('uu-cargo').value = '';
+  document.getElementById('uu-email').value = '';
+  document.getElementById('uu-sigla').value = '';
+  document.getElementById('uu-email').disabled = false;
+  document.getElementById('uu-delete-btn').style.display = 'none';
+  buildPermCheckboxes(ALL_PAGES.map(p=>p.key)); // tudo marcado por default
+  openModal('modal-usuario');
+}
+
+function openModalEditarUsuario(email){
+  const u = usuariosCache.find(x=>x.email===email);
+  if(!u) return;
+  editingUsuarioEmail = email;
+  document.getElementById('modal-usuario-title').textContent = 'Editar Usuário';
+  document.getElementById('uu-nome').value  = u.name||'';
+  document.getElementById('uu-cargo').value = u.cargo||'';
+  document.getElementById('uu-email').value = u.email;
+  document.getElementById('uu-sigla').value = u.personKey||'';
+  document.getElementById('uu-email').disabled = true; // não permite mudar email
+  document.getElementById('uu-delete-btn').style.display = 'inline-flex';
+  const perms = u.role==='admin' ? ALL_PAGES.map(p=>p.key) : (u.permissions||[]);
+  buildPermCheckboxes(perms);
+  openModal('modal-usuario');
+}
+
+function buildPermCheckboxes(checked){
+  const el = document.getElementById('perm-checkboxes');
+  el.innerHTML = ALL_PAGES.map(p=>`
+    <label class="perm-check-item">
+      <input type="checkbox" id="perm-${p.key}" value="${p.key}" ${checked.includes(p.key)?'checked':''}>
+      <i class="ti ${p.icon}" style="font-size:15px;color:var(--c-muted);"></i>
+      <label for="perm-${p.key}" style="font-size:13px;">${p.label}</label>
+    </label>`).join('');
+}
+
+async function salvarUsuario(){
+  const nome  = document.getElementById('uu-nome').value.trim();
+  const cargo = document.getElementById('uu-cargo').value.trim();
+  const email = editingUsuarioEmail || document.getElementById('uu-email').value.trim().toLowerCase();
+  const sigla = document.getElementById('uu-sigla').value.trim().toUpperCase();
+
+  if(!nome || !email || !sigla){ toast('Preencha nome, e-mail e sigla.','amber'); return; }
+
+  const perms = ALL_PAGES.map(p=>p.key).filter(k => document.getElementById('perm-'+k)?.checked);
+  // Admin se tiver todas as permissões
+  const isAdmin = perms.length === ALL_PAGES.length;
+
+  const data = {
+    name: nome, cargo, email,
+    personKey: sigla,
+    role: isAdmin ? 'admin' : 'user',
+    permissions: perms
+  };
+
+  const { doc, setDoc } = window._fbModules;
+  await setDoc(doc(window._db, 'usuarios', email), data);
+
+  // Atualiza PEOPLE_LIST local
+  const idx = PEOPLE_LIST.findIndex(p=>p.key===sigla);
+  const ci  = idx>=0 ? PEOPLE_LIST[idx].ci : PEOPLE_LIST.length;
+  if(idx>=0) PEOPLE_LIST[idx] = {key:sigla, name:nome, role:cargo||'Colaborador', ci};
+  else       PEOPLE_LIST.push({key:sigla, name:nome, role:cargo||'Colaborador', ci});
+
+  closeModal('modal-usuario');
+  toast('Usuário salvo!');
+}
+
+async function deletarUsuario(){
+  if(!editingUsuarioEmail) return;
+  if(!confirm(`Remover ${editingUsuarioEmail} do sistema?`)) return;
+  const { doc, deleteDoc } = window._fbModules;
+  await deleteDoc(doc(window._db, 'usuarios', editingUsuarioEmail));
+  closeModal('modal-usuario');
+  toast('Usuário removido.','red');
+}
+
+// Listener em tempo real para usuários
+function initUsuariosListener(){
+  const { collection, onSnapshot } = window._fbModules;
+  onSnapshot(collection(window._db,'usuarios'), snap => {
+    usuariosCache = snap.docs.map(d=>({email:d.id, ...d.data()}));
+    const pg = document.getElementById('page-usuarios');
+    if(pg && pg.classList.contains('active')) renderUsuariosPage();
+  });
+}
+
+// ══════════════════════════════════════════
+// FILTROS E ORDENAÇÃO
+// ══════════════════════════════════════════
+
+let filterPerson   = '';
+let filterPriority = '';
+let filterStatus   = '';
+let sortField      = '';
+let sortDir        = 'asc';
+
+function toggleFilterPanel(){
+  const p = document.getElementById('filter-panel');
+  const s = document.getElementById('sort-panel');
+  s.classList.remove('open');
+  p.classList.toggle('open');
+  // Popula responsáveis
+  const sel = document.getElementById('filter-person');
+  sel.innerHTML = '<option value="">Todos</option>' +
+    getPeople().map(p=>`<option value="${p.key}" ${filterPerson===p.key?'selected':''}>${p.name}</option>`).join('');
+  document.getElementById('btn-filtrar').classList.toggle('active', p.classList.contains('open'));
+}
+
+function toggleSortPanel(){
+  const p = document.getElementById('filter-panel');
+  const s = document.getElementById('sort-panel');
+  p.classList.remove('open');
+  s.classList.toggle('open');
+  document.getElementById('btn-ordenar').classList.toggle('active', s.classList.contains('open'));
+  // Marca botão ativo
+  document.querySelectorAll('.sort-btn').forEach(b=>{
+    b.style.borderColor = b.getAttribute('onclick').includes("'"+sortField+"'") ? 'var(--c-accent)' : '';
+    b.style.color       = b.getAttribute('onclick').includes("'"+sortField+"'") ? 'var(--c-accent)' : '';
+  });
+}
+
+function setSort(field, btn){
+  if(sortField === field){
+    sortDir = sortDir==='asc'?'desc':'asc';
+  } else {
+    sortField = field; sortDir = 'asc';
+  }
+  document.querySelectorAll('.sort-btn').forEach(b=>{ b.style.borderColor=''; b.style.color=''; });
+  btn.style.borderColor = 'var(--c-accent)';
+  btn.style.color       = 'var(--c-accent)';
+  const dirBtn = document.getElementById('sort-dir-btn');
+  dirBtn.innerHTML = sortDir==='asc'
+    ? '<i class="ti ti-arrow-up"></i>Crescente'
+    : '<i class="ti ti-arrow-down"></i>Decrescente';
+  applyFilter();
+}
+
+function toggleSortDir(){
+  sortDir = sortDir==='asc'?'desc':'asc';
+  const dirBtn = document.getElementById('sort-dir-btn');
+  dirBtn.innerHTML = sortDir==='asc'
+    ? '<i class="ti ti-arrow-up"></i>Crescente'
+    : '<i class="ti ti-arrow-down"></i>Decrescente';
+  applyFilter();
+}
+
+function clearFilters(){
+  filterPerson=''; filterPriority=''; filterStatus='';
+  document.getElementById('filter-person').value   = '';
+  document.getElementById('filter-priority').value = '';
+  document.getElementById('filter-status').value   = '';
+  applyFilter();
+  toast('Filtros removidos.');
 }
 
 // ─── SHAKE KEYFRAME ───────────────────────────────────
