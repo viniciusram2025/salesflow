@@ -2407,6 +2407,18 @@ function setMetalFormTipo(tipo){
   };
   document.getElementById('metal-obs').placeholder = placeholders[tipo];
 
+  // Zera todos os campos ao trocar de tipo
+  ['metal-chegou','metal-cadastrado','metal-obs','cadastro-peso','antigo-peso'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  const sp = document.getElementById('metal-sobrou-preview');
+  if(sp) sp.textContent = '— g';
+  const cr = document.getElementById('cadastro-preview-resta');
+  if(cr){ cr.textContent='— g'; cr.style.color='var(--c-green)'; }
+  const ar = document.getElementById('antigo-preview-resta');
+  if(ar){ ar.textContent='— g'; ar.style.color='var(--c-green)'; }
+
   if(tipo==='antigo')   updateAntigoDispo();
   if(tipo==='cadastro') updateCadastroDispo();
 }
@@ -2574,19 +2586,17 @@ function renderMetalKPIs(){
   const cards = metais.map(m => {
     const cfg         = METAL_CFG[m];
     const saldo       = calcSaldoTotal(m);
-    const totalChegou = METAIS.filter(e=>e.metal===m&&e.tipo==='entrada').reduce((a,e)=>a+(e.chegou||0),0);
-    const totalCad    = METAIS.filter(e=>e.metal===m&&e.tipo==='cadastro').reduce((a,e)=>a+(e.peso||0),0);
-    const totalAntigo = METAIS.filter(e=>e.metal===m&&e.tipo==='antigo').reduce((a,e)=>a+(e.peso||0),0);
+    const saldoSecond = calcSaldoPorOrigem(m, 'second');
+    const saldoScrap  = calcSaldoPorOrigem(m, 'scrap');
     return `<div class="kpi" style="border-top:2px solid ${cfg.dot};">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div class="kpi-label">${cfg.label}</div>
         <span class="metal-tag ${cfg.cls}">${cfg.label.toUpperCase()}</span>
       </div>
       <div class="kpi-value" style="font-size:26px;">${saldo.toFixed(2)}<span style="font-size:14px;font-weight:400;color:var(--c-muted);margin-left:4px;">g</span></div>
-      <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:11px;color:var(--c-muted);">Chegou: <strong style="color:var(--c-text);">${totalChegou.toFixed(2)}g</strong></span>
-        <span style="font-size:11px;color:var(--c-muted);">Cadastrado: <strong style="color:var(--c-accent);">${totalCad.toFixed(2)}g</strong></span>
-        ${totalAntigo>0?`<span style="font-size:11px;color:var(--c-muted);">Antigo: <strong style="color:var(--c-amber);">${totalAntigo.toFixed(2)}g</strong></span>`:''}
+      <div style="margin-top:8px;display:flex;gap:12px;">
+        <span style="font-size:11px;color:var(--c-muted);">Second: <strong style="color:var(--c-accent);">${saldoSecond.toFixed(2)}g</strong></span>
+        <span style="font-size:11px;color:var(--c-muted);">Scrap: <strong style="color:var(--c-green);">${saldoScrap.toFixed(2)}g</strong></span>
       </div>
       <div class="kpi-sub" style="margin-top:4px;">saldo em estoque</div>
     </div>`;
