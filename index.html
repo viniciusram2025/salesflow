@@ -2632,14 +2632,12 @@ function renderMetalThead(){
   const el = document.getElementById('metal-thead');
   if(!el) return;
   el.innerHTML =
-    th('Data',       'data')      +
-    th('Metal',      'metal')     +
-    th('Tipo/Origem','tipo')      +
-    th('Chegou',     'chegou',  'right') +
-    th('Cadastrado', 'cadastrado','right','var(--c-green)') +
-    th('Sobrou',     'sobrou',  'right') +
-    th('→ Antigo',   'antigo',  'right','var(--c-amber)') +
-    th('Saldo acum.','saldo',   'right','var(--c-accent)') +
+    th('Data',       'data')                                          +
+    th('Metal',      'metal')                                         +
+    th('Origem',     'origem')                                        +
+    th('Ação',       'tipo')                                          +
+    th('Peso',       'chegou', 'right')                               +
+    th('Saldo acum.','saldo',  'right', 'var(--c-accent)')            +
     `<th style="padding:8px 10px;"></th>`;
 }
 
@@ -2695,51 +2693,27 @@ function renderMetalHistorico(){
     const [y,m,d]   = e.data.split('-');
     const dataFmt   = `${d}/${m}/${y}`;
 
-    const tipo = e.tipo || (isAntigo ? 'antigo' : 'entrada');
+    const tipo      = e.tipo || (isAntigo ? 'antigo' : 'entrada');
     const deleteBtn = `<button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;"><i class="ti ti-trash" style="font-size:13px;"></i></button>`;
-    const obsRow = e.obs ? `<tr style="border-bottom:none;"><td colspan="9" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : '';
+    const obsRow    = e.obs ? `<tr style="border-bottom:none;"><td colspan="7" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : '';
 
-    if(tipo === 'antigo'){
-      return `<tr style="background:rgba(245,166,35,.04);">
-        <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
-        <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
-        <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(245,166,35,.15);color:var(--c-amber);">🔥 Antigo</span></td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-amber);font-weight:700;">-${(e.peso||0).toFixed(2)}g</td>
-        <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
-        <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
-      </tr>${obsRow}`;
-    }
+    // Config por tipo
+    const TIPO_CFG = {
+      entrada:  {label:'↓ Entrada',   bg:'rgba(79,110,247,.12)',  color:'var(--c-accent)',  pesoColor:'var(--c-text)',  sinal:''},
+      cadastro: {label:'✓ Cadastro',  bg:'rgba(34,201,135,.12)',  color:'var(--c-green)',   pesoColor:'var(--c-green)', sinal:''},
+      antigo:   {label:'🔥 Antigo',   bg:'rgba(245,166,35,.12)',  color:'var(--c-amber)',   pesoColor:'var(--c-amber)', sinal:'-'},
+    };
+    const tc     = TIPO_CFG[tipo] || TIPO_CFG.entrada;
+    const peso   = tipo==='entrada' ? (e.chegou||e.peso||0) : (e.peso||0);
+    const origemLabel = tipo==='entrada' ? (ocfg.label||e.origem) : (tipo==='cadastro' ? (ORIGEM_CFG[e.origem]?.label||e.origem) : '—');
+    const origemCls   = tipo==='entrada' ? ocfg.cls : (tipo==='cadastro' ? (ORIGEM_CFG[e.origem]?.cls||'') : '');
 
-    if(tipo === 'cadastro'){
-      const ocfgCad = ORIGEM_CFG[e.origem] || {label: e.origem==='second'?'Second Hand':'Scrap', cls: e.origem==='second'?'origem-second':'origem-scrap'};
-      return `<tr style="background:rgba(34,201,135,.04);">
-        <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
-        <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
-        <td class="td-cell">
-          <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;background:rgba(34,201,135,.15);color:var(--c-green);">✓ Cadastro</span>
-          <span class="origem-tag ${ocfgCad.cls}" style="margin-left:4px;">${ocfgCad.label}</span>
-        </td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-green);font-weight:700;">${(e.peso||0).toFixed(2)}g</td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-muted);">—</td>
-        <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
-        <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
-      </tr>${obsRow}`;
-    }
-
-    // Entrada
-    return `<tr>
+    return `<tr style="${tipo!=='entrada'?'background:'+tc.bg.replace('.12','.04')+';':''}">
       <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
       <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
-      <td class="td-cell"><span class="origem-tag ${ocfg.cls}">${ocfg.label||e.origem}</span></td>
-      <td class="td-num">${(e.chegou||e.peso||0).toFixed(2)}g</td>
-      <td class="td-num" style="color:var(--c-muted);">—</td>
-      <td class="td-num" style="color:var(--c-muted);">—</td>
-      <td class="td-num" style="color:var(--c-muted);">—</td>
+      <td class="td-cell">${origemLabel!=='—'?`<span class="origem-tag ${origemCls}">${origemLabel}</span>`:'<span style="color:var(--c-muted2);">—</span>'}</td>
+      <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;background:${tc.bg};color:${tc.color};">${tc.label}</span></td>
+      <td class="td-num" style="color:${tc.pesoColor};font-weight:600;">${tc.sinal}${peso.toFixed(2)}g</td>
       <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
       <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
     </tr>${obsRow}`;
