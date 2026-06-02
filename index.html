@@ -54,7 +54,7 @@ window._doFirebaseLogin = async function(email, pass){
       return;
     }
     const profile = snap.data();
-    const user = { email, name: profile.name, personKey: profile.personKey, role: profile.role };
+    const user = { email, name: profile.name, personKey: profile.personKey, role: profile.role, permissions: profile.permissions || [], cargo: profile.cargo || '' };
     currentUser = user;
     sessionStorage.setItem('sf_user', JSON.stringify(user));
     err.style.display = 'none';
@@ -2052,10 +2052,20 @@ const ALL_PAGES = [
 // Aplica permissões no menu lateral conforme perfil do usuário
 function applyPermissions(user){
   const isAdmin = user.role === 'admin';
-  const perms   = user.permissions || [];
+
+  // Compatibilidade com role legado 'metais'
+  let perms = user.permissions || [];
+  if(!perms.length && user.role === 'metais'){
+    perms = ['metais'];
+  }
+  // Se tem permissões em todos os módulos, é admin na prática
+  if(perms.length === ALL_PAGES.length) {
+    user = {...user, role:'admin'};
+  }
+  const _isAdmin = user.role === 'admin';
 
   // Admin vê tudo sempre
-  if(isAdmin){
+  if(_isAdmin){
     document.querySelectorAll('.nav-section').forEach(s => s.style.display = '');
     document.querySelectorAll('.nav-item').forEach(n => n.style.display = '');
     // Garante que seção admin aparece
