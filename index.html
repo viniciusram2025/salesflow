@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -273,7 +274,25 @@ select option{background:var(--c-bg);}
   .form-row{grid-template-columns:1fr;}
 }
 
-/* ── LOGIN SCREEN ── */
+/* ── METALS ── */
+.metal-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;letter-spacing:.03em;}
+.metal-ouro   {background:rgba(245,166,35,.15);color:var(--c-amber);}
+.metal-prata  {background:rgba(232,233,240,.1);color:#c8cad4;}
+.metal-platina{background:rgba(155,114,240,.15);color:var(--c-purple);}
+.origem-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;}
+.origem-second{background:rgba(79,110,247,.12);color:var(--c-accent);}
+.origem-scrap {background:rgba(34,201,135,.12);color:var(--c-green);}
+.metal-chart-btn{transition:all .15s;}
+.active-chart-btn{border-color:var(--c-accent)!important;color:var(--c-accent)!important;background:var(--c-accent-dim)!important;}
+input[type=number]{-moz-appearance:textfield;}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+.td-num{text-align:right;padding:10px 10px;color:var(--c-text);font-variant-numeric:tabular-nums;}
+.td-cell{padding:10px 10px;}
+tbody tr{border-bottom:1px solid var(--c-border);transition:background .1s;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody tr:last-child{border-bottom:none;}
+</style>
 #login-screen{
   position:fixed;inset:0;background:var(--c-bg);z-index:200;
   display:flex;align-items:center;justify-content:center;
@@ -378,6 +397,9 @@ select option{background:var(--c-bg);}
     <div class="nav-item" onclick="goTo('equipe')" data-page="equipe"><i class="ti ti-users"></i>Equipe <span class="nav-badge" id="badge-equipe" style="display:none;"></span></div>
     <div class="nav-item" onclick="goTo('dashboard')" data-page="dashboard"><i class="ti ti-chart-bar"></i>Dashboard</div>
     <div class="nav-item" onclick="goTo('relatorios')" data-page="relatorios"><i class="ti ti-file-analytics"></i>Relatórios</div>
+
+    <div class="nav-section">Estoque</div>
+    <div class="nav-item" onclick="goTo('metais')" data-page="metais"><i class="ti ti-weight"></i>Controle de Metais</div>
 
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
@@ -606,6 +628,133 @@ select option{background:var(--c-bg);}
         </div>
       </div>
 
+      <!-- ══════ PAGE: METAIS ══════ -->
+      <div id="page-metais" class="page">
+
+        <!-- KPIs saldo atual por metal -->
+        <div class="grid-3 mb-20" id="metal-kpis"></div>
+
+        <div class="grid-2 mb-20">
+
+          <!-- FORMULÁRIO DE ENTRADA -->
+          <div class="card">
+            <div class="sec-head">
+              <span class="sec-title"><i class="ti ti-plus-circle" style="color:var(--c-accent);margin-right:6px;"></i>Registrar entrada</span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Data</label>
+                <input type="date" id="metal-date" style="cursor:pointer;"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Metal</label>
+                <select id="metal-tipo">
+                  <option value="ouro">Ouro</option>
+                  <option value="prata">Prata</option>
+                  <option value="platina">Platina</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Origem</label>
+                <select id="metal-origem">
+                  <option value="second">Second Hand</option>
+                  <option value="scrap">Scrap</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Chegou hoje (g)</label>
+                <input type="number" id="metal-chegou" placeholder="0.00" min="0" step="0.01"
+                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Cadastrado no sistema (g)</label>
+                <input type="number" id="metal-cadastrado" placeholder="0.00" min="0" step="0.01"
+                  style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;"/>
+              </div>
+              <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
+                <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;font-size:13px;">
+                  <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Sobrou</span>
+                  <span id="metal-sobrou-preview" style="font-weight:700;color:var(--c-green);">— g</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Observação (opcional)</label>
+              <input type="text" id="metal-obs" placeholder="Ex: lote da Luciana, anéis antigos..."/>
+            </div>
+            <button class="btn" onclick="salvarEntradaMetal()" style="width:100%;justify-content:center;">
+              <i class="ti ti-check"></i>Confirmar entrada
+            </button>
+          </div>
+
+          <!-- GRÁFICO -->
+          <div class="card">
+            <div class="sec-head">
+              <span class="sec-title">Saldo acumulado — últimos 14 dias</span>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-ghost btn-sm metal-chart-btn active-chart-btn" onclick="setChartMetal('ouro',this)">Ouro</button>
+                <button class="btn-ghost btn-sm metal-chart-btn" onclick="setChartMetal('prata',this)">Prata</button>
+                <button class="btn-ghost btn-sm metal-chart-btn" onclick="setChartMetal('platina',this)">Platina</button>
+              </div>
+            </div>
+            <canvas id="metal-chart" height="200"></canvas>
+            <div id="metal-chart-empty" style="display:none;text-align:center;padding:40px 0;color:var(--c-muted);">
+              <i class="ti ti-chart-line" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3;"></i>
+              Nenhum dado registrado ainda
+            </div>
+          </div>
+        </div>
+
+        <!-- HISTÓRICO -->
+        <div class="card">
+          <div class="sec-head">
+            <span class="sec-title">Histórico de entradas</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <select id="metal-filter-tipo" onchange="renderMetalHistorico()"
+                style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:8px;padding:5px 10px;color:var(--c-text);font-size:12px;outline:none;">
+                <option value="todos">Todos os metais</option>
+                <option value="ouro">Ouro</option>
+                <option value="prata">Prata</option>
+                <option value="platina">Platina</option>
+              </select>
+              <select id="metal-filter-origem" onchange="renderMetalHistorico()"
+                style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:8px;padding:5px 10px;color:var(--c-text);font-size:12px;outline:none;">
+                <option value="todos">Todas as origens</option>
+                <option value="second">Second Hand</option>
+                <option value="scrap">Scrap</option>
+              </select>
+            </div>
+          </div>
+          <!-- tabela -->
+          <div style="overflow-x:auto;">
+            <table id="metal-table" style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--c-border2);">
+                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Data</th>
+                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Metal</th>
+                  <th style="text-align:left;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Origem</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Chegou</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Cadastrado</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Sobrou</th>
+                  <th style="text-align:right;padding:8px 10px;color:var(--c-muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Saldo acum.</th>
+                  <th style="padding:8px 10px;"></th>
+                </tr>
+              </thead>
+              <tbody id="metal-tbody"></tbody>
+            </table>
+            <div id="metal-empty" style="display:none;text-align:center;padding:40px;color:var(--c-muted);">
+              <i class="ti ti-scale" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3;"></i>
+              <div style="font-size:15px;font-weight:600;color:var(--c-text);margin-bottom:6px;">Nenhuma entrada registrada</div>
+              <div style="font-size:13px;">Use o formulário acima para registrar a primeira entrada</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -792,8 +941,10 @@ select option{background:var(--c-bg);}
 // LOGIN
 // ══════════════════════════════════════════
 const USERS = [
-  {email:'elias@goldtechjoias.com',  pass:'Elias105055@',  name:'Elias',  personKey:'EL'},
-  {email:'bruno@goldtechjoias.com',  pass:'Bruno105055@',  name:'Bruno',  personKey:'BR'},
+  {email:'elias@goldtechjoias.com',     pass:'Elias105055@',  name:'Elias',     personKey:'EL', role:'admin'},
+  {email:'bruno@goldtechjoias.com',     pass:'Bruno105055@',  name:'Bruno',     personKey:'BR', role:'admin'},
+  {email:'vitor@goldtechjoias.com',     pass:'Vitor105055@',  name:'Vitor',     personKey:'VI', role:'metais'},
+  {email:'francesco@goldtechjoias.com', pass:'Thesco105055@', name:'Francesco', personKey:'FR', role:'metais'},
 ];
 
 let currentUser = null;
@@ -841,25 +992,49 @@ function checkSession(){
 function showApp(user){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='flex';
-  // Atualiza user card com o usuário logado
-  const p = PEOPLE_LIST.find(x=>x.key===user.personKey)||PEOPLE_LIST[0];
+
+  // Controla visibilidade do menu conforme role
+  if(user.role === 'metais'){
+    // Esconde todas as seções exceto Estoque
+    document.querySelectorAll('.nav-section').forEach(s => {
+      s.style.display = s.textContent.trim() === 'Estoque' ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-item[data-page]').forEach(n => {
+      n.style.display = n.dataset.page === 'metais' ? '' : 'none';
+    });
+    // Esconde o botão Colaboradores
+    document.querySelector('.nav-item:not([data-page])').style.display = 'none';
+    // Vai direto para metais
+    goTo('metais');
+  } else {
+    // Admin — mostra tudo
+    document.querySelectorAll('.nav-section').forEach(s => s.style.display = '');
+    document.querySelectorAll('.nav-item').forEach(n => n.style.display = '');
+  }
+
+  // Atualiza user card
+  const p = PEOPLE_LIST.find(x=>x.key===user.personKey) || PEOPLE_LIST[0];
   if(p){
     const c = COLORS[p.ci%COLORS.length];
-    document.getElementById('user-av').textContent       = initials(p.name);
-    document.getElementById('user-av').style.background = c.bg;
-    document.getElementById('user-av').style.color      = c.color;
+    document.getElementById('user-av').textContent        = initials(p.name);
+    document.getElementById('user-av').style.background  = c.bg;
+    document.getElementById('user-av').style.color       = c.color;
     document.getElementById('user-name-display').textContent = p.name;
-    document.getElementById('user-role-display').textContent = p.role;
+    document.getElementById('user-role-display').textContent = user.role === 'metais' ? 'Controle de Metais' : 'Administrador';
   }
 }
 
 function doLogout(){
   sessionStorage.removeItem('sf_user');
   currentUser = null;
+  // Reseta visibilidade do menu para não vazar entre logins
+  document.querySelectorAll('.nav-section, .nav-item').forEach(el => el.style.display = '');
   document.getElementById('main-app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('login-email').value='';
   document.getElementById('login-pass').value='';
+  document.getElementById('login-pass').type='password';
+  document.getElementById('eye-icon').className='ti ti-eye';
 }
 
 // ══════════════════════════════════════════
@@ -923,7 +1098,8 @@ const PAGE_TITLES = {
   equipe:{title:'Painel da equipe',sub:'Visão do coordenador'},
   dashboard:{title:'Dashboard executivo',sub:'Relatório consolidado'},
   relatorios:{title:'Relatórios',sub:'Exportar dados e análises'},
-  ia:{title:'IA de Reuniões',sub:'Extração automática de tarefas via inteligência artificial'}
+  ia:{title:'IA de Reuniões',sub:'Extração automática de tarefas via inteligência artificial'},
+  metais:{title:'Controle de Metais',sub:'Ouro · Prata · Platina — Second Hand & Scrap'}
 };
 
 function goTo(name){
@@ -939,6 +1115,7 @@ function goTo(name){
   if(name==='kanban')    renderKanban();
   if(name==='equipe')    renderEquipe();
   if(name==='dashboard') renderDashboard();
+  if(name==='metais')    initMetaisPage();
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -1543,8 +1720,282 @@ const ks = document.createElement('style');
 ks.textContent = `@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}`;
 document.head.appendChild(ks);
 
+// ══════════════════════════════════════════
+// CONTROLE DE METAIS
+// ══════════════════════════════════════════
+
+let METAIS = [];           // array de entradas
+let metalChart = null;     // instância do Chart.js
+let activeChartMetal = 'ouro';
+
+function loadMetais(){
+  const saved = localStorage.getItem('sf_metais');
+  if(saved) METAIS = JSON.parse(saved);
+}
+function saveMetais(){ localStorage.setItem('sf_metais', JSON.stringify(METAIS)); }
+
+// config visual por tipo
+const METAL_CFG = {
+  ouro:    {label:'Ouro',    cls:'metal-ouro',    dot:'var(--c-amber)',  chartColor:'rgba(245,166,35,1)',  chartBg:'rgba(245,166,35,.15)'},
+  prata:   {label:'Prata',   cls:'metal-prata',   dot:'#c8cad4',        chartColor:'rgba(200,202,212,1)', chartBg:'rgba(200,202,212,.12)'},
+  platina: {label:'Platina', cls:'metal-platina', dot:'var(--c-purple)', chartColor:'rgba(155,114,240,1)', chartBg:'rgba(155,114,240,.15)'},
+};
+const ORIGEM_CFG = {
+  second:{label:'Second Hand', cls:'origem-second'},
+  scrap: {label:'Scrap',       cls:'origem-scrap'},
+};
+
+// ── Calc saldo acumulado por metal+origem até uma data ──
+function calcSaldo(metal, origem, ateData){
+  return METAIS
+    .filter(e => e.metal===metal && e.origem===origem && e.data <= ateData)
+    .reduce((acc, e) => acc + e.chegou - e.cadastrado, 0);
+}
+
+// ── Preview do campo "sobrou" ──
+function updateSobrouPreview(){
+  const chegou    = parseFloat(document.getElementById('metal-chegou').value)    || 0;
+  const cadastrado= parseFloat(document.getElementById('metal-cadastrado').value)|| 0;
+  const sobrou    = chegou - cadastrado;
+  const el = document.getElementById('metal-sobrou-preview');
+  el.textContent = sobrou.toFixed(2) + 'g';
+  el.style.color = sobrou < 0 ? 'var(--c-red)' : sobrou === 0 ? 'var(--c-muted)' : 'var(--c-green)';
+}
+
+// ── Salvar entrada ──
+function salvarEntradaMetal(){
+  const data      = document.getElementById('metal-date').value;
+  const metal     = document.getElementById('metal-tipo').value;
+  const origem    = document.getElementById('metal-origem').value;
+  const chegou    = parseFloat(document.getElementById('metal-chegou').value);
+  const cadastrado= parseFloat(document.getElementById('metal-cadastrado').value) || 0;
+  const obs       = document.getElementById('metal-obs').value.trim();
+
+  if(!data)          { shake('metal-date');    toast('Selecione a data.','amber');           return; }
+  if(isNaN(chegou) || chegou <= 0) { shake('metal-chegou'); toast('Informe o peso que chegou.','amber'); return; }
+  if(cadastrado > chegou){ shake('metal-cadastrado'); toast('Cadastrado não pode ser maior que o que chegou.','amber'); return; }
+
+  // Busca saldo do dia anterior (mesmo metal+origem, data < data atual)
+  const saldoAnterior = METAIS
+    .filter(e => e.metal===metal && e.origem===origem && e.data < data)
+    .reduce((acc, e) => acc + e.chegou - e.cadastrado, 0);
+
+  const sobrou = chegou + saldoAnterior - cadastrado;
+
+  METAIS.unshift({ id: Date.now(), data, metal, origem, chegou, cadastrado, sobrou: chegou - cadastrado, obs });
+  saveMetais();
+
+  // Limpa form mantendo data/metal/origem
+  document.getElementById('metal-chegou').value    = '';
+  document.getElementById('metal-cadastrado').value= '';
+  document.getElementById('metal-obs').value       = '';
+  document.getElementById('metal-sobrou-preview').textContent = '— g';
+
+  renderMetalKPIs();
+  renderMetalHistorico();
+  renderMetalChart(activeChartMetal);
+  toast('Entrada registrada!');
+}
+
+// ── KPIs: saldo atual por metal ──
+function renderMetalKPIs(){
+  const metais = ['ouro','prata','platina'];
+  const origensLabel = {second:'Second', scrap:'Scrap'};
+  const el = document.getElementById('metal-kpis');
+
+  el.innerHTML = metais.map(m => {
+    const cfg = METAL_CFG[m];
+    const totalChegou = METAIS.filter(e=>e.metal===m).reduce((a,e)=>a+e.chegou,0);
+    const totalCad    = METAIS.filter(e=>e.metal===m).reduce((a,e)=>a+e.cadastrado,0);
+    const saldo       = totalChegou - totalCad;
+    const secondSaldo = METAIS.filter(e=>e.metal===m&&e.origem==='second').reduce((a,e)=>a+(e.chegou-e.cadastrado),0);
+    const scrapSaldo  = METAIS.filter(e=>e.metal===m&&e.origem==='scrap').reduce((a,e)=>a+(e.chegou-e.cadastrado),0);
+    return `<div class="kpi" style="border-top:2px solid ${cfg.dot};">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div class="kpi-label">${cfg.label}</div>
+        <span class="metal-tag ${cfg.cls}">${cfg.label.toUpperCase()}</span>
+      </div>
+      <div class="kpi-value" style="font-size:26px;">${saldo.toFixed(2)}<span style="font-size:14px;font-weight:400;color:var(--c-muted);margin-left:4px;">g</span></div>
+      <div style="margin-top:8px;display:flex;gap:12px;">
+        <span style="font-size:11px;color:var(--c-muted);">Second: <strong style="color:var(--c-accent);">${secondSaldo.toFixed(2)}g</strong></span>
+        <span style="font-size:11px;color:var(--c-muted);">Scrap: <strong style="color:var(--c-green);">${scrapSaldo.toFixed(2)}g</strong></span>
+      </div>
+      <div class="kpi-sub" style="margin-top:4px;">saldo em estoque</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Tabela de histórico ──
+function renderMetalHistorico(){
+  const filterTipo   = document.getElementById('metal-filter-tipo')?.value   || 'todos';
+  const filterOrigem = document.getElementById('metal-filter-origem')?.value || 'todos';
+
+  let lista = [...METAIS].sort((a,b)=> a.data > b.data ? -1 : 1);
+  if(filterTipo   !== 'todos') lista = lista.filter(e=>e.metal  ===filterTipo);
+  if(filterOrigem !== 'todos') lista = lista.filter(e=>e.origem===filterOrigem);
+
+  const tbody = document.getElementById('metal-tbody');
+  const empty = document.getElementById('metal-empty');
+
+  if(!lista.length){
+    tbody.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+
+  // Calcula saldo acumulado por metal+origem em ordem cronológica
+  // Para exibir, recalcula saldo acum para cada linha
+  tbody.innerHTML = lista.map(e => {
+    const cfg  = METAL_CFG[e.metal]   || {};
+    const ocfg = ORIGEM_CFG[e.origem] || {};
+    const saldoAcum = calcSaldo(e.metal, e.origem, e.data);
+    const [y,m,d]   = e.data.split('-');
+    const dataFmt   = `${d}/${m}/${y}`;
+    const sobrouColor = e.sobrou < 0 ? 'var(--c-red)' : e.sobrou === 0 ? 'var(--c-muted)' : 'var(--c-green)';
+    return `<tr>
+      <td class="td-cell" style="color:var(--c-text);white-space:nowrap;">${dataFmt}</td>
+      <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
+      <td class="td-cell"><span class="origem-tag ${ocfg.cls}">${ocfg.label||e.origem}</span></td>
+      <td class="td-num">${e.chegou.toFixed(2)}g</td>
+      <td class="td-num">${e.cadastrado.toFixed(2)}g</td>
+      <td class="td-num" style="color:${sobrouColor};font-weight:600;">${e.sobrou.toFixed(2)}g</td>
+      <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
+      <td class="td-cell" style="text-align:right;">
+        <button class="btn-ghost btn-sm" onclick="deletarEntradaMetal(${e.id})" style="color:var(--c-red);border-color:rgba(240,82,82,.2);padding:4px 8px;">
+          <i class="ti ti-trash" style="font-size:13px;"></i>
+        </button>
+      </td>
+    </tr>
+    ${e.obs ? `<tr style="border-bottom:none;"><td colspan="8" style="padding:0 10px 10px 10px;font-size:11px;color:var(--c-muted2);font-style:italic;">↳ ${e.obs}</td></tr>` : ''}`;
+  }).join('');
+}
+
+// ── Deletar entrada ──
+function deletarEntradaMetal(id){
+  if(!confirm('Remover esta entrada?')) return;
+  METAIS = METAIS.filter(e=>e.id!==id);
+  saveMetais();
+  renderMetalKPIs();
+  renderMetalHistorico();
+  renderMetalChart(activeChartMetal);
+  toast('Entrada removida.','red');
+}
+
+// ── Gráfico de saldo acumulado ──
+function setChartMetal(metal, btn){
+  activeChartMetal = metal;
+  document.querySelectorAll('.metal-chart-btn').forEach(b=>b.classList.remove('active-chart-btn'));
+  if(btn) btn.classList.add('active-chart-btn');
+  renderMetalChart(metal);
+}
+
+function renderMetalChart(metal){
+  const cfg = METAL_CFG[metal];
+  const canvas = document.getElementById('metal-chart');
+  const emptyEl= document.getElementById('metal-chart-empty');
+
+  // Últimos 14 dias
+  const days = [];
+  for(let i=13;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+
+  const secondData  = days.map(d => calcSaldo(metal,'second',d));
+  const scrapData   = days.map(d => calcSaldo(metal,'scrap',d));
+  const hasData     = secondData.some(v=>v>0) || scrapData.some(v=>v>0);
+
+  if(!hasData){
+    canvas.style.display='none';
+    emptyEl.style.display='block';
+    return;
+  }
+  canvas.style.display='block';
+  emptyEl.style.display='none';
+
+  const labels = days.map(d=>{ const [y,m,dd]=d.split('-'); return `${dd}/${m}`; });
+
+  if(metalChart) metalChart.destroy();
+  metalChart = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {
+          label:'Second Hand',
+          data: secondData,
+          borderColor:'var(--c-accent)',
+          backgroundColor:'rgba(79,110,247,.08)',
+          borderWidth:2,
+          pointRadius:4,
+          pointHoverRadius:6,
+          pointBackgroundColor:'var(--c-accent)',
+          fill:true,
+          tension:.35,
+        },
+        {
+          label:'Scrap',
+          data: scrapData,
+          borderColor:'var(--c-green)',
+          backgroundColor:'rgba(34,201,135,.06)',
+          borderWidth:2,
+          pointRadius:4,
+          pointHoverRadius:6,
+          pointBackgroundColor:'var(--c-green)',
+          fill:true,
+          tension:.35,
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          labels:{color:'#6b7280',font:{family:'DM Sans',size:12},boxWidth:12,padding:16}
+        },
+        tooltip:{
+          backgroundColor:'#161921',
+          borderColor:'#2a2d38',
+          borderWidth:1,
+          titleColor:'#e8e9f0',
+          bodyColor:'#6b7280',
+          padding:12,
+          callbacks:{
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}g`
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{color:'rgba(42,45,56,.6)'},
+          ticks:{color:'#6b7280',font:{family:'DM Sans',size:11}}
+        },
+        y:{
+          grid:{color:'rgba(42,45,56,.6)'},
+          ticks:{color:'#6b7280',font:{family:'DM Sans',size:11},callback:v=>v+'g'}
+        }
+      }
+    }
+  });
+}
+
+// ── Init da página de metais ──
+function initMetaisPage(){
+  document.getElementById('metal-date').value = todayISO();
+  // live preview sobrou
+  ['metal-chegou','metal-cadastrado'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', updateSobrouPreview);
+  });
+  renderMetalKPIs();
+  renderMetalHistorico();
+  renderMetalChart('ouro');
+}
+
 // ─── INIT ─────────────────────────────────────────────
 loadData();        // carrega tarefas do localStorage
+loadMetais();      // carrega metais do localStorage
 renderTasks([]);   // renderiza lista vazia
 checkSession();    // verifica se já tem sessão ativa (recarregamento de página)
 </script>
