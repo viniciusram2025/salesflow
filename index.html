@@ -2368,9 +2368,10 @@ function calcSaldo(metal, origem, ateData){
   }
 
   // Saldo total = entradas - cadastros - antigos
-  const entradas  = registros.filter(e=>e.tipo==='entrada').reduce((a,e)=>a+(e.chegou||0),0);
-  const cadastros = registros.filter(e=>e.tipo==='cadastro').reduce((a,e)=>a+(e.peso||0),0);
-  const antigos   = registros.filter(e=>e.tipo==='antigo').reduce((a,e)=>a+(e.peso||0),0);
+  // origem==='antigo' é compatibilidade com registros antigos sem campo tipo
+  const entradas  = registros.filter(e=>e.tipo==='entrada'  || (!e.tipo && e.origem!=='antigo' && e.origem!=='cadastro')).reduce((a,e)=>a+(e.chegou||0),0);
+  const cadastros = registros.filter(e=>e.tipo==='cadastro' || (!e.tipo && e.origem==='cadastro')).reduce((a,e)=>a+(e.peso||0),0);
+  const antigos   = registros.filter(e=>e.tipo==='antigo'   || (!e.tipo && e.origem==='antigo')).reduce((a,e)=>a+(e.peso||0),0);
   return entradas - cadastros - antigos;
 }
 
@@ -2730,10 +2731,12 @@ function renderMetalHistorico(){
   const saldoCorrente = {};
   todosOrdenados.forEach(e => {
     if(!saldoCorrente[e.metal]) saldoCorrente[e.metal] = 0;
-    if(e.tipo==='entrada')  saldoCorrente[e.metal] += (e.chegou||e.peso||0);
-    if(e.tipo==='cadastro') saldoCorrente[e.metal] -= (e.peso||0);
-    if(e.tipo==='antigo')   saldoCorrente[e.metal] -= (e.peso||0);
-    saldoMap.set(e.id, saldoCorrente[e.metal]);
+    const _tipo = e.tipo || (e.origem==='antigo' ? 'antigo' : e.origem==='cadastro' ? 'cadastro' : 'entrada');
+    if(_tipo==='entrada')  saldoCorrente[e.metal] += (e.chegou||e.peso||0);
+    if(_tipo==='cadastro') saldoCorrente[e.metal] -= (e.peso||0);
+    if(_tipo==='antigo')   saldoCorrente[e.metal] -= (e.peso||0);
+    // Usa String(id) como chave para evitar mismatch número/string
+    saldoMap.set(String(e.id), parseFloat(saldoCorrente[e.metal].toFixed(4)));
   });
 
   tbody.innerHTML = lista.map(e => {
@@ -2742,7 +2745,7 @@ function renderMetalHistorico(){
     const ocfg    = isAntigo
       ? {label:'→ Antigo', cls:''}
       : (ORIGEM_CFG[e.origem] || {label:e.origem, cls:''});
-    const saldoAcum = saldoMap.get(e.id) ?? 0;
+    const saldoAcum = saldoMap.get(String(e.id)) ?? 0;
     const [y,m,d]   = e.data.split('-');
     const dataFmt   = `${d}/${m}/${y}`;
 
