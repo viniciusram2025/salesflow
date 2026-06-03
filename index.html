@@ -108,19 +108,28 @@ window._initFirebaseListeners = function(){
     }
   });
 
-  // USUARIOS
+  // USUARIOS — reconstrói PEOPLE_LIST do zero a cada update
   onSnapshot(collection(db,'usuarios'), snap => {
     usuariosCache = snap.docs.map(d=>({email:d.id, ...d.data()}));
-    // Sincroniza PEOPLE_LIST com usuarios do Firestore
-    usuariosCache.forEach(u => {
-      if(!u.personKey) return;
-      const idx = PEOPLE_LIST.findIndex(p=>p.key===u.personKey);
-      const ci  = idx>=0 ? PEOPLE_LIST[idx].ci : PEOPLE_LIST.length % COLORS.length;
-      if(idx>=0) PEOPLE_LIST[idx] = {key:u.personKey, name:u.name||u.email, role:u.cargo||'Colaborador', ci};
-      else       PEOPLE_LIST.push({key:u.personKey, name:u.name||u.email, role:u.cargo||'Colaborador', ci});
-    });
+    // Substitui PEOPLE_LIST completamente — sem duplicatas
+    PEOPLE_LIST = usuariosCache
+      .filter(u => u.personKey)
+      .map((u, i) => ({
+        key:  u.personKey,
+        name: u.name || u.email,
+        role: u.cargo || 'Colaborador',
+        ci:   i % COLORS.length,
+      }));
+    // Atualiza selects de responsável em aberto
+    const np = document.getElementById('new-person');
+    if(np) buildPersonOptions('new-person', np.value);
+    const ep = document.getElementById('edit-person');
+    if(ep) buildPersonOptions('edit-person', ep.value);
     const pg = document.getElementById('page-usuarios');
     if(pg && pg.classList.contains('active')) renderUsuariosPage();
+    // Atualiza badge do menu
+    const badge = document.getElementById('badge-equipe');
+    if(badge){ badge.textContent = PEOPLE_LIST.length; badge.style.display = PEOPLE_LIST.length ? 'inline' : 'none'; }
   });
 };
 </script>
@@ -150,6 +159,31 @@ window._initFirebaseListeners = function(){
   --font-serif:'Instrument Serif',serif;
   --r:10px;--r-lg:16px;
 }
+/* ── LIGHT THEME ── */
+body.light{
+  --c-bg:#f0f2f5;
+  --c-surface:#ffffff;
+  --c-surface2:#f5f6f8;
+  --c-border:#e2e5eb;
+  --c-border2:#d0d4de;
+  --c-text:#1a1d27;
+  --c-muted:#6b7280;
+  --c-muted2:#9ca3af;
+  --c-accent:#4f6ef7;
+  --c-accent2:#3d5ce8;
+  --c-green:#16a870;
+  --c-amber:#d4861a;
+  --c-red:#dc2626;
+  --c-purple:#7c3aed;
+  --c-green-dim:rgba(22,168,112,.1);
+  --c-amber-dim:rgba(212,134,26,.1);
+  --c-red-dim:rgba(220,38,38,.1);
+  --c-accent-dim:rgba(79,110,247,.1);
+  --c-purple-dim:rgba(124,58,237,.1);
+}
+body.light .login-box{box-shadow:0 8px 40px rgba(0,0,0,.12);}
+body.light select option{background:#fff;color:#1a1d27;}
+body.light ::-webkit-scrollbar-thumb{background:var(--c-border2);}
 html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var(--font);font-size:14px;line-height:1.5;}
 
 /* ── LAYOUT ── */
@@ -561,7 +595,7 @@ tbody tr:last-child{border-bottom:none;}
     <div class="nav-item nav-admin-only" onclick="goTo('configuracoes')" data-page="configuracoes"><i class="ti ti-settings-2"></i>Configurações</div>
 
     <div class="sidebar-bottom">
-      <div class="nav-item" onclick="openPessoas()" style="margin-bottom:6px;">
+      <div class="nav-item nav-admin-only" onclick="goTo('usuarios')" style="margin-bottom:6px;">
         <i class="ti ti-user-cog"></i>Colaboradores
       </div>
       <div class="user-card" id="user-card-display" onclick="doLogout()" title="Sair">
@@ -591,6 +625,9 @@ tbody tr:last-child{border-bottom:none;}
         </div>
         <div class="icon-btn" onclick="toggleNotif()">
           <i class="ti ti-bell" style="font-size:17px;"></i>
+        </div>
+        <div class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Alternar tema">
+          <i class="ti ti-sun" id="theme-icon" style="font-size:17px;"></i>
         </div>
         <div class="icon-btn" id="sync-btn" title="Sincronizado com Firebase" style="cursor:default;">
           <i class="ti ti-cloud-check" style="font-size:17px;color:var(--c-green);"></i>
@@ -1335,6 +1372,23 @@ tbody tr:last-child{border-bottom:none;}
 // ══════════════════════════════════════════
 let currentUser = null;
 
+// ── TEMA ─────────────────────────────────────────────
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('sf_theme', isLight ? 'light' : 'dark');
+  const icon = document.getElementById('theme-icon');
+  if(icon) icon.className = isLight ? 'ti ti-moon' : 'ti ti-sun';
+}
+
+function loadTheme(){
+  const saved = localStorage.getItem('sf_theme');
+  if(saved === 'light'){
+    document.body.classList.add('light');
+    const icon = document.getElementById('theme-icon');
+    if(icon) icon.className = 'ti ti-moon';
+  }
+}
+
 function togglePassVis(){
   const inp  = document.getElementById('login-pass');
   const icon = document.getElementById('eye-icon');
@@ -1416,21 +1470,14 @@ const COLORS = [
 ];
 
 // ─── PEOPLE — lista fixa de colaboradores ─────────────
-let PEOPLE_LIST = [
-  {key:'BR', name:'Bruno',     role:'Colaborador', ci:0},
-  {key:'EL', name:'Elias',     role:'Colaborador', ci:1},
-  {key:'MA', name:'Matheus',   role:'Colaborador', ci:2},
-  {key:'FR', name:'Francesco', role:'Colaborador', ci:3},
-  {key:'VI', name:'Vitor',     role:'Colaborador', ci:4},
-  {key:'FE', name:'Fernanda',  role:'Colaborador', ci:5},
-  {key:'CL', name:'Clara',     role:'Colaborador', ci:1},
-];
+// PEOPLE_LIST vem exclusivamente do Firestore (coleção usuarios)
+// Nunca edite manualmente — use o painel Usuários & Acesso
+let PEOPLE_LIST = [];
 
 function getPeople(){
-  // A lista de colaboradores é fixa — não carrega do localStorage
   return PEOPLE_LIST;
 }
-function savePeople(){ /* lista fixa, sem persistir */ }
+function savePeople(){ /* gerenciado pelo Firestore */ }
 function getPeopleMap(){
   const m={};
   getPeople().forEach((p)=>{
@@ -1928,22 +1975,8 @@ function renderPessoasList(){
     </div>`).join('');
 }
 
-function updateUserCard(){
-  const people = getPeople();
-  if(people.length){
-    const p = people[0];
-    const c = COLORS[p.ci%COLORS.length];
-    document.getElementById('user-av').textContent       = initials(p.name);
-    document.getElementById('user-av').style.background = c.bg;
-    document.getElementById('user-av').style.color      = c.color;
-    document.getElementById('user-name-display').textContent = p.name;
-    document.getElementById('user-role-display').textContent = p.role;
-    // badge equipe
-    const badge = document.getElementById('badge-equipe');
-    badge.textContent = people.length;
-    badge.style.display = 'inline';
-  }
-}
+// updateUserCard removido — gerenciado pelo listener Firestore
+
 
 function updatePessoa(i, field, val){
   PEOPLE_LIST[i][field] = val;
@@ -1957,14 +1990,12 @@ function updatePessoa(i, field, val){
     PEOPLE_LIST[i].key = newKey;
   }
   savePeople();
-  updateUserCard();
 }
 
 function removePessoa(i){
   PEOPLE_LIST.splice(i,1);
   savePeople();
   renderPessoasList();
-  updateUserCard();
 }
 
 function addPessoa(){
@@ -1978,7 +2009,6 @@ function addPessoa(){
   document.getElementById('np-nome').value='';
   document.getElementById('np-cargo').value='';
   renderPessoasList();
-  updateUserCard();
   toast('Colaborador adicionado!');
 }
 
@@ -2290,12 +2320,7 @@ async function salvarUsuario(){
   const { doc, setDoc } = window._fbModules;
   await setDoc(doc(window._db, 'usuarios', email), data);
 
-  // Atualiza PEOPLE_LIST local
-  const idx = PEOPLE_LIST.findIndex(p=>p.key===sigla);
-  const ci  = idx>=0 ? PEOPLE_LIST[idx].ci : PEOPLE_LIST.length;
-  if(idx>=0) PEOPLE_LIST[idx] = {key:sigla, name:nome, role:cargo||'Colaborador', ci};
-  else       PEOPLE_LIST.push({key:sigla, name:nome, role:cargo||'Colaborador', ci});
-
+  // PEOPLE_LIST é atualizado automaticamente pelo listener do Firestore
   closeModal('modal-usuario');
   toast('Usuário salvo!');
 }
@@ -3361,9 +3386,9 @@ function initMetaisPage(){
 }
 
 // ─── INIT ─────────────────────────────────────────────
+loadTheme();       // aplica tema salvo antes de mostrar qualquer coisa
 renderTasks([]);   // renderiza lista vazia enquanto Firebase carrega
 checkSession();    // verifica sessão — se logado, mostra app e inicia listeners
-
 // Inicia listeners Firebase após módulos carregados
 window.addEventListener('load', () => {
   if(typeof window._initFirebaseListeners === 'function'){
