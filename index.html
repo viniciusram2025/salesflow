@@ -910,6 +910,20 @@ tbody tr:last-child{border-bottom:none;}
                   <input type="number" id="cadastro-peso" placeholder="0.00" min="0.01" step="0.01"
                     style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateCadastroPreview()"/>
                 </div>
+                <div class="form-group">
+                  <label class="form-label">Diferença de balança (g)</label>
+                  <input type="number" id="cadastro-diff" placeholder="ex: -0.11 ou +0.08" step="0.01"
+                    style="background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;outline:none;width:100%;" oninput="updateCadastroPreview()"/>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Peso real cadastrado (com diferença)</label>
+                  <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
+                    <span id="cadastro-preview-real" style="font-weight:700;font-size:14px;color:var(--c-green);">— g</span>
+                    <span id="cadastro-diff-label" style="font-size:11px;color:var(--c-muted);margin-left:6px;"></span>
+                  </div>
+                </div>
                 <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;">
                   <div style="background:var(--c-border);border-radius:var(--r);padding:9px 12px;">
                     <span style="color:var(--c-muted);font-size:11px;display:block;margin-bottom:2px;">Ainda por cadastrar</span>
@@ -2482,9 +2496,23 @@ function updateCadastroPreview(){
   const metal  = document.getElementById('metal-tipo').value;
   const origem = document.getElementById('cadastro-origem')?.value || 'second';
   const saldo  = calcSaldoPorOrigem(metal, origem);
-  const peso  = parseFloat(document.getElementById('cadastro-peso')?.value) || 0;
-  const resta = saldo - peso;
-  const el    = document.getElementById('cadastro-preview-resta');
+  const peso   = parseFloat(document.getElementById('cadastro-peso')?.value) || 0;
+  const diff   = parseFloat(document.getElementById('cadastro-diff')?.value) || 0;
+  const pesoReal = peso + diff;
+  const resta  = saldo - pesoReal;
+
+  const pr = document.getElementById('cadastro-preview-real');
+  if(pr){
+    pr.textContent = peso > 0 ? pesoReal.toFixed(2)+'g' : '— g';
+    pr.style.color = pesoReal < 0 ? 'var(--c-red)' : 'var(--c-green)';
+  }
+  const dl = document.getElementById('cadastro-diff-label');
+  if(dl && diff !== 0){
+    dl.textContent = diff > 0 ? `(+${diff.toFixed(2)}g balança)` : `(${diff.toFixed(2)}g balança)`;
+    dl.style.color = diff > 0 ? 'var(--c-amber)' : 'var(--c-accent)';
+  } else if(dl){ dl.textContent = ''; }
+
+  const el = document.getElementById('cadastro-preview-resta');
   if(!el) return;
   el.textContent = peso > 0 ? resta.toFixed(2)+'g' : '— g';
   el.style.color = resta < 0 ? 'var(--c-red)' : 'var(--c-green)';
@@ -2495,22 +2523,27 @@ async function confirmarCadastroMetal(){
   const metal  = document.getElementById('metal-tipo').value;
   const origem = document.getElementById('cadastro-origem')?.value || 'second';
   const peso   = parseFloat(document.getElementById('cadastro-peso').value);
+  const diff   = parseFloat(document.getElementById('cadastro-diff')?.value) || 0;
+  const pesoReal = peso + diff;
   const obs    = document.getElementById('metal-obs').value.trim();
   const saldo  = calcSaldoPorOrigem(metal, origem);
 
-  if(!data)               { shake('metal-date');    toast('Selecione a data.','amber'); return; }
-  if(!metal)             { shake('metal-tipo');    toast('Selecione o metal.','amber'); return; }
-  if(!origem)            { shake('cadastro-origem'); toast('Selecione a origem.','amber'); return; }
-  if(isNaN(peso)||peso<=0){ shake('cadastro-peso'); toast('Informe o peso cadastrado.','amber'); return; }
-  if(peso > saldo)        { shake('cadastro-peso'); toast(`Saldo insuficiente de ${origem==='second'?'Second Hand':'Scrap'}. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
+  if(!data)                { shake('metal-date');      toast('Selecione a data.','amber'); return; }
+  if(!metal)               { shake('metal-tipo');      toast('Selecione o metal.','amber'); return; }
+  if(!origem)              { shake('cadastro-origem'); toast('Selecione a origem.','amber'); return; }
+  if(isNaN(peso)||peso<=0) { shake('cadastro-peso');  toast('Informe o peso cadastrado.','amber'); return; }
+  if(pesoReal > saldo)     { shake('cadastro-peso');  toast(`Saldo insuficiente. Disponível: ${saldo.toFixed(2)}g`,'red'); return; }
 
+  const diffObs = diff !== 0 ? ` | Dif. balança: ${diff > 0 ? '+' : ''}${diff.toFixed(2)}g` : '';
   const entrada = {
     id: Date.now(), data, metal,
     tipo: 'cadastro',
-    origem,   // second ou scrap
-    peso,
-    chegou: 0, cadastrado: peso, sobrou: 0,
-    obs: obs || `Cadastro ${origem==='second'?'Second Hand':'Scrap'}`,
+    origem,
+    peso: pesoReal,        // peso real = cadastrado + diferença
+    pesoInformado: peso,   // peso original informado
+    diffBalanca: diff,     // diferença de balança
+    chegou: 0, cadastrado: pesoReal, sobrou: 0,
+    obs: (obs || `Cadastro ${origem==='second'?'Second Hand':'Scrap'}`) + diffObs,
     createdAt: Date.now()
   };
   const { doc, setDoc } = window._fbModules;
@@ -2690,13 +2723,12 @@ function renderMetalHistorico(){
   });
 
   // Calcula saldo acumulado progressivo em ordem cronológica
-  // Ordena por data ASC para calcular progressão, depois mantém ordem da lista para exibir
-  const listaOrdenada = [...lista].sort((a,b)=> a.data<b.data?-1:a.data>b.data?1:(a.createdAt||0)-(b.createdAt||0));
-  
-  // Calcula saldo acumulado ponto a ponto
+  // Usa TODOS os registros (não só os filtrados) para saldo ser sempre correto
+  const todosOrdenados = [...METAIS].sort((a,b)=> a.data<b.data?-1:a.data>b.data?1:(a.createdAt||0)-(b.createdAt||0));
+
   const saldoMap = new Map();
-  const saldoCorrente = {}; // por metal
-  listaOrdenada.forEach(e => {
+  const saldoCorrente = {};
+  todosOrdenados.forEach(e => {
     if(!saldoCorrente[e.metal]) saldoCorrente[e.metal] = 0;
     if(e.tipo==='entrada')  saldoCorrente[e.metal] += (e.chegou||e.peso||0);
     if(e.tipo==='cadastro') saldoCorrente[e.metal] -= (e.peso||0);
@@ -2728,12 +2760,15 @@ function renderMetalHistorico(){
     const peso   = tipo==='entrada' ? (e.chegou||e.peso||0) : (e.peso||0);
     const origemLabel = tipo==='entrada' ? (ocfg.label||e.origem) : (tipo==='cadastro' ? (ORIGEM_CFG[e.origem]?.label||e.origem) : '—');
     const origemCls   = tipo==='entrada' ? ocfg.cls : (tipo==='cadastro' ? (ORIGEM_CFG[e.origem]?.cls||'') : '');
+    const diffTag = (tipo==='cadastro' && e.diffBalanca)
+      ? `<span style="font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;background:rgba(245,166,35,.15);color:var(--c-amber);margin-left:4px;">${e.diffBalanca>0?'+':''}${Number(e.diffBalanca).toFixed(2)}g</span>`
+      : '';
 
     return `<tr style="${tipo!=='entrada'?'background:'+tc.bg.replace('.12','.04')+';':''}">
       <td class="td-cell" style="white-space:nowrap;">${dataFmt}</td>
       <td class="td-cell"><span class="metal-tag ${cfg.cls}">${cfg.label||e.metal}</span></td>
       <td class="td-cell">${origemLabel!=='—'?`<span class="origem-tag ${origemCls}">${origemLabel}</span>`:'<span style="color:var(--c-muted2);">—</span>'}</td>
-      <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;background:${tc.bg};color:${tc.color};">${tc.label}</span></td>
+      <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;background:${tc.bg};color:${tc.color};">${tc.label}</span>${diffTag}</td>
       <td class="td-num" style="color:${tc.pesoColor};font-weight:600;">${tc.sinal}${peso.toFixed(2)}g</td>
       <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
       <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
@@ -2872,6 +2907,9 @@ function resetMetalForm(){
   document.getElementById('metal-cadastrado').value = '';
   document.getElementById('metal-obs').value     = '';
   const cp = document.getElementById('cadastro-peso');  if(cp) cp.value='';
+  const cd2= document.getElementById('cadastro-diff');  if(cd2) cd2.value='';
+  const cpr= document.getElementById('cadastro-preview-real'); if(cpr){ cpr.textContent='— g'; }
+  const cdl= document.getElementById('cadastro-diff-label'); if(cdl) cdl.textContent='';
   const ap = document.getElementById('antigo-peso');    if(ap) ap.value='';
   const co = document.getElementById('cadastro-origem');if(co) co.value='';
   const sp = document.getElementById('metal-sobrou-preview');
