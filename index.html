@@ -1190,6 +1190,31 @@ tbody tr:last-child{border-bottom:none;}
   </div>
 </div>
 
+<!-- ══════ MODAL: EDITAR CAMPO CONFIG ══════ -->
+<div class="modal-overlay" id="modal-config-edit">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <div class="modal-title" id="config-edit-title">Editar item</div>
+      <button class="modal-close" onclick="closeModal('modal-config-edit')">&times;</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label</label>
+      <input type="text" id="config-edit-label" placeholder="Nome visível..."/>
+    </div>
+    <div class="form-group" id="config-edit-color-group">
+      <label class="form-label">Cor</label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="color" id="config-edit-color" style="width:48px;height:38px;padding:2px;background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);cursor:pointer;"/>
+        <div style="flex:1;font-size:12px;color:var(--c-muted);">Cor usada nas tags e indicadores</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+      <button class="btn-ghost" onclick="closeModal('modal-config-edit')">Cancelar</button>
+      <button class="btn" onclick="confirmConfigEdit()"><i class="ti ti-check"></i>Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════ MODAL: NOVA TAREFA ══════ -->
 <div class="modal-overlay" id="modal-new">
   <div class="modal">
@@ -2327,7 +2352,17 @@ async function salvarUsuario(){
 
 async function deletarUsuario(){
   if(!editingUsuarioEmail) return;
-  if(!confirm(`Remover ${editingUsuarioEmail} do sistema?`)) return;
+  // Confirmação via modal de senha já existente não é necessária aqui
+  // Usa toast de confirmação dupla — clica de novo em 3s para confirmar
+  const btn = document.getElementById('uu-delete-btn');
+  if(!btn) return;
+  if(btn.dataset.confirming !== '1'){
+    btn.dataset.confirming = '1';
+    btn.innerHTML = '<i class="ti ti-alert-triangle"></i> Clique para confirmar';
+    btn.style.background = 'var(--c-amber)';
+    setTimeout(()=>{ btn.dataset.confirming='0'; btn.innerHTML='<i class="ti ti-trash"></i>Remover'; btn.style.background='var(--c-red)'; }, 3000);
+    return;
+  }
   const { doc, deleteDoc } = window._fbModules;
   await deleteDoc(doc(window._db, 'usuarios', editingUsuarioEmail));
   closeModal('modal-usuario');
@@ -2501,22 +2536,74 @@ function addConfigItem(sec){
 }
 
 function removeConfigItem(sec, idx){
-  if(!confirm(`Remover "${CONFIG[sec][idx].label}"?`)) return;
-  CONFIG[sec].splice(idx, 1);
-  saveConfig();
-  syncConfigToSelects();
-  renderConfigPage();
-  toast('Removido.','red');
+  const item = CONFIG[sec][idx];
+  // Mostra confirmação inline no próprio card
+  const listEl = document.getElementById(`cfg-list-${sec}`);
+  const rows = listEl.querySelectorAll('.config-item');
+  const row  = rows[idx];
+  if(!row) return;
+  // Se já tem confirm inline, executa
+  if(row.dataset.confirming === '1'){
+    CONFIG[sec].splice(idx, 1);
+    saveConfig();
+    syncConfigToSelects();
+    renderConfigPage();
+    toast('Removido.','red');
+    return;
+  }
+  // Mostra estado de confirmação na linha
+  row.dataset.confirming = '1';
+  row.style.background = 'var(--c-red-dim)';
+  row.style.borderRadius = 'var(--r)';
+  const btns = row.querySelectorAll('button');
+  if(btns.length >= 2){
+    btns[btns.length-1].innerHTML = '<i class="ti ti-check" style="font-size:13px;"></i> Confirmar';
+    btns[btns.length-1].style.background = 'var(--c-red)';
+    btns[btns.length-1].style.color = '#fff';
+  }
+  // Auto-cancela em 3s
+  setTimeout(()=>{
+    if(row.dataset.confirming==='1'){
+      row.dataset.confirming='0';
+      renderConfigPage();
+    }
+  }, 3000);
 }
+
+let _configEditSec = null;
+let _configEditIdx  = null;
 
 function openEditConfigItem(sec, idx){
   const item = CONFIG[sec][idx];
-  const novaLabel = prompt('Novo label:', item.label);
-  if(novaLabel === null) return;
-  CONFIG[sec][idx].label = novaLabel.trim() || item.label;
+  const secCfg = CONFIG_SECTIONS.find(s=>s.key===sec);
+  _configEditSec = sec;
+  _configEditIdx = idx;
+  document.getElementById('config-edit-title').textContent = `Editar — ${secCfg?.label||sec}`;
+  document.getElementById('config-edit-label').value = item.label;
+  const colorGroup = document.getElementById('config-edit-color-group');
+  const colorInput = document.getElementById('config-edit-color');
+  if(secCfg?.hasColor){
+    colorGroup.style.display = 'block';
+    colorInput.value = item.color || '#4f6ef7';
+  } else {
+    colorGroup.style.display = 'none';
+  }
+  openModal('modal-config-edit');
+  setTimeout(()=>document.getElementById('config-edit-label').focus(), 100);
+}
+
+function confirmConfigEdit(){
+  const label = document.getElementById('config-edit-label').value.trim();
+  if(!label){ shake('config-edit-label'); return; }
+  const item  = CONFIG[_configEditSec][_configEditIdx];
+  item.label  = label;
+  const secCfg = CONFIG_SECTIONS.find(s=>s.key===_configEditSec);
+  if(secCfg?.hasColor) item.color = document.getElementById('config-edit-color').value;
   saveConfig();
   syncConfigToSelects();
   renderConfigPage();
+  closeModal('modal-config-edit');
+  toast('Salvo!');
 }
 
 // Sincroniza os selects do formulário de tarefas com a config
@@ -3233,7 +3320,15 @@ function renderMetalHistorico(){
 
 // ── Deletar entrada ──
 function deletarEntradaMetal(id){
-  if(!confirm('Remover esta entrada?')) return;
+  const btn = event?.target?.closest('button');
+  if(btn && btn.dataset.confirming !== '1'){
+    btn.dataset.confirming = '1';
+    btn.innerHTML = '<i class="ti ti-alert-triangle" style="font-size:13px;"></i>';
+    btn.style.background = 'var(--c-red)';
+    btn.style.color = '#fff';
+    setTimeout(()=>{ btn.dataset.confirming='0'; btn.innerHTML='<i class="ti ti-trash" style="font-size:13px;"></i>'; btn.style.background=''; btn.style.color=''; }, 3000);
+    return;
+  }
   const { doc, deleteDoc } = window._fbModules;
   deleteDoc(doc(window._db,'metais', String(id)));
   toast('Entrada removida.','red');
