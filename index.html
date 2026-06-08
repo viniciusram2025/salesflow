@@ -773,15 +773,24 @@ tbody tr:last-child{border-bottom:none;}
 
 .fab-table-wrap { overflow-x: auto; }
 .fab-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.fab-table thead tr { border-bottom: 2px solid var(--fab-border); }
 .fab-table th {
-  padding: 10px 16px; text-align: left; font-size: 11px;
+  padding: 10px 14px; text-align: left; font-size: 11px;
   text-transform: uppercase; letter-spacing: .5px;
-  color: var(--fab-muted); border-bottom: 1px solid var(--fab-border); white-space: nowrap;
+  color: var(--fab-muted); background: rgba(255,255,255,.04);
+  white-space: nowrap; border-right: 1px solid rgba(255,255,255,.05);
 }
+.fab-table th:last-child { border-right: none; }
 .fab-table th.right { text-align: right; }
-.fab-table td { padding: 11px 16px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+.fab-table td {
+  padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.05);
+  border-right: 1px solid rgba(255,255,255,.03);
+  vertical-align: middle;
+}
+.fab-table td:last-child { border-right: none; }
 .fab-table td.right { text-align: right; }
-.fab-table tr:hover td { background: rgba(255,255,255,.025); }
+.fab-table tbody tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+.fab-table tbody tr:hover td { background: rgba(79,110,247,.07) !important; }
 
 .fab-bar-wrap { display: flex; align-items: center; gap: 8px; }
 .fab-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; min-width: 50px; }
@@ -4150,7 +4159,7 @@ window.addEventListener('load', () => {
       </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
-        <th>Ref</th><th>Produto</th><th>Subtipo</th>
+        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Tipo Pedra</th>
         <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço Cobrado</th>
         <th>Diamantes</th><th class="right">Cts Diam.</th>
         <th>Pedra Colorida</th><th class="right">Cts PC</th>
@@ -4159,6 +4168,7 @@ window.addEventListener('load', () => {
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
+        <td>${r.tipo_pedra||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -4166,11 +4176,11 @@ window.addEventListener('load', () => {
         <td class="right">${r.cts_diamantes||'—'}</td>
         <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
         <td class="right">${r.cts_pedra_colorida||'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
     } else {
       thead.innerHTML = `<tr>
-        <th>Ref</th><th>Produto</th><th>Subtipo</th>
-        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço Loja</th>
+        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Tipo Pedra</th>
+        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço À Vista</th>
         <th>Diamantes</th><th class="right">Cts Diam.</th>
         <th>Pedra Colorida</th><th class="right">Cts PC</th>
       </tr>`;
@@ -4178,14 +4188,15 @@ window.addEventListener('load', () => {
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
+        <td>${r.tipo_pedra||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
-        <td class="right" style="font-weight:700">${r.preco_loja?fmt.moeda(r.preco_loja):'—'}</td>
+        <td class="right" style="font-weight:700">${r.preco_avista?fmt.moeda(r.preco_avista):'—'}</td>
         <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
         <td class="right">${r.cts_diamantes||'—'}</td>
         <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
         <td class="right">${r.cts_pedra_colorida||'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
     }
   }
 
