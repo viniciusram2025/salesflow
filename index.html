@@ -1943,6 +1943,8 @@ function showApp(user){
   if(typeof window._initFirebaseListeners === 'function'){
     window._initFirebaseListeners();
   }
+  // Garante filtro correto ao trocar de conta (listeners já ativos não re-disparam)
+  applyFilter();
 
   // Aplica permissões baseadas no perfil do Firestore
   applyPermissions(user);
