@@ -1469,9 +1469,9 @@ canvas.fab-canvas { width: 100% !important; }
       <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(168,85,247,.15);color:#a855f7"><i class="ti ti-currency-dollar"></i></div>
         <div class="fab-kpi-body">
-          <div class="fab-kpi-label">Faturamento Mês</div>
+          <div class="fab-kpi-label">Faturamento Total</div>
           <div class="fab-kpi-value" id="fab-kpi-faturamento" style="color:#a855f7">—</div>
-          <div class="fab-kpi-sub">mês atual</div>
+          <div class="fab-kpi-sub">vendas com data registrada</div>
         </div>
       </div>
     </div>
@@ -4002,6 +4002,7 @@ window.addEventListener('load', () => {
   const fmt = {
     num:     (n) => Number(n || 0).toLocaleString("pt-BR"),
     moeda:   (n) => Number(n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
+    moeda2:  (n) => Number(n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     moedaK:  (n) => {
       const v = Number(n || 0);
       return v >= 1000 ? "R$" + (v / 1000).toFixed(0) + "k" : fmt.moeda(v);
@@ -4035,7 +4036,7 @@ window.addEventListener('load', () => {
     document.getElementById("fab-kpi-vendidos").textContent   = fmt.num(d.vendidos);
     document.getElementById("fab-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
     document.getElementById("fab-kpi-ticket").textContent     = fmt.moedaK(d.ticket_medio);
-    document.getElementById("fab-kpi-faturamento").textContent = fmt.moedaK(d.faturamento_mes);
+    document.getElementById("fab-kpi-faturamento").textContent = fmt.moeda2(d.faturamento_total);
   }
 
   // ── RENDER ALERTAS ───────────────────────────────────────────
