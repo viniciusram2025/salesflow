@@ -4169,7 +4169,7 @@ window.addEventListener('load', () => {
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
-        <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
         <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
@@ -4189,7 +4189,7 @@ window.addEventListener('load', () => {
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
-        <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700">${r.preco_avista?fmt.moeda(r.preco_avista):'—'}</td>
         <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
