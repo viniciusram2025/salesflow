@@ -796,26 +796,57 @@ tbody tr:last-child{border-bottom:none;}
 
 /* ── Filtros da tabela ── */
 .fab-filtros {
-  display: flex; gap: 8px; padding: 10px 14px;
+  display: flex; gap: 8px; padding: 12px 16px;
   border-bottom: 1px solid var(--fab-border);
   flex-wrap: wrap; align-items: center;
+  background: rgba(255,255,255,.015);
 }
-.fab-filtro-input {
-  background: var(--fab-bg); border: 1px solid var(--fab-border);
+.fab-filtro-search-wrap {
+  position: relative; display: flex; align-items: center; flex: 1; min-width: 180px; max-width: 280px;
+}
+.fab-filtro-search-wrap i {
+  position: absolute; left: 10px; font-size: 15px; color: var(--fab-muted); pointer-events: none;
+}
+.fab-filtro-busca {
+  width: 100%; background: var(--fab-bg); border: 1px solid var(--fab-border);
   color: var(--fab-text); font-family: var(--fab-font); font-size: 13px;
-  padding: 6px 11px; border-radius: 7px; outline: none; min-width: 0;
+  padding: 7px 11px 7px 32px; border-radius: 8px; outline: none;
+  transition: border-color .15s;
 }
-.fab-filtro-input:focus { border-color: var(--fab-accent); }
-.fab-filtro-input option { background: var(--fab-surface); }
-.fab-filtro-busca { flex: 1; min-width: 160px; max-width: 260px; }
-.fab-filtros-count { font-size: 12px; color: var(--fab-muted); margin-left: auto; white-space: nowrap; }
+.fab-filtro-busca:focus { border-color: var(--fab-accent); }
+.fab-filtro-sep { width: 1px; height: 22px; background: var(--fab-border); margin: 0 2px; }
+.fab-filtro-select-wrap { position: relative; display: flex; align-items: center; }
+.fab-filtro-select-wrap i {
+  position: absolute; left: 10px; font-size: 14px; color: var(--fab-muted); pointer-events: none;
+}
+.fab-filtro-select {
+  appearance: none; background: var(--fab-bg); border: 1px solid var(--fab-border);
+  color: var(--fab-text); font-family: var(--fab-font); font-size: 12px; font-weight: 500;
+  padding: 7px 28px 7px 30px; border-radius: 8px; outline: none; cursor: pointer;
+  transition: border-color .15s, background .15s; white-space: nowrap;
+}
+.fab-filtro-select:focus { border-color: var(--fab-accent); }
+.fab-filtro-select.active {
+  border-color: var(--fab-accent); background: rgba(79,110,247,.12); color: #fff;
+}
+.fab-filtro-select-wrap::after {
+  content: ''; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  border: 4px solid transparent; border-top: 5px solid var(--fab-muted);
+  margin-top: 3px; pointer-events: none;
+}
+.fab-filtros-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.fab-filtros-count {
+  font-size: 12px; color: var(--fab-muted); background: var(--fab-surface);
+  border: 1px solid var(--fab-border); border-radius: 20px; padding: 3px 10px;
+  white-space: nowrap;
+}
 .fab-filtro-clear {
   display: flex; align-items: center; gap: 5px;
   background: transparent; border: 1px solid var(--fab-border);
   color: var(--fab-muted); font-family: var(--fab-font); font-size: 12px;
-  padding: 6px 11px; border-radius: 7px; cursor: pointer; transition: .15s;
+  padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: .15s;
 }
-.fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); }
+.fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); background: rgba(239,68,68,.06); }
 .fab-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; min-width: 50px; }
 .fab-bar-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
 .fab-bar-fill.estoque  { background: var(--fab-accent); }
@@ -4177,18 +4208,32 @@ window.addEventListener('load', () => {
     const subtipos = [...new Set(data.map(r => r.subtipo).filter(Boolean))].sort();
 
     bar.innerHTML = `
-      <input class="fab-filtro-input fab-filtro-busca" id="fab-f-busca"
-             placeholder="Buscar ref ou produto…" oninput="applyFabFiltros()">
-      ${pedras.length ? `<select class="fab-filtro-input" id="fab-f-pedra" onchange="applyFabFiltros()">
-        <option value="">Tipo Pedra</option>
-        ${pedras.map(p=>`<option value="${p}">${p}</option>`).join('')}
-      </select>` : ''}
-      ${subtipos.length ? `<select class="fab-filtro-input" id="fab-f-subtipo" onchange="applyFabFiltros()">
-        <option value="">Subtipo</option>
-        ${subtipos.map(s=>`<option value="${s}">${s}</option>`).join('')}
-      </select>` : ''}
-      <button class="fab-filtro-clear" onclick="clearFabFiltros()"><i class="ti ti-x"></i> Limpar</button>
-      <span class="fab-filtros-count" id="fab-filtros-count"></span>
+      <div class="fab-filtro-search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="fab-filtro-busca" id="fab-f-busca"
+               placeholder="Buscar ref ou produto…" oninput="applyFabFiltros()">
+      </div>
+      ${pedras.length ? `
+        <div class="fab-filtro-sep"></div>
+        <div class="fab-filtro-select-wrap">
+          <i class="ti ti-diamond"></i>
+          <select class="fab-filtro-select" id="fab-f-pedra" onchange="applyFabFiltros();this.classList.toggle('active',!!this.value)">
+            <option value="">Tipo Pedra</option>
+            ${pedras.map(p=>`<option value="${p}">${p}</option>`).join('')}
+          </select>
+        </div>` : ''}
+      ${subtipos.length ? `
+        <div class="fab-filtro-select-wrap">
+          <i class="ti ti-tag"></i>
+          <select class="fab-filtro-select" id="fab-f-subtipo" onchange="applyFabFiltros();this.classList.toggle('active',!!this.value)">
+            <option value="">Subtipo</option>
+            ${subtipos.map(s=>`<option value="${s}">${s}</option>`).join('')}
+          </select>
+        </div>` : ''}
+      <div class="fab-filtros-right">
+        <span class="fab-filtros-count" id="fab-filtros-count" style="display:none"></span>
+        <button class="fab-filtro-clear" onclick="clearFabFiltros()"><i class="ti ti-x"></i> Limpar</button>
+      </div>
     `;
 
     applyFabFiltros();
@@ -4207,10 +4252,11 @@ window.addEventListener('load', () => {
     if (subtipo) filtered = filtered.filter(r => r.subtipo    === subtipo);
 
     const countEl = document.getElementById('fab-filtros-count');
-    if (countEl) countEl.textContent =
-      filtered.length < _fabListaData.length
-        ? `${filtered.length} de ${_fabListaData.length}`
-        : '';
+    if (countEl) {
+      const active = filtered.length < _fabListaData.length;
+      countEl.style.display = active ? '' : 'none';
+      countEl.textContent   = active ? `${filtered.length} de ${_fabListaData.length}` : '';
+    }
 
     const tbody = document.getElementById('fab-lista-tbody');
     const thead = document.getElementById('fab-lista-thead');
@@ -4222,8 +4268,8 @@ window.addEventListener('load', () => {
     const p = document.getElementById('fab-f-pedra');
     const s = document.getElementById('fab-f-subtipo');
     if (b) b.value = '';
-    if (p) p.value = '';
-    if (s) s.value = '';
+    if (p) { p.value = ''; p.classList.remove('active'); }
+    if (s) { s.value = ''; s.classList.remove('active'); }
     applyFabFiltros();
   };
 
