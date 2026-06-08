@@ -86,10 +86,19 @@ window._initFirebaseListeners = function(){
 
   // TASKS
   onSnapshot(query(collection(db,'tasks'), orderBy('createdAt','desc')), snap => {
+    const _today = new Date(); _today.setHours(0,0,0,0);
     TASKS = snap.docs.map(d => {
       const data = d.data();
-      // id pode estar salvo como número — normaliza para número para compatibilidade
-      return {...data, id: isNaN(data.id) ? d.id : Number(data.id)};
+      const task = {...data, id: isNaN(data.id) ? d.id : Number(data.id)};
+      // Recalcula atraso em tempo real — o campo salvo no Firestore não é atualizado automaticamente
+      if(task.status !== 'done' && task.due && task.due !== 'Sem prazo'){
+        const p = task.due.split('/');
+        const dueDate = p.length===3 ? new Date(+p[2], +p[1]-1, +p[0]) : null;
+        task.late = dueDate ? Math.max(0, Math.floor((_today - dueDate) / 86400000)) : 0;
+      } else {
+        task.late = 0;
+      }
+      return task;
     });
     applyFilter();
   });
@@ -2149,6 +2158,11 @@ const PRIO_ORDER = {urgente:0,alta:1,media:2,baixa:3};
 function applyFilter(){
   let list = [...TASKS];
 
+  // Não-admin vê apenas suas próprias tarefas
+  if(currentUser && currentUser.role !== 'admin'){
+    list = list.filter(t => t.person === currentUser.personKey);
+  }
+
   // Filtro por chip de data
   if(currentFilter==='atrasadas')    list = list.filter(t=>t.late>0);
   else if(currentFilter==='concluidas')  list = list.filter(t=>t.status==='done');
@@ -2209,8 +2223,11 @@ function updateKPIs(list){
 // ─── KANBAN ───────────────────────────────────────────
 function renderKanban(){
   const pm = getPeopleMap();
+  const kbTasks = (currentUser && currentUser.role !== 'admin')
+    ? TASKS.filter(t => t.person === currentUser.personKey)
+    : TASKS;
   const cols={pendente:[],progress:[],blocked:[],done:[]};
-  TASKS.forEach(t=>{
+  kbTasks.forEach(t=>{
     const col = t.status==='done'?'done':t.status==='progress'?'progress':t.status==='blocked'?'blocked':'pendente';
     cols[col].push(t);
   });
@@ -3175,8 +3192,11 @@ function renderCalendar(){
   const today = new Date(); today.setHours(0,0,0,0);
 
   // Mapeia tarefas por dia
+  const calTasks = (currentUser && currentUser.role !== 'admin')
+    ? TASKS.filter(t => t.person === currentUser.personKey)
+    : TASKS;
   const tasksByDay = {};
-  TASKS.forEach(t => {
+  calTasks.forEach(t => {
     const d = parseDue(t.due);
     if(!d) return;
     if(d.getFullYear()===calYear && d.getMonth()===calMonth){
@@ -3224,7 +3244,10 @@ function calSelectDay(d){
   const dateStr = `${String(d).padStart(2,'0')}/${String(calMonth+1).padStart(2,'0')}/${calYear}`;
   title.textContent = `${d} de ${MESES_PT[calMonth]}`;
   const pm = getPeopleMap();
-  const tasks = TASKS.filter(t=>{
+  const _calSrc = (currentUser && currentUser.role !== 'admin')
+    ? TASKS.filter(t => t.person === currentUser.personKey)
+    : TASKS;
+  const tasks = _calSrc.filter(t=>{
     const due = parseDue(t.due);
     return due && due.getDate()===d && due.getMonth()===calMonth && due.getFullYear()===calYear;
   });
