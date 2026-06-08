@@ -2166,11 +2166,22 @@ function applyFilter(){
   }
 
   // Filtro por chip de data
-  if(currentFilter==='atrasadas')    list = list.filter(t=>t.late>0);
-  else if(currentFilter==='concluidas')  list = list.filter(t=>t.status==='done');
-  else if(currentFilter==='hoje')    list = list.filter(t=>(t.due||'').toLowerCase().includes('hoje'));
-  else if(currentFilter==='amanha')  list = list.filter(t=>(t.due||'').toLowerCase().includes('amanh'));
-  else if(currentFilter==='semana')  list = list.filter(t=>(t.due||'').toLowerCase().includes('semana'));
+  const _fToday = new Date(); _fToday.setHours(0,0,0,0);
+  const _fTomorrow = new Date(_fToday); _fTomorrow.setDate(_fToday.getDate()+1);
+  const _fDow = _fToday.getDay();
+  const _fWeekStart = new Date(_fToday); _fWeekStart.setDate(_fToday.getDate()-((_fDow+6)%7));
+  const _fWeekEnd   = new Date(_fWeekStart); _fWeekEnd.setDate(_fWeekStart.getDate()+6);
+
+  if(currentFilter==='atrasadas')
+    list = list.filter(t=>t.late>0);
+  else if(currentFilter==='concluidas')
+    list = list.filter(t=>t.status==='done');
+  else if(currentFilter==='hoje')
+    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fToday.getTime(); });
+  else if(currentFilter==='amanha')
+    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fTomorrow.getTime(); });
+  else if(currentFilter==='semana')
+    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d>=_fWeekStart&&d<=_fWeekEnd; });
 
   // Filtros do painel
   const fp = (document.getElementById('filter-person')?.value)   || filterPerson;
