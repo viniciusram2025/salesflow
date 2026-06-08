@@ -793,6 +793,29 @@ tbody tr:last-child{border-bottom:none;}
 .fab-table tbody tr:hover td { background: rgba(79,110,247,.07) !important; }
 
 .fab-bar-wrap { display: flex; align-items: center; gap: 8px; }
+
+/* ── Filtros da tabela ── */
+.fab-filtros {
+  display: flex; gap: 8px; padding: 10px 14px;
+  border-bottom: 1px solid var(--fab-border);
+  flex-wrap: wrap; align-items: center;
+}
+.fab-filtro-input {
+  background: var(--fab-bg); border: 1px solid var(--fab-border);
+  color: var(--fab-text); font-family: var(--fab-font); font-size: 13px;
+  padding: 6px 11px; border-radius: 7px; outline: none; min-width: 0;
+}
+.fab-filtro-input:focus { border-color: var(--fab-accent); }
+.fab-filtro-input option { background: var(--fab-surface); }
+.fab-filtro-busca { flex: 1; min-width: 160px; max-width: 260px; }
+.fab-filtros-count { font-size: 12px; color: var(--fab-muted); margin-left: auto; white-space: nowrap; }
+.fab-filtro-clear {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--fab-border);
+  color: var(--fab-muted); font-family: var(--fab-font); font-size: 12px;
+  padding: 6px 11px; border-radius: 7px; cursor: pointer; transition: .15s;
+}
+.fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); }
 .fab-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; min-width: 50px; }
 .fab-bar-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
 .fab-bar-fill.estoque  { background: var(--fab-accent); }
@@ -1563,6 +1586,7 @@ canvas.fab-canvas { width: 100% !important; }
       </div>
       <span class="fab-badge-count" id="fab-lista-count">—</span>
     </div>
+    <div class="fab-filtros" id="fab-filtros-bar"></div>
     <div class="fab-table-wrap">
       <table class="fab-table">
         <thead id="fab-lista-thead"></thead>
@@ -4007,6 +4031,8 @@ window.addEventListener('load', () => {
   let _subtipoDados   = [];
   let _chartVendas    = null;
   let _fabCurrentSec  = 'resumo';
+  let _fabListaData   = [];
+  let _fabListaSec    = 'resumo';
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
@@ -4128,18 +4154,78 @@ window.addEventListener('load', () => {
     iconEl.className = 'ti ' + cfg.icon;
     iconEl.style.color = cfg.color;
     document.getElementById('fab-lista-count').textContent = '—';
+    document.getElementById('fab-filtros-bar').innerHTML = '';
     const tbody = document.getElementById('fab-lista-tbody');
     const thead = document.getElementById('fab-lista-thead');
-    tbody.innerHTML = '<tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
     try {
       const r = await fetch(`${API_BASE}/${cfg.url}`);
       const data = await r.json();
       document.getElementById('fab-lista-count').textContent = data.length;
-      renderFabLista(data, sec, thead, tbody);
+      buildFabFiltros(data, sec);
     } catch(e) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-red)">Erro ao carregar dados</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-red)">Erro ao carregar dados</td></tr>';
     }
   }
+
+  function buildFabFiltros(data, sec) {
+    _fabListaData = data;
+    _fabListaSec  = sec;
+    const bar     = document.getElementById('fab-filtros-bar');
+
+    const pedras   = [...new Set(data.map(r => r.tipo_pedra).filter(Boolean))].sort();
+    const subtipos = [...new Set(data.map(r => r.subtipo).filter(Boolean))].sort();
+
+    bar.innerHTML = `
+      <input class="fab-filtro-input fab-filtro-busca" id="fab-f-busca"
+             placeholder="Buscar ref ou produto…" oninput="applyFabFiltros()">
+      ${pedras.length ? `<select class="fab-filtro-input" id="fab-f-pedra" onchange="applyFabFiltros()">
+        <option value="">Tipo Pedra</option>
+        ${pedras.map(p=>`<option value="${p}">${p}</option>`).join('')}
+      </select>` : ''}
+      ${subtipos.length ? `<select class="fab-filtro-input" id="fab-f-subtipo" onchange="applyFabFiltros()">
+        <option value="">Subtipo</option>
+        ${subtipos.map(s=>`<option value="${s}">${s}</option>`).join('')}
+      </select>` : ''}
+      <button class="fab-filtro-clear" onclick="clearFabFiltros()"><i class="ti ti-x"></i> Limpar</button>
+      <span class="fab-filtros-count" id="fab-filtros-count"></span>
+    `;
+
+    applyFabFiltros();
+  }
+
+  window.applyFabFiltros = function() {
+    const busca   = (document.getElementById('fab-f-busca')?.value  || '').toLowerCase();
+    const pedra   =  document.getElementById('fab-f-pedra')?.value  || '';
+    const subtipo =  document.getElementById('fab-f-subtipo')?.value || '';
+
+    let filtered = _fabListaData;
+    if (busca)   filtered = filtered.filter(r =>
+      (r.referencia||'').toLowerCase().includes(busca) ||
+      (r.produto||'').toLowerCase().includes(busca));
+    if (pedra)   filtered = filtered.filter(r => r.tipo_pedra === pedra);
+    if (subtipo) filtered = filtered.filter(r => r.subtipo    === subtipo);
+
+    const countEl = document.getElementById('fab-filtros-count');
+    if (countEl) countEl.textContent =
+      filtered.length < _fabListaData.length
+        ? `${filtered.length} de ${_fabListaData.length}`
+        : '';
+
+    const tbody = document.getElementById('fab-lista-tbody');
+    const thead = document.getElementById('fab-lista-thead');
+    renderFabLista(filtered, _fabListaSec, thead, tbody);
+  };
+
+  window.clearFabFiltros = function() {
+    const b = document.getElementById('fab-f-busca');
+    const p = document.getElementById('fab-f-pedra');
+    const s = document.getElementById('fab-f-subtipo');
+    if (b) b.value = '';
+    if (p) p.value = '';
+    if (s) s.value = '';
+    applyFabFiltros();
+  };
 
   function renderFabLista(data, sec, thead, tbody) {
     if (sec === 'producao') {
