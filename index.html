@@ -1488,36 +1488,6 @@ canvas.fab-canvas { width: 100% !important; }
       </div>
     </div>
 
-    <div class="fab-grid-2">
-      <div class="fab-card">
-        <div class="fab-card-header">
-          <div class="fab-card-header-left">
-            <i class="ti ti-alert-triangle" style="color:var(--c-amber)"></i>
-            <span class="fab-card-title">Alertas de Estoque</span>
-          </div>
-          <span class="fab-badge-count" id="fab-badge-alertas">0</span>
-        </div>
-        <div id="fab-alertas-lista" class="fab-alertas">
-          <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
-        </div>
-      </div>
-
-      <div class="fab-card">
-        <div class="fab-card-header">
-          <div class="fab-card-header-left">
-            <i class="ti ti-hammer" style="color:#f59e0b"></i>
-            <span class="fab-card-title">Em Fabricação Agora</span>
-          </div>
-          <span class="fab-badge-count" id="fab-badge-fab">0</span>
-        </div>
-        <div id="fab-fab-lista" class="fab-fab-list">
-          <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
-        </div>
-        <div style="padding:8px 16px;border-top:1px solid var(--c-border);">
-          <button class="btn-ghost btn-sm" onclick="fabGoTo('producao',document.querySelector('.fab-nav-btn[data-sec=producao]'))"><i class="ti ti-arrow-right"></i> Ver todas</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- ═══ SEÇÃO: ESTOQUE ═══ -->
@@ -1572,6 +1542,25 @@ canvas.fab-canvas { width: 100% !important; }
       <div id="fab-fab-lista-full" class="fab-fab-grid">
         <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ TABELA COMPARTILHADA (muda com o nav) ═══ -->
+  <div class="fab-card" style="margin-top:16px">
+    <div class="fab-card-header">
+      <div class="fab-card-header-left">
+        <i id="fab-lista-icon" class="ti ti-box" style="color:var(--c-accent)"></i>
+        <span class="fab-card-title" id="fab-lista-titulo">Estoque Disponível</span>
+      </div>
+      <span class="fab-badge-count" id="fab-lista-count">—</span>
+    </div>
+    <div class="fab-table-wrap">
+      <table class="fab-table">
+        <thead id="fab-lista-thead"></thead>
+        <tbody id="fab-lista-tbody">
+          <tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -4005,8 +3994,9 @@ window.addEventListener('load', () => {
   // Troque pela URL da sua Cloud Function depois do deploy
   const API_BASE = "https://goldtech-fabricacoes-api.onrender.com";
 
-  let _subtipoDados = [];
-  let _chartVendas  = null;
+  let _subtipoDados   = [];
+  let _chartVendas    = null;
+  let _fabCurrentSec  = 'resumo';
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
@@ -4077,30 +4067,15 @@ window.addEventListener('load', () => {
 
   // ── RENDER EM FABRICAÇÃO ─────────────────────────────────────
   function renderFabricacao(lista) {
-    const el     = document.getElementById("fab-fab-lista");
     const elFull = document.getElementById("fab-fab-lista-full");
     const badge2 = document.getElementById("fab-badge-fab2");
-    document.getElementById("fab-badge-fab").textContent = lista.length;
     if (badge2) badge2.textContent = lista.length;
 
     const empty = '<div class="fab-empty">Nenhuma peça em fabricação</div>';
     if (!lista.length) {
-      el.innerHTML = empty;
       if (elFull) elFull.innerHTML = empty;
       return;
     }
-
-    // Lista compacta (preview no Resumo — máx 8)
-    el.innerHTML = lista.slice(0, 8).map(p => `
-      <div class="fab-fab-item">
-        <div>
-          <div class="fab-fab-ref">${p.referencia}</div>
-          <div class="fab-fab-sub">${p.subtipo || "—"}</div>
-          ${p.tipo_pedra ? `<div class="fab-fab-pedra">${p.tipo_pedra}</div>` : ""}
-        </div>
-        <span class="fab-dias ${diasClass(p.dias)}">${p.dias}d</span>
-      </div>
-    `).join("");
 
     // Grid de cards (seção Em Fabricação — completo)
     if (elFull) {
@@ -4124,7 +4099,95 @@ window.addEventListener('load', () => {
     const el = document.getElementById("fab-sec-" + sec);
     if (el) el.classList.remove("fab-hidden");
     if (btn) btn.classList.add("active");
+    _fabCurrentSec = sec;
+    loadFabLista(sec);
   };
+
+  // ── TABELA COMPARTILHADA ──────────────────────────────────────
+  const _fabListaCfg = {
+    resumo:   { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    estoque:  { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    producao: { url: 'em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    vendas:   { url: 'lista-faturamento', titulo: 'Vendas do Mês',      icon: 'ti-receipt', color: '#a855f7' },
+  };
+
+  async function loadFabLista(sec) {
+    const cfg = _fabListaCfg[sec] || _fabListaCfg.resumo;
+    document.getElementById('fab-lista-titulo').textContent = cfg.titulo;
+    const iconEl = document.getElementById('fab-lista-icon');
+    iconEl.className = 'ti ' + cfg.icon;
+    iconEl.style.color = cfg.color;
+    document.getElementById('fab-lista-count').textContent = '—';
+    const tbody = document.getElementById('fab-lista-tbody');
+    const thead = document.getElementById('fab-lista-thead');
+    tbody.innerHTML = '<tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
+    try {
+      const r = await fetch(`${API_BASE}/${cfg.url}`);
+      const data = await r.json();
+      document.getElementById('fab-lista-count').textContent = data.length;
+      renderFabLista(data, sec, thead, tbody);
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-red)">Erro ao carregar dados</td></tr>';
+    }
+  }
+
+  function renderFabLista(data, sec, thead, tbody) {
+    if (sec === 'producao') {
+      thead.innerHTML = `<tr>
+        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Pedra</th>
+        <th class="right">Envio Fab.</th><th class="right">Dias</th>
+        <th class="right">Preço Mín.</th><th class="right">Preço Loja</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td>
+        <td>${r.subtipo||'—'}</td>
+        <td>${r.tipo_pedra||'—'}</td>
+        <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
+        <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
+        <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
+        <td class="right">${r.preco_loja?fmt.moeda(r.preco_loja):'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
+    } else if (sec === 'vendas') {
+      thead.innerHTML = `<tr>
+        <th>Ref</th><th>Produto</th><th>Subtipo</th>
+        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço Cobrado</th>
+        <th>Diamantes</th><th class="right">Cts Diam.</th>
+        <th>Pedra Colorida</th><th class="right">Cts PC</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td>
+        <td>${r.subtipo||'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
+        <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
+        <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
+        <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
+        <td class="right">${r.cts_diamantes||'—'}</td>
+        <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
+        <td class="right">${r.cts_pedra_colorida||'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
+    } else {
+      thead.innerHTML = `<tr>
+        <th>Ref</th><th>Produto</th><th>Subtipo</th>
+        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço Loja</th>
+        <th>Diamantes</th><th class="right">Cts Diam.</th>
+        <th>Pedra Colorida</th><th class="right">Cts PC</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td>
+        <td>${r.subtipo||'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(3)+'g':'—'}</td>
+        <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
+        <td class="right" style="font-weight:700">${r.preco_loja?fmt.moeda(r.preco_loja):'—'}</td>
+        <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
+        <td class="right">${r.cts_diamantes||'—'}</td>
+        <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
+        <td class="right">${r.cts_pedra_colorida||'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
+    }
+  }
 
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
   function renderSubtipoTabela(filtro = "todos") {
@@ -4300,9 +4363,8 @@ window.addEventListener('load', () => {
     btn.classList.add("spinning");
 
     try {
-      const [resumo, alertas, fabricacao, subtipo, vendasMes, vendasPedra] = await Promise.all([
+      const [resumo, fabricacao, subtipo, vendasMes, vendasPedra] = await Promise.all([
         apiFetch("resumo"),
-        apiFetch("alertas"),
         apiFetch("em-fabricacao"),
         apiFetch("estoque-subtipo"),
         apiFetch("vendas-mes"),
@@ -4310,8 +4372,8 @@ window.addEventListener('load', () => {
       ]);
 
       renderResumo(resumo);
-      renderAlertas(alertas);
       renderFabricacao(fabricacao);
+      loadFabLista(_fabCurrentSec);
 
       _subtipoDados = subtipo;
       renderSubtipoTabela("todos");
