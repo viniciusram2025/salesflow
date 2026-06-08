@@ -621,7 +621,7 @@ tbody tr:last-child{border-bottom:none;}
 /* ── KPI Cards ── */
 .fab-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 14px;
   margin-bottom: 18px;
 }
@@ -635,6 +635,7 @@ tbody tr:last-child{border-bottom:none;}
   align-items: flex-start;
   gap: 13px;
   transition: border-color .2s;
+  min-width: 0;
 }
 .fab-kpi:hover { border-color: rgba(79,110,247,.4); }
 
@@ -644,9 +645,9 @@ tbody tr:last-child{border-bottom:none;}
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; font-size: 17px;
 }
-.fab-kpi-body { min-width: 0; }
-.fab-kpi-label { font-size: 11px; color: var(--fab-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; }
-.fab-kpi-value { font-size: 26px; font-weight: 700; line-height: 1; letter-spacing: -.5px; }
+.fab-kpi-body { min-width: 0; flex: 1; overflow: hidden; }
+.fab-kpi-label { font-size: 11px; color: var(--fab-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fab-kpi-value { font-size: clamp(14px, 1.6vw, 26px); font-weight: 700; line-height: 1.15; letter-spacing: -.3px; overflow-wrap: break-word; word-break: break-word; }
 .fab-kpi-sub   { font-size: 11px; color: var(--fab-muted); margin-top: 5px; }
 
 /* ── Grid 2 colunas ── */
@@ -656,9 +657,20 @@ tbody tr:last-child{border-bottom:none;}
   gap: 16px;
   margin-bottom: 18px;
 }
+@media (max-width: 1000px) {
+  .fab-kpis { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 860px) {
   .fab-grid-2 { grid-template-columns: 1fr; }
   .fab-nav-btn span { display: none; }
+  .fab-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .fab-kpis { grid-template-columns: repeat(2, 1fr); }
+  .fab-kpi { padding: 12px; gap: 10px; }
+  .fab-kpi-icon { width: 32px; height: 32px; font-size: 15px; }
+  .fab-topbar { gap: 8px; }
+  .fab-sync-time { display: none; }
 }
 
 /* ── Card genérico ── */
