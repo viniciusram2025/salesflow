@@ -4383,7 +4383,21 @@ window.addEventListener('load', () => {
   window.fabDrpHover = function(ymd) {
     if (!_drpPickStart) return;
     window._drpHover = ymd;
-    _drpRender();
+    // Atualiza apenas as classes CSS, sem substituir innerHTML
+    // (substituir innerHTML entre mousedown e mouseup impede o disparo do click)
+    const start = _drpIso(_drpPickStart);
+    const lo = start <= ymd ? start : ymd;
+    const hi = start <= ymd ? ymd : start;
+    const popup = document.getElementById('fab-drp-popup');
+    if (!popup) return;
+    popup.querySelectorAll('[data-date]').forEach(function(cell) {
+      const d = cell.dataset.date;
+      cell.classList.remove('in-range','range-start','range-end','range-single');
+      if (d === lo && d === hi) cell.classList.add('range-single');
+      else if (d === lo)        cell.classList.add('range-start');
+      else if (d === hi)        cell.classList.add('range-end');
+      else if (d > lo && d < hi) cell.classList.add('in-range');
+    });
   };
 
   window.fabDrpApply = function() {
