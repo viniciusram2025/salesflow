@@ -797,62 +797,72 @@ tbody tr:last-child{border-bottom:none;}
 /* ── Filtros da tabela (painel estilo PBI) ── */
 .fab-filtros {
   display: flex; align-items: stretch;
-  border-bottom: 1px solid var(--fab-border);
-  background: rgba(255,255,255,.01);
-  max-height: 170px; overflow: hidden;
+  border-bottom: 2px solid var(--fab-border);
+  background: rgba(255,255,255,.015);
+  max-height: 158px; overflow: hidden;
 }
 .fab-fv2-search {
-  flex: 0 0 auto; min-width: 140px; max-width: 190px;
-  padding: 10px 12px; border-right: 1px solid var(--fab-border);
-  display: flex; flex-direction: column; gap: 7px;
+  flex: 0 0 auto; min-width: 145px; max-width: 175px;
+  padding: 8px 12px; border-right: 1px solid var(--fab-border);
+  display: flex; flex-direction: column; gap: 6px; justify-content: center;
 }
 .fab-fv2-search-label {
-  font-size: 10px; font-weight: 700; letter-spacing: .7px;
+  font-size: 9px; font-weight: 800; letter-spacing: .9px;
   text-transform: uppercase; color: var(--fab-muted);
 }
 .fab-fv2-search-wrap { position: relative; display: flex; align-items: center; }
 .fab-fv2-search-wrap i { position: absolute; left: 8px; font-size: 13px; color: var(--fab-muted); pointer-events: none; }
 .fab-filtro-busca {
-  width: 100%; background: var(--fab-bg); border: 1px solid var(--fab-border);
+  width: 100%; background: rgba(0,0,0,.2); border: 1px solid var(--fab-border);
   color: var(--fab-text); font-family: var(--fab-font); font-size: 12px;
-  padding: 6px 8px 6px 27px; border-radius: 6px; outline: none; transition: border-color .15s;
+  padding: 5px 8px 5px 27px; border-radius: 5px; outline: none; transition: border-color .15s;
 }
 .fab-filtro-busca:focus { border-color: var(--fab-accent); }
 .fab-fv2-panel {
-  flex: 1 1 0; min-width: 90px; border-right: 1px solid var(--fab-border);
+  flex: 1 1 0; min-width: 86px; border-right: 1px solid var(--fab-border);
   display: flex; flex-direction: column; overflow: hidden;
 }
 .fab-fv2-panel-title {
-  padding: 6px 10px 5px; font-size: 10px; font-weight: 700;
-  letter-spacing: .7px; text-transform: uppercase; color: var(--fab-muted);
+  padding: 5px 9px 4px; font-size: 9px; font-weight: 800;
+  letter-spacing: .9px; text-transform: uppercase; color: #8b95b0;
   border-bottom: 1px solid var(--fab-border); flex-shrink: 0;
-  background: rgba(255,255,255,.02);
+  background: rgba(255,255,255,.03);
 }
 .fab-fv2-panel-items {
-  overflow-y: auto; padding: 2px 0; flex: 1;
-  scrollbar-width: thin; scrollbar-color: var(--fab-border) transparent;
+  overflow-y: auto; padding: 1px 0; flex: 1;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent;
 }
 .fab-fv2-item {
-  display: flex; align-items: center; gap: 7px;
-  padding: 3px 10px; cursor: pointer; user-select: none;
-  font-size: 12px; color: var(--fab-text); transition: background .1s;
+  display: flex; align-items: center; gap: 6px;
+  padding: 2px 9px 2px 8px; cursor: pointer; user-select: none;
+  font-size: 11.5px; color: #bdc5d6; transition: background .08s;
+  line-height: 1.6;
 }
-.fab-fv2-item:hover { background: rgba(255,255,255,.05); }
-.fab-fv2-item:has(input:checked) { color: var(--fab-accent); background: rgba(79,110,247,.09); }
-.fab-fv2-item input[type=checkbox] { accent-color: var(--fab-accent); cursor: pointer; flex-shrink: 0; margin: 0; }
+.fab-fv2-item:hover { background: rgba(79,110,247,.07); color: var(--fab-text); }
+.fab-fv2-item:has(input:checked) { color: #7fa3ff; background: rgba(79,110,247,.13); font-weight: 500; }
+.fab-fv2-item input[type=checkbox] {
+  accent-color: var(--fab-accent); cursor: pointer;
+  flex-shrink: 0; margin: 0; width: 12px; height: 12px;
+}
 .fab-fv2-right {
-  flex: 0 0 auto; min-width: 72px; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 10px; padding: 10px 14px;
+  flex: 0 0 auto; min-width: 68px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px; padding: 8px 12px;
+  background: rgba(255,255,255,.01);
 }
-.fab-fv2-count { font-size: 24px; font-weight: 700; color: var(--fab-text); line-height: 1; text-align: center; }
-.fab-fv2-count-label { font-size: 10px; color: var(--fab-muted); text-align: center; }
+.fab-fv2-count { font-size: 26px; font-weight: 700; color: var(--fab-text); line-height: 1; text-align: center; }
+.fab-fv2-count-label { font-size: 9px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--fab-muted); text-align: center; }
 .fab-filtro-clear {
   display: flex; align-items: center; gap: 4px;
-  background: transparent; border: 1px solid var(--fab-border);
+  background: transparent; border: 1px solid rgba(255,255,255,.12);
   color: var(--fab-muted); font-family: var(--fab-font); font-size: 11px;
-  padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: .15s;
+  padding: 4px 9px; border-radius: 5px; cursor: pointer; transition: .15s; white-space: nowrap;
 }
 .fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); background: rgba(239,68,68,.06); }
+/* ── Cabeçalhos ordenáveis ── */
+.fab-table thead th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+.fab-table thead th.sortable:hover { color: var(--fab-accent); }
+.fab-table thead th.sort-asc::after  { content: ' ↑'; color: var(--fab-accent); font-size: 10px; }
+.fab-table thead th.sort-desc::after { content: ' ↓'; color: var(--fab-accent); font-size: 10px; }
 .fab-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; min-width: 50px; }
 .fab-bar-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
 .fab-bar-fill.estoque  { background: var(--fab-accent); }
@@ -4070,6 +4080,8 @@ window.addEventListener('load', () => {
   let _fabCurrentSec  = 'resumo';
   let _fabListaData   = [];
   let _fabListaSec    = 'resumo';
+  let _fabSortCol     = null;
+  let _fabSortDir     = 1;
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
@@ -4208,17 +4220,26 @@ window.addEventListener('load', () => {
   function buildFabFiltros(data, sec) {
     _fabListaData = data;
     _fabListaSec  = sec;
+    _fabSortCol   = null;
+    _fabSortDir   = 1;
     const bar = document.getElementById('fab-filtros-bar');
 
-    const esc      = v => v.replace(/"/g, '&quot;');
-    const uniq     = key => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
-    const mkItems  = (list, dim) => list.map(v =>
+    const esc     = v => v.replace(/"/g, '&quot;');
+    const uniq    = key => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+    const mkItems = (list, dim) => list.map(v =>
       `<label class="fab-fv2-item"><input type="checkbox" value="${esc(v)}" onchange="applyFabFiltros()"> ${v}</label>`
     ).join('');
 
-    const pedras   = uniq('tipo_pedra');
-    const subtipos = uniq('subtipo');
-    const produtos = uniq('produto');
+    const produtos    = uniq('produto');
+    const subtipos    = uniq('subtipo');
+    const pedras      = uniq('tipo_pedra');
+    const lapidacoes  = uniq('lapidacao');
+    const destinos    = uniq('destino');
+    const fabricantes = uniq('fabricante');
+
+    const mkPanel = (id, title, list, dim) => list.length
+      ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">${title}</div><div class="fab-fv2-panel-items" id="${id}">${mkItems(list, dim)}</div></div>`
+      : '';
 
     bar.innerHTML = `
       <div class="fab-fv2-search">
@@ -4228,9 +4249,12 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
         </div>
       </div>
-      ${produtos.length ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Produto</div><div class="fab-fv2-panel-items" id="fab-fp-produto">${mkItems(produtos,'produto')}</div></div>` : ''}
-      ${subtipos.length ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Subtipo</div><div class="fab-fv2-panel-items" id="fab-fp-subtipo">${mkItems(subtipos,'subtipo')}</div></div>` : ''}
-      ${pedras.length   ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Tipo Pedra</div><div class="fab-fv2-panel-items" id="fab-fp-pedra">${mkItems(pedras,'tipo_pedra')}</div></div>` : ''}
+      ${mkPanel('fab-fp-produto',    'Produto',    produtos,    'produto')}
+      ${mkPanel('fab-fp-subtipo',    'Subtipo',    subtipos,    'subtipo')}
+      ${mkPanel('fab-fp-pedra',      'Tipo Pedra', pedras,      'tipo_pedra')}
+      ${mkPanel('fab-fp-lapidacao',  'Lapidação',  lapidacoes,  'lapidacao')}
+      ${mkPanel('fab-fp-destino',    'Destino',    destinos,    'destino')}
+      ${mkPanel('fab-fp-fabricante', 'Fabricante', fabricantes, 'fabricante')}
       <div class="fab-fv2-right">
         <div>
           <div class="fab-fv2-count" id="fab-filtros-count">${data.length}</div>
@@ -4244,18 +4268,33 @@ window.addEventListener('load', () => {
   }
 
   window.applyFabFiltros = function() {
-    const busca   = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
-    const selProd = new Set([...document.querySelectorAll('#fab-fp-produto input:checked')].map(el => el.value));
-    const selSub  = new Set([...document.querySelectorAll('#fab-fp-subtipo input:checked')].map(el => el.value));
-    const selPed  = new Set([...document.querySelectorAll('#fab-fp-pedra input:checked')].map(el => el.value));
+    const busca    = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
+    const selProd  = new Set([...document.querySelectorAll('#fab-fp-produto    input:checked')].map(el => el.value));
+    const selSub   = new Set([...document.querySelectorAll('#fab-fp-subtipo    input:checked')].map(el => el.value));
+    const selPed   = new Set([...document.querySelectorAll('#fab-fp-pedra      input:checked')].map(el => el.value));
+    const selLap   = new Set([...document.querySelectorAll('#fab-fp-lapidacao  input:checked')].map(el => el.value));
+    const selDest  = new Set([...document.querySelectorAll('#fab-fp-destino    input:checked')].map(el => el.value));
+    const selFab   = new Set([...document.querySelectorAll('#fab-fp-fabricante input:checked')].map(el => el.value));
 
     let filtered = _fabListaData;
-    if (busca)       filtered = filtered.filter(r =>
+    if (busca)        filtered = filtered.filter(r =>
       (r.referencia||'').toLowerCase().includes(busca) ||
       (r.produto||'').toLowerCase().includes(busca));
-    if (selProd.size) filtered = filtered.filter(r => selProd.has(r.produto));
-    if (selSub.size)  filtered = filtered.filter(r => selSub.has(r.subtipo));
-    if (selPed.size)  filtered = filtered.filter(r => selPed.has(r.tipo_pedra));
+    if (selProd.size)  filtered = filtered.filter(r => selProd.has(r.produto));
+    if (selSub.size)   filtered = filtered.filter(r => selSub.has(r.subtipo));
+    if (selPed.size)   filtered = filtered.filter(r => selPed.has(r.tipo_pedra));
+    if (selLap.size)   filtered = filtered.filter(r => selLap.has(r.lapidacao));
+    if (selDest.size)  filtered = filtered.filter(r => selDest.has(r.destino));
+    if (selFab.size)   filtered = filtered.filter(r => selFab.has(r.fabricante));
+
+    if (_fabSortCol) {
+      filtered = [...filtered].sort((a, b) => {
+        const av = a[_fabSortCol] ?? '';
+        const bv = b[_fabSortCol] ?? '';
+        if (!isNaN(av) && !isNaN(bv)) return (Number(av) - Number(bv)) * _fabSortDir;
+        return String(av).localeCompare(String(bv), 'pt-BR') * _fabSortDir;
+      });
+    }
 
     const countEl = document.getElementById('fab-filtros-count');
     if (countEl) countEl.textContent = filtered.length;
@@ -4272,35 +4311,56 @@ window.addEventListener('load', () => {
     applyFabFiltros();
   };
 
+  window.sortFabBy = function(col) {
+    if (_fabSortCol === col) { _fabSortDir *= -1; }
+    else { _fabSortCol = col; _fabSortDir = 1; }
+    applyFabFiltros();
+  };
+
   function renderFabLista(data, sec, thead, tbody) {
+    const srt = (col, cls='') => {
+      const active = _fabSortCol === col;
+      const dir    = active ? (_fabSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+      return `<th class="sortable ${cls} ${dir}" onclick="sortFabBy('${col}')">`;
+    };
     if (sec === 'producao') {
       thead.innerHTML = `<tr>
-        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Pedra</th>
-        <th class="right">Envio Fab.</th><th class="right">Dias</th>
-        <th class="right">Preço Mín.</th><th class="right">Preço Loja</th>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
+        ${srt('data_envio_fabricacao','right')}Envio Fab.</th>
+        ${srt('dias','right')}Dias</th>
+        ${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td>
+        <td>${r.fabricante||'—'}</td>
         <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
-        <td class="right">${r.preco_loja?fmt.moeda(r.preco_loja):'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
-        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Tipo Pedra</th>
-        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço Cobrado</th>
-        <th>Diamantes</th><th class="right">Cts Diam.</th>
-        <th>Pedra Colorida</th><th class="right">Cts PC</th>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
+        ${srt('preco_cobrado','right')}Preço Cobrado</th>
+        <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
+        <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td>
+        <td>${r.destino||'—'}</td>
+        <td>${r.fabricante||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -4308,19 +4368,25 @@ window.addEventListener('load', () => {
         <td class="right">${r.cts_diamantes||'—'}</td>
         <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
         <td class="right">${r.cts_pedra_colorida||'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
     } else {
       thead.innerHTML = `<tr>
-        <th>Ref</th><th>Produto</th><th>Subtipo</th><th>Tipo Pedra</th>
-        <th class="right">Peso</th><th class="right">Custo</th><th class="right">Preço À Vista</th>
-        <th>Diamantes</th><th class="right">Cts Diam.</th>
-        <th>Pedra Colorida</th><th class="right">Cts PC</th>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
+        ${srt('preco_avista','right')}Preço À Vista</th>
+        <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
+        <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td>
+        <td>${r.destino||'—'}</td>
+        <td>${r.fabricante||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700">${r.preco_avista?fmt.moeda(r.preco_avista):'—'}</td>
@@ -4328,7 +4394,7 @@ window.addEventListener('load', () => {
         <td class="right">${r.cts_diamantes||'—'}</td>
         <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
         <td class="right">${r.cts_pedra_colorida||'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
     }
   }
 
