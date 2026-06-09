@@ -1639,8 +1639,12 @@ canvas.fab-canvas { width: 100% !important; }
         <i id="fab-lista-icon" class="ti ti-box" style="color:var(--c-accent)"></i>
         <span class="fab-card-title" id="fab-lista-titulo">Estoque Disponível</span>
       </div>
-      <span class="fab-badge-count" id="fab-lista-count">—</span>
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
+        <span id="fab-lista-total" style="display:none;font-size:13px;font-weight:700;color:#22c55e"></span>
+        <span class="fab-badge-count" id="fab-lista-count">—</span>
+      </div>
     </div>
+    <div id="fab-period-slot"></div>
     <div class="fab-filtros" id="fab-filtros-bar"></div>
     <div class="fab-table-wrap">
       <table class="fab-table">
@@ -1653,15 +1657,7 @@ canvas.fab-canvas { width: 100% !important; }
   </div>
 
   <!-- ═══ SEÇÃO: VENDAS ═══ -->
-  <div id="fab-sec-vendas" class="fab-section fab-hidden">
-    <div class="fab-period-bar">
-      <button class="fab-period-btn active" onclick="setFabPeriod('1m',this)">Este mês</button>
-      <button class="fab-period-btn" onclick="setFabPeriod('prev',this)">Mês anterior</button>
-      <button class="fab-period-btn" onclick="setFabPeriod('3m',this)">3 meses</button>
-      <button class="fab-period-btn" onclick="setFabPeriod('6m',this)">6 meses</button>
-      <button class="fab-period-btn" onclick="setFabPeriod('12m',this)">12 meses</button>
-    </div>
-  </div>
+  <div id="fab-sec-vendas" class="fab-section fab-hidden"></div>
 
 </div>
 
@@ -4188,6 +4184,14 @@ window.addEventListener('load', () => {
     vendas:   { url: 'lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
+  function _buildPeriodSlot() {
+    const mk = p => {
+      const labels = { '1m':'Este mês','prev':'Mês anterior','3m':'3 meses','6m':'6 meses','12m':'12 meses' };
+      return `<button class="fab-period-btn${_fabVendasPeriod===p?' active':''}" onclick="setFabPeriod('${p}',this)">${labels[p]}</button>`;
+    };
+    return `<div class="fab-period-bar" style="padding:10px 16px 0">${['1m','prev','3m','6m','12m'].map(mk).join('')}</div>`;
+  }
+
   async function loadFabLista(sec) {
     const cfg = _fabListaCfg[sec] || _fabListaCfg.resumo;
     document.getElementById('fab-lista-titulo').textContent = cfg.titulo;
@@ -4196,6 +4200,10 @@ window.addEventListener('load', () => {
     iconEl.style.color = cfg.color;
     document.getElementById('fab-lista-count').textContent = '—';
     document.getElementById('fab-filtros-bar').innerHTML = '';
+    const slot = document.getElementById('fab-period-slot');
+    slot.innerHTML = sec === 'vendas' ? _buildPeriodSlot() : '';
+    const totalEl = document.getElementById('fab-lista-total');
+    if (totalEl) totalEl.style.display = 'none';
     const tbody = document.getElementById('fab-lista-tbody');
     const thead = document.getElementById('fab-lista-thead');
     tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
@@ -4310,6 +4318,17 @@ window.addEventListener('load', () => {
     const countEl = document.getElementById('fab-filtros-count');
     if (countEl) countEl.textContent = filtered.length;
 
+    const totalEl = document.getElementById('fab-lista-total');
+    if (totalEl) {
+      if (_fabListaSec === 'vendas') {
+        const sum = filtered.reduce((s, r) => s + Number(r.preco_cobrado || 0), 0);
+        totalEl.textContent = fmt.moeda(sum);
+        totalEl.style.display = '';
+      } else {
+        totalEl.style.display = 'none';
+      }
+    }
+
     renderFabLista(filtered, _fabListaSec,
       document.getElementById('fab-lista-thead'),
       document.getElementById('fab-lista-tbody'));
@@ -4324,11 +4343,8 @@ window.addEventListener('load', () => {
 
   window.setFabPeriod = function(period, btn) {
     _fabVendasPeriod = period;
-    document.querySelectorAll('.fab-period-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#fab-period-slot .fab-period-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    const labels = { '1m':'Este mês', 'prev':'Mês anterior', '3m':'Últimos 3 meses', '6m':'Últimos 6 meses', '12m':'Últimos 12 meses' };
-    const titleEl = document.getElementById('fab-lista-titulo');
-    if (titleEl) titleEl.textContent = 'Vendas — ' + (labels[period] || '');
     loadFabLista('vendas');
   };
 
