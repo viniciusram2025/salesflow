@@ -4475,11 +4475,15 @@ window.addEventListener('load', () => {
   };
 
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
+  const _PEDRAS_CONTROLE = ['esmeralda','esmeralda colombiana','turmalina paraíba','rubi','safira','diamante'];
+
   function renderCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('fab-categoria-tbody');
     const thead = document.getElementById('fab-categoria-thead');
     const busca = (document.getElementById('fab-cat-busca')?.value || '').toLowerCase();
-    let dados = [..._categoriaDados];
+    let dados = [..._categoriaDados].filter(d =>
+      _PEDRAS_CONTROLE.includes((d.tipo_pedra || '').toLowerCase())
+    );
 
     if (busca) dados = dados.filter(d =>
       (d.subtipo    || '').toLowerCase().includes(busca) ||
