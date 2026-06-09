@@ -605,10 +605,14 @@ tbody tr:last-child{border-bottom:none;}
   transition: border-color .15s;
 }
 .fab-drp-btn:hover { border-color: #a855f7; }
+.fab-drp-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; display: none;
+}
+.fab-drp-backdrop.open { display: block; }
 .fab-drp-popup {
   position: fixed; background: var(--fab-surface); border: 1px solid var(--fab-border2);
-  border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.55);
-  z-index: 999; padding: 18px; display: none; min-width: 520px;
+  border-radius: 12px; box-shadow: 0 16px 48px rgba(0,0,0,.65);
+  z-index: 1001; padding: 18px; display: none; min-width: 520px;
 }
 .fab-drp-popup.open { display: block; }
 .fab-drp-months { display: flex; gap: 28px; }
@@ -4311,33 +4315,34 @@ window.addEventListener('load', () => {
       </div>`;
   }
 
+  function _drpClose() {
+    document.getElementById('fab-drp-popup')?.classList.remove('open');
+    document.getElementById('fab-drp-backdrop')?.remove();
+  }
+
   window.fabDrpToggle = function(e) {
     e && e.stopPropagation();
     const popup = document.getElementById('fab-drp-popup');
     if (!popup) return;
-    if (popup.classList.contains('open')) { popup.classList.remove('open'); return; }
+    if (popup.classList.contains('open')) { _drpClose(); return; }
     // position below trigger
     const btn = document.getElementById('fab-drp-btn');
     if (btn) {
       const r = btn.getBoundingClientRect();
-      popup.style.top  = (r.bottom + 6) + 'px';
+      popup.style.top  = (r.bottom + 8) + 'px';
       popup.style.left = r.left + 'px';
     }
-    // init left calendar to start of current range
+    // backdrop
+    const bd = document.createElement('div');
+    bd.id = 'fab-drp-backdrop'; bd.className = 'fab-drp-backdrop open';
+    bd.onclick = _drpClose;
+    document.body.appendChild(bd);
+    // init left calendar
     const ref = _fabDateFrom ? new Date(_fabDateFrom+'T00:00:00') : new Date();
     _drpLY = ref.getFullYear(); _drpLM = ref.getMonth();
     _drpPickStart = null; window._drpHover = null;
     popup.classList.add('open');
     _drpRender();
-    setTimeout(() => {
-      document.addEventListener('click', function _close(ev) {
-        if (!document.getElementById('fab-drp-popup')?.contains(ev.target) &&
-            !document.getElementById('fab-drp-btn')?.contains(ev.target)) {
-          document.getElementById('fab-drp-popup')?.classList.remove('open');
-          document.removeEventListener('click', _close);
-        }
-      });
-    }, 0);
   };
 
   window.fabDrpNav = function(dir) {
@@ -4370,7 +4375,7 @@ window.addEventListener('load', () => {
   };
 
   window.fabDrpApply = function() {
-    document.getElementById('fab-drp-popup')?.classList.remove('open');
+    _drpClose();
     _drpPickStart = null; window._drpHover = null;
     _drpUpdateBtn();
     applyFabDateRange();
