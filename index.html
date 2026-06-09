@@ -4322,9 +4322,16 @@ window.addEventListener('load', () => {
 
   window.fabDrpToggle = function(e) {
     e && e.stopPropagation();
-    const popup = document.getElementById('fab-drp-popup');
-    if (!popup) return;
-    if (popup.classList.contains('open')) { _drpClose(); return; }
+    // Popup vive em document.body para evitar problemas de stacking context
+    let popup = document.getElementById('fab-drp-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.className = 'fab-drp-popup';
+      popup.id = 'fab-drp-popup';
+      document.body.appendChild(popup);
+    } else if (popup.classList.contains('open')) {
+      _drpClose(); return;
+    }
     // event delegation — adicionado só uma vez por instância do popup
     if (!popup._drpInit) {
       popup.addEventListener('click', function(ev) {
@@ -4430,7 +4437,6 @@ window.addEventListener('load', () => {
             <span id="fab-drp-label">${_drpFmtBR(lo)} → ${_drpFmtBR(hi)}</span>
             <i class="ti ti-chevron-down" style="font-size:11px;opacity:.5"></i>
           </button>
-          <div class="fab-drp-popup" id="fab-drp-popup"></div>
         </div>
       </div>`;
   }
