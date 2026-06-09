@@ -1581,6 +1581,19 @@ canvas.fab-canvas { width: 100% !important; }
       </div>
     </div>
 
+    <div class="fab-card" style="margin-top:16px">
+      <div class="fab-card-header">
+        <div class="fab-card-header-left">
+          <i class="ti ti-bell-ringing" style="color:var(--c-amber)"></i>
+          <span class="fab-card-title">Alertas de Estoque</span>
+        </div>
+        <span class="fab-badge-count" id="fab-badge-alertas">—</span>
+      </div>
+      <div class="fab-alertas" id="fab-alertas-lista">
+        <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ═══ SEÇÃO: ESTOQUE (vazia — conteúdo movido para Controle) ═══ -->
@@ -1588,6 +1601,18 @@ canvas.fab-canvas { width: 100% !important; }
 
   <!-- ═══ SEÇÃO: CONTROLE / FABRICAÇÃO ═══ -->
   <div id="fab-sec-producao" class="fab-section fab-hidden">
+    <div class="fab-card" style="margin-bottom:16px">
+      <div class="fab-card-header">
+        <div class="fab-card-header-left">
+          <i class="ti ti-hammer" style="color:#f59e0b"></i>
+          <span class="fab-card-title">Em Fabricação</span>
+        </div>
+        <span class="fab-badge-count" id="fab-badge-fab2">—</span>
+      </div>
+      <div id="fab-fab-lista-full" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:14px 16px">
+        <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
+      </div>
+    </div>
     <div class="fab-card" style="margin-bottom:16px">
       <div class="fab-card-header">
         <div class="fab-card-header-left">
@@ -2152,7 +2177,7 @@ function renderTasks(list){
         ${t.desc ? `<div style="font-size:12px;color:var(--c-muted);margin-top:3px;line-height:1.4;">${t.desc}</div>` : ''}
         <div class="task-meta">
           <span class="tag ${t.priority}">${cap(t.priority)}</span>
-          <span class="meta-text"><i class="ti ti-calendar" style="font-size:11px;"></i> ${t.due}</span>
+          <span class="meta-text"><i class="ti ti-calendar" style="font-size:11px;"></i> ${t.due || 'Sem prazo'}</span>
           ${t.late>0?`<span class="meta-text" style="color:var(--c-red);"><i class="ti ti-clock" style="font-size:11px;"></i> ${t.late}d atraso</span>`:''}
           ${statusLabel(t.status,t.late)}
           <span class="meta-text" style="color:var(--c-muted2);">${p.name}</span>
@@ -3571,7 +3596,8 @@ function updateAntigoPreview(){
   const saldo  = calcSaldoTotal(metal);
   const peso   = parseFloat(document.getElementById('antigo-peso').value) || 0;
   const resta  = saldo - peso;
-  document.getElementById('antigo-preview-baixa').textContent = peso > 0 ? peso.toFixed(2)+'g' : '— g';
+  const _baixaEl = document.getElementById('antigo-preview-baixa');
+  if (_baixaEl) _baixaEl.textContent = peso > 0 ? peso.toFixed(2)+'g' : '— g';
   document.getElementById('antigo-preview-resta').textContent = peso > 0 ? resta.toFixed(2)+'g' : '— g';
   document.getElementById('antigo-preview-resta').style.color = resta < 0 ? 'var(--c-red)' : 'var(--c-green)';
 }
@@ -4111,7 +4137,9 @@ window.addEventListener('load', () => {
   // ── RENDER ALERTAS ───────────────────────────────────────────
   function renderAlertas(lista) {
     const el = document.getElementById("fab-alertas-lista");
-    document.getElementById("fab-badge-alertas").textContent = lista.length;
+    if (!el) return;
+    const _badge = document.getElementById("fab-badge-alertas");
+    if (_badge) _badge.textContent = lista.length;
 
     if (!lista.length) {
       el.innerHTML = '<div class="fab-empty">✅ Nenhum alerta no momento</div>';
@@ -4697,14 +4725,16 @@ window.addEventListener('load', () => {
     btn.classList.add("spinning");
 
     try {
-      const [resumo, fabricacao, categorias] = await Promise.all([
+      const [resumo, fabricacao, categorias, alertas] = await Promise.all([
         apiFetch("resumo"),
         apiFetch("em-fabricacao"),
         apiFetch("estoque-categoria"),
+        apiFetch("alertas"),
       ]);
 
       renderResumo(resumo);
       renderFabricacao(fabricacao);
+      renderAlertas(alertas);
       loadFabLista(_fabCurrentSec);
 
       _categoriaDados = categorias;
@@ -4725,16 +4755,7 @@ window.addEventListener('load', () => {
   // ── REFRESH MANUAL ───────────────────────────────────────────
   window.fabRefresh = fabLoad;
 
-  // ── INICIALIZAR QUANDO NAVEGAR PARA FABRICAÇÕES ──────────────
-  const _origGoTo = window.goTo;
-  if (typeof _origGoTo === "function") {
-    window.goTo = function (page) {
-      _origGoTo(page);
-      if (page === "fabricacoes") fabLoad();
-    };
-  } else {
-    if (document.getElementById("page-fabricacoes")?.style.display !== "none") fabLoad();
-  }
+
 
 </script>
 
