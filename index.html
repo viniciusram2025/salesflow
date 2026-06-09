@@ -4509,7 +4509,7 @@ window.addEventListener('load', () => {
       const vtot = Number(d.vendidos_total);
       const vel  = Math.round((v90 / max90) * 100);
 
-      const subtitle = [d.produto, d.tipo_pedra, d.lapidacao].filter(Boolean).join(' · ');
+      const subtitle = [d.produto, d.tipo_pedra].filter(Boolean).join(' · ');
 
       let badge = '';
       if (est === 0 && v90 > 0) {
