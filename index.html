@@ -4536,6 +4536,8 @@ window.addEventListener('load', () => {
 
     const countEl = document.getElementById('fab-filtros-count');
     if (countEl) countEl.textContent = filtered.length;
+    const badgeEl = document.getElementById('fab-lista-count');
+    if (badgeEl) badgeEl.textContent = filtered.length;
 
     const totalEl = document.getElementById('fab-lista-total');
     if (totalEl) {
