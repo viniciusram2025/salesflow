@@ -4208,8 +4208,7 @@ window.addEventListener('load', () => {
     const thead = document.getElementById('fab-lista-thead');
     tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
     try {
-      const apiUrl = sec === 'vendas' ? `${cfg.url}?period=${_fabVendasPeriod}` : cfg.url;
-      const r = await fetch(`${API_BASE}/${apiUrl}`);
+      const r = await fetch(`${API_BASE}/${cfg.url}`);
       const data = await r.json();
       document.getElementById('fab-lista-count').textContent = data.length;
       buildFabFiltros(data, sec);
@@ -4283,11 +4282,14 @@ window.addEventListener('load', () => {
       d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
     });
 
+    const byPeriod = _fabListaSec === 'vendas'
+      ? _fabListaData.filter(r => _inPeriod(r.data_venda))
+      : _fabListaData;
     const base = busca
-      ? _fabListaData.filter(r =>
+      ? byPeriod.filter(r =>
           (r.referencia||'').toLowerCase().includes(busca) ||
           (r.produto||'').toLowerCase().includes(busca))
-      : _fabListaData;
+      : byPeriod;
 
     const filterExcept = excludeField => base.filter(r =>
       dims.every(d => d.field === excludeField || d.sel.size === 0 || d.sel.has(r[d.field]))
@@ -4341,11 +4343,31 @@ window.addEventListener('load', () => {
     applyFabFiltros();
   };
 
+  function _inPeriod(dateStr) {
+    if (!dateStr) return false;
+    const d   = new Date(dateStr);
+    const now = new Date();
+    const bom = new Date(now.getFullYear(), now.getMonth(), 1);         // início deste mês
+    const bpm = new Date(now.getFullYear(), now.getMonth() - 1, 1);    // início mês anterior
+    const ago = n => { const t = new Date(now); t.setMonth(t.getMonth() - n); return t; };
+    switch (_fabVendasPeriod) {
+      case '1m':   return d >= bom;
+      case 'prev': return d >= bpm && d < bom;
+      case '3m':   return d >= ago(3);
+      case '6m':   return d >= ago(6);
+      case '12m':  return d >= ago(12);
+      default:     return true;
+    }
+  }
+
   window.setFabPeriod = function(period, btn) {
     _fabVendasPeriod = period;
     document.querySelectorAll('#fab-period-slot .fab-period-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    loadFabLista('vendas');
+    const labels = {'1m':'Este mês','prev':'Mês anterior','3m':'Últimos 3 meses','6m':'Últimos 6 meses','12m':'Últimos 12 meses'};
+    const titleEl = document.getElementById('fab-lista-titulo');
+    if (titleEl) titleEl.textContent = 'Vendas — ' + labels[period];
+    applyFabFiltros(); // filtra no cliente, sem refetch
   };
 
   window.sortFabBy = function(col) {
