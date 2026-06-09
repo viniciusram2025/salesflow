@@ -4064,7 +4064,8 @@ window.addEventListener('load', () => {
   let _fabListaSec    = 'resumo';
   let _fabSortCol     = null;
   let _fabSortDir     = 1;
-  let _fabVendasPeriod = '1m';
+  let _fabDateFrom = '';
+  let _fabDateTo   = '';
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
@@ -4184,11 +4185,19 @@ window.addEventListener('load', () => {
   };
 
   function _buildPeriodSlot() {
-    const mk = p => {
-      const labels = { '1m':'Este mês','prev':'Mês anterior','3m':'3 meses','6m':'6 meses','12m':'12 meses' };
-      return `<button class="fab-period-btn${_fabVendasPeriod===p?' active':''}" onclick="setFabPeriod('${p}',this)">${labels[p]}</button>`;
-    };
-    return `<div class="fab-period-bar" style="padding:10px 16px 0">${['1m','prev','3m','6m','12m'].map(mk).join('')}</div>`;
+    const today = new Date();
+    const bom   = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fmt   = d => d.toISOString().split('T')[0];
+    if (!_fabDateFrom) _fabDateFrom = fmt(bom);
+    if (!_fabDateTo)   _fabDateTo   = fmt(today);
+    const inputStyle = `background:var(--fab-bg);border:1px solid var(--fab-border);border-radius:6px;padding:5px 10px;color:var(--fab-text);font-size:12px;font-family:var(--fab-font);outline:none;cursor:pointer`;
+    return `
+      <div class="fab-period-bar" style="padding:10px 16px 4px;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--fab-muted)">De</span>
+        <input type="date" id="fab-date-from" value="${_fabDateFrom}" style="${inputStyle}" onchange="applyFabDateRange()">
+        <span style="font-size:12px;color:var(--fab-muted)">até</span>
+        <input type="date" id="fab-date-to"   value="${_fabDateTo}"   style="${inputStyle}" onchange="applyFabDateRange()">
+      </div>`;
   }
 
   async function loadFabLista(sec) {
@@ -4344,29 +4353,19 @@ window.addEventListener('load', () => {
 
   function _inPeriod(dateStr) {
     if (!dateStr) return false;
-    const d   = new Date(dateStr);
-    const now = new Date();
-    const bom = new Date(now.getFullYear(), now.getMonth(), 1);         // início deste mês
-    const bpm = new Date(now.getFullYear(), now.getMonth() - 1, 1);    // início mês anterior
-    const ago = n => { const t = new Date(now); t.setMonth(t.getMonth() - n); return t; };
-    switch (_fabVendasPeriod) {
-      case '1m':   return d >= bom;
-      case 'prev': return d >= bpm && d < bom;
-      case '3m':   return d >= ago(3);
-      case '6m':   return d >= ago(6);
-      case '12m':  return d >= ago(12);
-      default:     return true;
-    }
+    const d = new Date(dateStr);
+    if (_fabDateFrom && d < new Date(_fabDateFrom + 'T00:00:00')) return false;
+    if (_fabDateTo   && d > new Date(_fabDateTo   + 'T23:59:59')) return false;
+    return true;
   }
 
-  window.setFabPeriod = function(period, btn) {
-    _fabVendasPeriod = period;
-    document.querySelectorAll('#fab-period-slot .fab-period-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    const labels = {'1m':'Este mês','prev':'Mês anterior','3m':'Últimos 3 meses','6m':'Últimos 6 meses','12m':'Últimos 12 meses'};
+  window.applyFabDateRange = function() {
+    _fabDateFrom = document.getElementById('fab-date-from')?.value || '';
+    _fabDateTo   = document.getElementById('fab-date-to')?.value   || '';
+    const fmtBR  = s => s ? s.split('-').reverse().join('/') : '—';
     const titleEl = document.getElementById('fab-lista-titulo');
-    if (titleEl) titleEl.textContent = 'Vendas — ' + labels[period];
-    applyFabFiltros(); // filtra no cliente, sem refetch
+    if (titleEl) titleEl.textContent = `Vendas — ${fmtBR(_fabDateFrom)} a ${fmtBR(_fabDateTo)}`;
+    applyFabFiltros();
   };
 
   window.sortFabBy = function(col) {
