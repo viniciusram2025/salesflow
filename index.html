@@ -579,6 +579,8 @@ tbody tr:last-child{border-bottom:none;}
   padding: 8px 16px;
   border-radius: 7px;
   border: none;
+  -webkit-appearance: none;
+  appearance: none;
   background: transparent;
   color: var(--fab-muted);
   font-family: var(--fab-font);
@@ -589,8 +591,10 @@ tbody tr:last-child{border-bottom:none;}
   white-space: nowrap;
 }
 .fab-nav-btn i { font-size: 15px; }
-.fab-nav-btn:hover { background: rgba(255,255,255,.05); color: var(--fab-text); }
+.fab-nav-btn:hover { background: var(--c-accent-dim); color: var(--fab-text); }
+.fab-nav-btn:focus { outline: none; }
 .fab-nav-btn.active { background: var(--fab-accent); color: #fff; }
+.fab-nav-btn.active:hover { background: var(--fab-accent); }
 .fab-period-bar { display: flex; gap: 8px; padding: 14px 0 4px; flex-wrap: wrap; }
 .fab-period-btn {
   background: transparent; border: 1px solid var(--fab-border);
