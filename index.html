@@ -4274,7 +4274,7 @@ window.addEventListener('load', () => {
         else if (ymd > lo && ymd < hi) cls += ' in-range';
       } else if (lo && ymd === lo) cls += ' range-single';
 
-      cells += `<div class="${cls}" onclick="fabDrpDay('${ymd}')" onmouseover="fabDrpHover('${ymd}')">${d}</div>`;
+      cells += `<div class="${cls}" data-date="${ymd}">${d}</div>`;
     }
 
     const navL = isLeft
@@ -4325,6 +4325,18 @@ window.addEventListener('load', () => {
     const popup = document.getElementById('fab-drp-popup');
     if (!popup) return;
     if (popup.classList.contains('open')) { _drpClose(); return; }
+    // event delegation — adicionado só uma vez por instância do popup
+    if (!popup._drpInit) {
+      popup.addEventListener('click', function(ev) {
+        const cell = ev.target.closest('[data-date]');
+        if (cell) window.fabDrpDay(cell.dataset.date);
+      });
+      popup.addEventListener('mouseover', function(ev) {
+        const cell = ev.target.closest('[data-date]');
+        if (cell) window.fabDrpHover(cell.dataset.date);
+      });
+      popup._drpInit = true;
+    }
     // position below trigger
     const btn = document.getElementById('fab-drp-btn');
     if (btn) {
