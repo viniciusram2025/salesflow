@@ -1595,6 +1595,12 @@ canvas.fab-canvas { width: 100% !important; }
           <span><i class="fab-dot" style="background:var(--c-green)"></i>Vel. 90d</span>
         </div>
       </div>
+      <div style="padding:8px 16px;border-bottom:1px solid var(--fab-border)">
+        <div class="fab-fv2-search-wrap" style="max-width:320px">
+          <i class="ti ti-search"></i>
+          <input class="fab-filtro-busca" id="fab-cat-busca" placeholder="Buscar subtipo, produto ou pedra…" oninput="setCatBusca()">
+        </div>
+      </div>
       <div class="fab-tabs">
         <div class="fab-tab active" onclick="fabFiltrarSubtipo('todos',this)">Todos</div>
         <div class="fab-tab" onclick="fabFiltrarSubtipo('carroChefe',this)">Carro Chefe</div>
@@ -1610,22 +1616,10 @@ canvas.fab-canvas { width: 100% !important; }
         </table>
       </div>
     </div>
-    <div class="fab-card">
-      <div class="fab-card-header">
-        <div class="fab-card-header-left">
-          <i class="ti ti-hammer" style="color:#f59e0b"></i>
-          <span class="fab-card-title">Peças em Fabricação</span>
-        </div>
-        <span class="fab-badge-count" id="fab-badge-fab2">0</span>
-      </div>
-      <div id="fab-fab-lista-full" class="fab-fab-grid">
-        <div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>
-      </div>
-    </div>
   </div>
 
   <!-- ═══ TABELA COMPARTILHADA (muda com o nav) ═══ -->
-  <div class="fab-card" style="margin-top:16px">
+  <div id="fab-shared-card" class="fab-card" style="margin-top:16px">
     <div class="fab-card-header">
       <div class="fab-card-header-left">
         <i id="fab-lista-icon" class="ti ti-box" style="color:var(--c-accent)"></i>
@@ -4168,7 +4162,9 @@ window.addEventListener('load', () => {
     if (el) el.classList.remove("fab-hidden");
     if (btn) btn.classList.add("active");
     _fabCurrentSec = sec;
-    loadFabLista(sec);
+    const sharedCard = document.getElementById('fab-shared-card');
+    if (sharedCard) sharedCard.style.display = sec === 'producao' ? 'none' : '';
+    if (sec !== 'producao') loadFabLista(sec);
   };
 
   // ── TABELA COMPARTILHADA ──────────────────────────────────────
@@ -4474,7 +4470,14 @@ window.addEventListener('load', () => {
   function renderCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('fab-categoria-tbody');
     const thead = document.getElementById('fab-categoria-thead');
+    const busca = (document.getElementById('fab-cat-busca')?.value || '').toLowerCase();
     let dados = [..._categoriaDados];
+
+    if (busca) dados = dados.filter(d =>
+      (d.subtipo    || '').toLowerCase().includes(busca) ||
+      (d.produto    || '').toLowerCase().includes(busca) ||
+      (d.tipo_pedra || '').toLowerCase().includes(busca)
+    );
 
     if (filtro === 'carroChefe') dados = dados.filter(d => _isCarroChefe(d));
     if (filtro === 'criticos')   dados = dados.filter(d => Number(d.estoque) <= 3 && Number(d.vendidos_90d) > 0);
@@ -4566,6 +4569,8 @@ window.addEventListener('load', () => {
     tabEl.classList.add('active');
     renderCategoriaTabela(filtro);
   };
+
+  window.setCatBusca = function() { renderCategoriaTabela(_catFiltro); };
 
   window.sortCatBy = function(col) {
     if (_catSortCol === col) _catSortDir *= -1;
