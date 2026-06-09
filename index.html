@@ -1509,11 +1509,8 @@ canvas.fab-canvas { width: 100% !important; }
       <button class="fab-nav-btn active" data-sec="resumo" onclick="fabGoTo('resumo',this)">
         <i class="ti ti-layout-dashboard"></i><span>Resumo</span>
       </button>
-      <button class="fab-nav-btn" data-sec="estoque" onclick="fabGoTo('estoque',this)">
-        <i class="ti ti-package"></i><span>Estoque</span>
-      </button>
       <button class="fab-nav-btn" data-sec="producao" onclick="fabGoTo('producao',this)">
-        <i class="ti ti-hammer"></i><span>Em Fabricação</span>
+        <i class="ti ti-hammer"></i><span>Controle</span>
       </button>
       <button class="fab-nav-btn" data-sec="vendas" onclick="fabGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
@@ -1581,9 +1578,12 @@ canvas.fab-canvas { width: 100% !important; }
 
   </div>
 
-  <!-- ═══ SEÇÃO: ESTOQUE ═══ -->
-  <div id="fab-sec-estoque" class="fab-section fab-hidden">
-    <div class="fab-card">
+  <!-- ═══ SEÇÃO: ESTOQUE (vazia — conteúdo movido para Controle) ═══ -->
+  <div id="fab-sec-estoque" class="fab-section fab-hidden"></div>
+
+  <!-- ═══ SEÇÃO: CONTROLE / FABRICAÇÃO ═══ -->
+  <div id="fab-sec-producao" class="fab-section fab-hidden">
+    <div class="fab-card" style="margin-bottom:16px">
       <div class="fab-card-header">
         <div class="fab-card-header-left">
           <i class="ti ti-layout-grid" style="color:var(--c-accent)"></i>
@@ -1610,10 +1610,6 @@ canvas.fab-canvas { width: 100% !important; }
         </table>
       </div>
     </div>
-  </div>
-
-  <!-- ═══ SEÇÃO: EM FABRICAÇÃO ═══ -->
-  <div id="fab-sec-producao" class="fab-section fab-hidden">
     <div class="fab-card">
       <div class="fab-card-header">
         <div class="fab-card-header-left">
