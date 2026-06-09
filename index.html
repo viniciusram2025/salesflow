@@ -1603,17 +1603,7 @@ canvas.fab-canvas { width: 100% !important; }
       </div>
       <div class="fab-table-wrap">
         <table class="fab-table">
-          <thead>
-            <tr>
-              <th>Categoria</th>
-              <th class="right">Estoque</th>
-              <th class="right">Em Fab.</th>
-              <th style="min-width:130px">Vel. 90d</th>
-              <th class="right">Total Vend.</th>
-              <th class="right">Ticket Médio</th>
-              <th class="right">Status</th>
-            </tr>
-          </thead>
+          <thead id="fab-categoria-thead"></thead>
           <tbody id="fab-categoria-tbody">
             <tr><td colspan="7"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>
           </tbody>
@@ -4069,6 +4059,9 @@ window.addEventListener('load', () => {
   const API_BASE = "https://goldtech-fabricacoes-api.onrender.com";
 
   let _categoriaDados = [];
+  let _catSortCol     = null;
+  let _catSortDir     = 1;
+  let _catFiltro      = 'todos';
   let _chartVendas    = null;
   let _fabCurrentSec  = 'resumo';
   let _fabListaData   = [];
@@ -4466,11 +4459,33 @@ window.addEventListener('load', () => {
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
   function renderCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('fab-categoria-tbody');
+    const thead = document.getElementById('fab-categoria-thead');
     let dados = [..._categoriaDados];
 
     if (filtro === 'carroChefe') dados = dados.filter(d => Number(d.vendidos_90d) >= 2);
     if (filtro === 'criticos')   dados = dados.filter(d => Number(d.estoque) <= 3 && Number(d.vendidos_90d) > 0);
     if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
+
+    if (_catSortCol) {
+      dados = [...dados].sort((a, b) => {
+        const av = a[_catSortCol] ?? '';
+        const bv = b[_catSortCol] ?? '';
+        const an = Number(av), bn = Number(bv);
+        if (!isNaN(an) && !isNaN(bn) && av !== '' && bv !== '') return (an - bn) * _catSortDir;
+        return String(av).localeCompare(String(bv), 'pt-BR') * _catSortDir;
+      });
+    }
+
+    const sc = col => _catSortCol === col ? (_catSortDir === 1 ? ' sort-asc' : ' sort-desc') : '';
+    if (thead) thead.innerHTML = `<tr>
+      <th class="sortable${sc('subtipo')}" onclick="sortCatBy('subtipo')">Categoria</th>
+      <th class="sortable right${sc('estoque')}" onclick="sortCatBy('estoque')">Estoque</th>
+      <th class="sortable right${sc('em_fabricacao')}" onclick="sortCatBy('em_fabricacao')">Em Fab.</th>
+      <th class="sortable${sc('vendidos_90d')}" style="min-width:130px" onclick="sortCatBy('vendidos_90d')">Vel. 90d</th>
+      <th class="sortable right${sc('vendidos_total')}" onclick="sortCatBy('vendidos_total')">Total Vend.</th>
+      <th class="sortable right${sc('ticket_medio')}" onclick="sortCatBy('ticket_medio')">Ticket Médio</th>
+      <th class="right">Status</th>
+    </tr>`;
 
     if (!dados.length) {
       tbody.innerHTML = `<tr><td colspan="7"><div class="fab-empty">Nenhum registro</div></td></tr>`;
@@ -4524,9 +4539,16 @@ window.addEventListener('load', () => {
   }
 
   window.fabFiltrarSubtipo = function(filtro, tabEl) {
+    _catFiltro = filtro;
     document.querySelectorAll('#fab-sec-estoque .fab-tab').forEach(t => t.classList.remove('active'));
     tabEl.classList.add('active');
     renderCategoriaTabela(filtro);
+  };
+
+  window.sortCatBy = function(col) {
+    if (_catSortCol === col) _catSortDir *= -1;
+    else { _catSortCol = col; _catSortDir = 1; }
+    renderCategoriaTabela(_catFiltro);
   };
 
   // ── RENDER GRÁFICO VENDAS MÊS ────────────────────────────────
@@ -4651,7 +4673,8 @@ window.addEventListener('load', () => {
       loadFabLista(_fabCurrentSec);
 
       _categoriaDados = categorias;
-      renderCategoriaTabela("todos");
+      _catSortCol = null; _catSortDir = 1; _catFiltro = 'todos';
+      renderCategoriaTabela('todos');
 
       document.getElementById("fab-last-update").textContent =
         "Atualizado: " + new Date().toLocaleTimeString("pt-BR");
