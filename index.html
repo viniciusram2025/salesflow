@@ -840,8 +840,6 @@ tbody tr:last-child{border-bottom:none;}
 }
 .fab-fv2-item:hover { background: rgba(79,110,247,.07); color: var(--fab-text); }
 .fab-fv2-item:has(input:checked) { color: #7fa3ff; background: rgba(79,110,247,.13); font-weight: 500; }
-.fab-fv2-item.unavailable { opacity: 0.28; pointer-events: none; }
-.fab-fv2-item.unavailable:has(input:checked) { opacity: 1; pointer-events: auto; }
 .fab-fv2-item input[type=checkbox] {
   accent-color: var(--fab-accent); cursor: pointer;
   flex-shrink: 0; margin: 0; width: 12px; height: 12px;
@@ -2108,7 +2106,7 @@ function goTo(name){
   if(name==='configuracoes')   renderConfigPage();
   if(name==='calendario')      renderCalendar();
   if(name==='relatorios')      {} // static page
-  if(name==='fabricacoes')     { fabLoad(); fabStartAutoRefresh(); }
+  if(name==='fabricacoes')     { fabLoad(); }
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -4303,7 +4301,7 @@ window.addEventListener('load', () => {
       const available = new Set(filterExcept(d.field).map(r => r[d.field]).filter(Boolean));
       panel.querySelectorAll('label.fab-fv2-item').forEach(label => {
         const val = label.querySelector('input').value;
-        label.classList.toggle('unavailable', !available.has(val));
+        label.style.display = available.has(val) || label.querySelector('input').checked ? '' : 'none';
       });
     });
 
@@ -4369,7 +4367,7 @@ window.addEventListener('load', () => {
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
         ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
-        ${srt('preco_cobrado','right')}Preço Cobrado</th>
+        ${srt('preco_cobrado','right')}Valor Total</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
         <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
       </tr>`;
@@ -4624,31 +4622,15 @@ window.addEventListener('load', () => {
   // ── REFRESH MANUAL ───────────────────────────────────────────
   window.fabRefresh = fabLoad;
 
-  // ── AUTO-REFRESH A CADA 60s ──────────────────────────────────
-  function fabStartAutoRefresh() {
-    if (_autoRefresh) clearInterval(_autoRefresh);
-    _autoRefresh = setInterval(fabLoad, 60_000);
-  }
-
   // ── INICIALIZAR QUANDO NAVEGAR PARA FABRICAÇÕES ──────────────
-  // Se o SalesFlow usa goTo(), conecte aqui:
   const _origGoTo = window.goTo;
   if (typeof _origGoTo === "function") {
     window.goTo = function (page) {
       _origGoTo(page);
-      if (page === "fabricacoes") {
-        fabLoad();
-        fabStartAutoRefresh();
-      } else {
-        if (_autoRefresh) clearInterval(_autoRefresh);
-      }
+      if (page === "fabricacoes") fabLoad();
     };
   } else {
-    // Fallback: inicializa direto se a página já estiver visível
-    if (document.getElementById("page-fabricacoes")?.style.display !== "none") {
-      fabLoad();
-      fabStartAutoRefresh();
-    }
+    if (document.getElementById("page-fabricacoes")?.style.display !== "none") fabLoad();
   }
 
 </script>
