@@ -595,14 +595,60 @@ tbody tr:last-child{border-bottom:none;}
 .fab-nav-btn:focus { outline: none; }
 .fab-nav-btn.active { background: #4f6ef7; color: #fff; }
 .fab-nav-btn.active:hover { background: #4f6ef7; }
-.fab-period-bar { display: flex; gap: 8px; padding: 14px 0 4px; flex-wrap: wrap; }
-.fab-period-btn {
-  background: transparent; border: 1px solid var(--fab-border);
-  color: var(--fab-muted); font-family: var(--fab-font); font-size: 12px; font-weight: 500;
-  padding: 6px 18px; border-radius: 20px; cursor: pointer; transition: .15s;
+/* ── DATE RANGE PICKER ── */
+.fab-drp { position: relative; display: inline-block; }
+.fab-drp-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--fab-bg); border: 1px solid var(--fab-border);
+  border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 500;
+  color: var(--fab-text); cursor: pointer; font-family: var(--fab-font);
+  transition: border-color .15s;
 }
-.fab-period-btn:hover { border-color: #a855f7; color: #a855f7; }
-.fab-period-btn.active { background: #a855f7; border-color: #a855f7; color: #fff; }
+.fab-drp-btn:hover { border-color: #a855f7; }
+.fab-drp-popup {
+  position: fixed; background: var(--fab-surface); border: 1px solid var(--fab-border2);
+  border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.55);
+  z-index: 999; padding: 18px; display: none; min-width: 520px;
+}
+.fab-drp-popup.open { display: block; }
+.fab-drp-months { display: flex; gap: 28px; }
+.fab-drp-month { flex: 1; }
+.fab-drp-mhead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.fab-drp-mnav {
+  background: none; border: 1px solid var(--fab-border); border-radius: 6px;
+  width: 28px; height: 28px; cursor: pointer; color: var(--fab-muted);
+  font-size: 16px; line-height: 1; transition: .15s; display: flex; align-items: center; justify-content: center;
+}
+.fab-drp-mnav:hover { border-color: #a855f7; color: #a855f7; }
+.fab-drp-mname { font-size: 13px; font-weight: 700; color: var(--fab-text); }
+.fab-drp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+.fab-drp-wday { font-size: 10px; color: var(--fab-muted); text-align: center; padding: 5px 0; font-weight: 600; }
+.fab-drp-day {
+  height: 30px; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; cursor: pointer; border-radius: 6px; transition: background .1s, color .1s;
+  color: var(--fab-text); user-select: none;
+}
+.fab-drp-day.empty { cursor: default; pointer-events: none; }
+.fab-drp-day:not(.empty):hover { background: rgba(168,85,247,.2); }
+.fab-drp-day.today { font-weight: 700; color: #a855f7; }
+.fab-drp-day.range-start { background: #a855f7; color: #fff; font-weight: 700; border-radius: 6px 0 0 6px; }
+.fab-drp-day.range-end   { background: #a855f7; color: #fff; font-weight: 700; border-radius: 0 6px 6px 0; }
+.fab-drp-day.range-single { background: #a855f7; color: #fff; font-weight: 700; border-radius: 6px; }
+.fab-drp-day.in-range { background: rgba(168,85,247,.15); border-radius: 0; }
+.fab-drp-day.other-month { opacity: .3; }
+.fab-drp-sep { width: 1px; background: var(--fab-border); margin: 0 4px; }
+.fab-drp-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--fab-border);
+}
+.fab-drp-hint { font-size: 11px; color: var(--fab-muted); }
+.fab-drp-range-lbl { font-size: 12px; color: var(--fab-text); font-weight: 600; }
+.fab-drp-apply {
+  background: #a855f7; color: #fff; border: none; border-radius: 6px;
+  padding: 7px 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: var(--fab-font); transition: opacity .15s;
+}
+.fab-drp-apply:hover { opacity: .85; }
 
 .fab-sync { display: flex; align-items: center; gap: 12px; }
 .fab-sync-time { font-size: 12px; color: var(--fab-muted); }
@@ -4066,6 +4112,8 @@ window.addEventListener('load', () => {
   let _fabSortDir     = 1;
   let _fabDateFrom = '';
   let _fabDateTo   = '';
+  let _drpLY = 0, _drpLM = 0;
+  let _drpPickStart = null;
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
@@ -4184,19 +4232,175 @@ window.addEventListener('load', () => {
     vendas:   { url: 'lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
+  // ── DATE RANGE PICKER ───────────────────────────────────────────
+  const _drpMN  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const _drpWD  = ['D','S','T','Q','Q','S','S'];
+
+  function _drpIso(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+
+  function _drpFmtBR(ymd) {
+    if (!ymd) return '—';
+    const [y,m,d] = ymd.split('-');
+    return `${d}/${_drpMN[+m-1]}/${y.slice(2)}`;
+  }
+
+  function _drpMkMonth(y, m, isLeft) {
+    const first = new Date(y, m, 1).getDay();
+    const days  = new Date(y, m+1, 0).getDate();
+    const today = _drpIso(new Date());
+
+    let cells = '';
+    for (let i = 0; i < first; i++) cells += `<div class="fab-drp-day empty"></div>`;
+    for (let d = 1; d <= days; d++) {
+      const ymd = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const pickA = _drpPickStart ? _drpIso(_drpPickStart) : null;
+      const rA = pickA || _fabDateFrom;
+      const rB = pickA ? (window._drpHover || null) : _fabDateTo;
+      const lo = rA && rB ? (rA <= rB ? rA : rB) : rA;
+      const hi = rA && rB ? (rA <= rB ? rB : rA) : null;
+
+      let cls = 'fab-drp-day';
+      if (ymd === today) cls += ' today';
+      if (lo && hi) {
+        if (ymd === lo && ymd === hi) cls += ' range-single';
+        else if (ymd === lo) cls += ' range-start';
+        else if (ymd === hi) cls += ' range-end';
+        else if (ymd > lo && ymd < hi) cls += ' in-range';
+      } else if (lo && ymd === lo) cls += ' range-single';
+
+      cells += `<div class="${cls}" onclick="fabDrpDay('${ymd}')" onmouseover="fabDrpHover('${ymd}')">${d}</div>`;
+    }
+
+    const navL = isLeft
+      ? `<button class="fab-drp-mnav" onclick="fabDrpNav(-1)">&#8249;</button>`
+      : `<div style="width:28px"></div>`;
+    const navR = !isLeft
+      ? `<button class="fab-drp-mnav" onclick="fabDrpNav(1)">&#8250;</button>`
+      : `<div style="width:28px"></div>`;
+
+    return `<div class="fab-drp-month">
+      <div class="fab-drp-mhead">${navL}<span class="fab-drp-mname">${_drpMN[m]} ${y}</span>${navR}</div>
+      <div class="fab-drp-grid">
+        ${_drpWD.map(w=>`<div class="fab-drp-wday">${w}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>`;
+  }
+
+  function _drpRender() {
+    const popup = document.getElementById('fab-drp-popup');
+    if (!popup || !popup.classList.contains('open')) return;
+    const ry = _drpLM === 11 ? _drpLY+1 : _drpLY;
+    const rm = _drpLM === 11 ? 0 : _drpLM+1;
+    const lo = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateFrom:_fabDateTo) : _fabDateFrom;
+    const hi = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateTo:_fabDateFrom) : _fabDateTo;
+    const hint = _drpPickStart ? 'Clique na data final' : 'Clique na data inicial';
+    const rangeLbl = (lo && hi) ? `${_drpFmtBR(lo)} → ${_drpFmtBR(hi)}` : (lo ? _drpFmtBR(lo) : '—');
+    popup.innerHTML = `
+      <div class="fab-drp-months">
+        ${_drpMkMonth(_drpLY, _drpLM, true)}
+        <div class="fab-drp-sep"></div>
+        ${_drpMkMonth(ry, rm, false)}
+      </div>
+      <div class="fab-drp-footer">
+        <span class="fab-drp-hint">${hint}</span>
+        <span class="fab-drp-range-lbl">${rangeLbl}</span>
+        <button class="fab-drp-apply" onclick="fabDrpApply()">Aplicar</button>
+      </div>`;
+  }
+
+  window.fabDrpToggle = function(e) {
+    e && e.stopPropagation();
+    const popup = document.getElementById('fab-drp-popup');
+    if (!popup) return;
+    if (popup.classList.contains('open')) { popup.classList.remove('open'); return; }
+    // position below trigger
+    const btn = document.getElementById('fab-drp-btn');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      popup.style.top  = (r.bottom + 6) + 'px';
+      popup.style.left = r.left + 'px';
+    }
+    // init left calendar to start of current range
+    const ref = _fabDateFrom ? new Date(_fabDateFrom+'T00:00:00') : new Date();
+    _drpLY = ref.getFullYear(); _drpLM = ref.getMonth();
+    _drpPickStart = null; window._drpHover = null;
+    popup.classList.add('open');
+    _drpRender();
+    setTimeout(() => {
+      document.addEventListener('click', function _close(ev) {
+        if (!document.getElementById('fab-drp-popup')?.contains(ev.target) &&
+            !document.getElementById('fab-drp-btn')?.contains(ev.target)) {
+          document.getElementById('fab-drp-popup')?.classList.remove('open');
+          document.removeEventListener('click', _close);
+        }
+      });
+    }, 0);
+  };
+
+  window.fabDrpNav = function(dir) {
+    _drpLM += dir;
+    if (_drpLM < 0)  { _drpLM = 11; _drpLY--; }
+    if (_drpLM > 11) { _drpLM = 0;  _drpLY++; }
+    _drpRender();
+  };
+
+  window.fabDrpDay = function(ymd) {
+    if (!_drpPickStart) {
+      _drpPickStart = new Date(ymd+'T00:00:00');
+      _fabDateFrom = ymd; _fabDateTo = '';
+      window._drpHover = null;
+      _drpRender();
+    } else {
+      const start = _drpIso(_drpPickStart);
+      _fabDateFrom = start <= ymd ? start : ymd;
+      _fabDateTo   = start <= ymd ? ymd   : start;
+      _drpPickStart = null; window._drpHover = null;
+      _drpRender();
+      _drpUpdateBtn();
+    }
+  };
+
+  window.fabDrpHover = function(ymd) {
+    if (!_drpPickStart) return;
+    window._drpHover = ymd;
+    _drpRender();
+  };
+
+  window.fabDrpApply = function() {
+    document.getElementById('fab-drp-popup')?.classList.remove('open');
+    _drpPickStart = null; window._drpHover = null;
+    _drpUpdateBtn();
+    applyFabDateRange();
+  };
+
+  function _drpUpdateBtn() {
+    const lo = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateFrom:_fabDateTo) : _fabDateFrom;
+    const hi = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateTo:_fabDateFrom) : '';
+    const el = document.getElementById('fab-drp-label');
+    if (el) el.textContent = hi ? `${_drpFmtBR(lo)} → ${_drpFmtBR(hi)}` : _drpFmtBR(lo);
+  }
+
   function _buildPeriodSlot() {
     const today = new Date();
     const bom   = new Date(today.getFullYear(), today.getMonth(), 1);
-    const fmt   = d => d.toISOString().split('T')[0];
+    const fmt   = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     if (!_fabDateFrom) _fabDateFrom = fmt(bom);
     if (!_fabDateTo)   _fabDateTo   = fmt(today);
-    const inputStyle = `background:var(--fab-bg);border:1px solid var(--fab-border);border-radius:6px;padding:5px 10px;color:var(--fab-text);font-size:12px;font-family:var(--fab-font);outline:none;cursor:pointer`;
+    const lo = _fabDateFrom <= _fabDateTo ? _fabDateFrom : _fabDateTo;
+    const hi = _fabDateFrom <= _fabDateTo ? _fabDateTo   : _fabDateFrom;
     return `
-      <div class="fab-period-bar" style="padding:10px 16px 4px;align-items:center;gap:10px">
-        <span style="font-size:12px;color:var(--fab-muted)">De</span>
-        <input type="date" id="fab-date-from" value="${_fabDateFrom}" style="${inputStyle}" onchange="applyFabDateRange()">
-        <span style="font-size:12px;color:var(--fab-muted)">até</span>
-        <input type="date" id="fab-date-to"   value="${_fabDateTo}"   style="${inputStyle}" onchange="applyFabDateRange()">
+      <div style="padding:10px 16px 4px">
+        <div class="fab-drp">
+          <button class="fab-drp-btn" id="fab-drp-btn" onclick="fabDrpToggle(event)">
+            <i class="ti ti-calendar" style="font-size:13px;opacity:.7"></i>
+            <span id="fab-drp-label">${_drpFmtBR(lo)} → ${_drpFmtBR(hi)}</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;opacity:.5"></i>
+          </button>
+          <div class="fab-drp-popup" id="fab-drp-popup"></div>
+        </div>
       </div>`;
   }
 
