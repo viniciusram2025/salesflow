@@ -4597,8 +4597,6 @@ window.addEventListener('load', () => {
   }
 
   window.applyFabDateRange = function() {
-    _fabDateFrom = document.getElementById('fab-date-from')?.value || '';
-    _fabDateTo   = document.getElementById('fab-date-to')?.value   || '';
     const fmtBR  = s => s ? s.split('-').reverse().join('/') : '—';
     const titleEl = document.getElementById('fab-lista-titulo');
     if (titleEl) titleEl.textContent = `Vendas — ${fmtBR(_fabDateFrom)} a ${fmtBR(_fabDateTo)}`;
