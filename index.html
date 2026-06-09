@@ -794,57 +794,63 @@ tbody tr:last-child{border-bottom:none;}
 
 .fab-bar-wrap { display: flex; align-items: center; gap: 8px; }
 
-/* ── Filtros da tabela ── */
+/* ── Filtros da tabela (painel estilo PBI) ── */
 .fab-filtros {
-  display: flex; gap: 8px; padding: 12px 16px;
+  display: flex; align-items: stretch;
   border-bottom: 1px solid var(--fab-border);
-  flex-wrap: wrap; align-items: center;
-  background: rgba(255,255,255,.015);
+  background: rgba(255,255,255,.01);
+  max-height: 170px; overflow: hidden;
 }
-.fab-filtro-search-wrap {
-  position: relative; display: flex; align-items: center; flex: 1; min-width: 180px; max-width: 280px;
+.fab-fv2-search {
+  flex: 0 0 auto; min-width: 140px; max-width: 190px;
+  padding: 10px 12px; border-right: 1px solid var(--fab-border);
+  display: flex; flex-direction: column; gap: 7px;
 }
-.fab-filtro-search-wrap i {
-  position: absolute; left: 10px; font-size: 15px; color: var(--fab-muted); pointer-events: none;
+.fab-fv2-search-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .7px;
+  text-transform: uppercase; color: var(--fab-muted);
 }
+.fab-fv2-search-wrap { position: relative; display: flex; align-items: center; }
+.fab-fv2-search-wrap i { position: absolute; left: 8px; font-size: 13px; color: var(--fab-muted); pointer-events: none; }
 .fab-filtro-busca {
   width: 100%; background: var(--fab-bg); border: 1px solid var(--fab-border);
-  color: var(--fab-text); font-family: var(--fab-font); font-size: 13px;
-  padding: 7px 11px 7px 32px; border-radius: 8px; outline: none;
-  transition: border-color .15s;
+  color: var(--fab-text); font-family: var(--fab-font); font-size: 12px;
+  padding: 6px 8px 6px 27px; border-radius: 6px; outline: none; transition: border-color .15s;
 }
 .fab-filtro-busca:focus { border-color: var(--fab-accent); }
-.fab-filtro-sep { width: 1px; height: 22px; background: var(--fab-border); margin: 0 2px; }
-.fab-filtro-select-wrap { position: relative; display: flex; align-items: center; }
-.fab-filtro-select-wrap i {
-  position: absolute; left: 10px; font-size: 14px; color: var(--fab-muted); pointer-events: none;
+.fab-fv2-panel {
+  flex: 1 1 0; min-width: 90px; border-right: 1px solid var(--fab-border);
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.fab-filtro-select {
-  appearance: none; background: var(--fab-bg); border: 1px solid var(--fab-border);
-  color: var(--fab-text); font-family: var(--fab-font); font-size: 12px; font-weight: 500;
-  padding: 7px 28px 7px 30px; border-radius: 8px; outline: none; cursor: pointer;
-  transition: border-color .15s, background .15s; white-space: nowrap;
+.fab-fv2-panel-title {
+  padding: 6px 10px 5px; font-size: 10px; font-weight: 700;
+  letter-spacing: .7px; text-transform: uppercase; color: var(--fab-muted);
+  border-bottom: 1px solid var(--fab-border); flex-shrink: 0;
+  background: rgba(255,255,255,.02);
 }
-.fab-filtro-select:focus { border-color: var(--fab-accent); }
-.fab-filtro-select.active {
-  border-color: var(--fab-accent); background: rgba(79,110,247,.12); color: #fff;
+.fab-fv2-panel-items {
+  overflow-y: auto; padding: 2px 0; flex: 1;
+  scrollbar-width: thin; scrollbar-color: var(--fab-border) transparent;
 }
-.fab-filtro-select-wrap::after {
-  content: ''; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  border: 4px solid transparent; border-top: 5px solid var(--fab-muted);
-  margin-top: 3px; pointer-events: none;
+.fab-fv2-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 10px; cursor: pointer; user-select: none;
+  font-size: 12px; color: var(--fab-text); transition: background .1s;
 }
-.fab-filtros-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.fab-filtros-count {
-  font-size: 12px; color: var(--fab-muted); background: var(--fab-surface);
-  border: 1px solid var(--fab-border); border-radius: 20px; padding: 3px 10px;
-  white-space: nowrap;
+.fab-fv2-item:hover { background: rgba(255,255,255,.05); }
+.fab-fv2-item:has(input:checked) { color: var(--fab-accent); background: rgba(79,110,247,.09); }
+.fab-fv2-item input[type=checkbox] { accent-color: var(--fab-accent); cursor: pointer; flex-shrink: 0; margin: 0; }
+.fab-fv2-right {
+  flex: 0 0 auto; min-width: 72px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; padding: 10px 14px;
 }
+.fab-fv2-count { font-size: 24px; font-weight: 700; color: var(--fab-text); line-height: 1; text-align: center; }
+.fab-fv2-count-label { font-size: 10px; color: var(--fab-muted); text-align: center; }
 .fab-filtro-clear {
-  display: flex; align-items: center; gap: 5px;
+  display: flex; align-items: center; gap: 4px;
   background: transparent; border: 1px solid var(--fab-border);
-  color: var(--fab-muted); font-family: var(--fab-font); font-size: 12px;
-  padding: 6px 12px; border-radius: 8px; cursor: pointer; transition: .15s;
+  color: var(--fab-muted); font-family: var(--fab-font); font-size: 11px;
+  padding: 5px 10px; border-radius: 6px; cursor: pointer; transition: .15s;
 }
 .fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); background: rgba(239,68,68,.06); }
 .fab-bar-bg { flex: 1; height: 5px; background: rgba(255,255,255,.07); border-radius: 3px; overflow: hidden; min-width: 50px; }
@@ -4202,36 +4208,34 @@ window.addEventListener('load', () => {
   function buildFabFiltros(data, sec) {
     _fabListaData = data;
     _fabListaSec  = sec;
-    const bar     = document.getElementById('fab-filtros-bar');
+    const bar = document.getElementById('fab-filtros-bar');
 
-    const pedras   = [...new Set(data.map(r => r.tipo_pedra).filter(Boolean))].sort();
-    const subtipos = [...new Set(data.map(r => r.subtipo).filter(Boolean))].sort();
+    const esc      = v => v.replace(/"/g, '&quot;');
+    const uniq     = key => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+    const mkItems  = (list, dim) => list.map(v =>
+      `<label class="fab-fv2-item"><input type="checkbox" value="${esc(v)}" onchange="applyFabFiltros()"> ${v}</label>`
+    ).join('');
+
+    const pedras   = uniq('tipo_pedra');
+    const subtipos = uniq('subtipo');
+    const produtos = uniq('produto');
 
     bar.innerHTML = `
-      <div class="fab-filtro-search-wrap">
-        <i class="ti ti-search"></i>
-        <input class="fab-filtro-busca" id="fab-f-busca"
-               placeholder="Buscar ref ou produto…" oninput="applyFabFiltros()">
+      <div class="fab-fv2-search">
+        <span class="fab-fv2-search-label">Buscar</span>
+        <div class="fab-fv2-search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
+        </div>
       </div>
-      ${pedras.length ? `
-        <div class="fab-filtro-sep"></div>
-        <div class="fab-filtro-select-wrap">
-          <i class="ti ti-diamond"></i>
-          <select class="fab-filtro-select" id="fab-f-pedra" onchange="applyFabFiltros();this.classList.toggle('active',!!this.value)">
-            <option value="">Tipo Pedra</option>
-            ${pedras.map(p=>`<option value="${p}">${p}</option>`).join('')}
-          </select>
-        </div>` : ''}
-      ${subtipos.length ? `
-        <div class="fab-filtro-select-wrap">
-          <i class="ti ti-tag"></i>
-          <select class="fab-filtro-select" id="fab-f-subtipo" onchange="applyFabFiltros();this.classList.toggle('active',!!this.value)">
-            <option value="">Subtipo</option>
-            ${subtipos.map(s=>`<option value="${s}">${s}</option>`).join('')}
-          </select>
-        </div>` : ''}
-      <div class="fab-filtros-right">
-        <span class="fab-filtros-count" id="fab-filtros-count" style="display:none"></span>
+      ${produtos.length ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Produto</div><div class="fab-fv2-panel-items" id="fab-fp-produto">${mkItems(produtos,'produto')}</div></div>` : ''}
+      ${subtipos.length ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Subtipo</div><div class="fab-fv2-panel-items" id="fab-fp-subtipo">${mkItems(subtipos,'subtipo')}</div></div>` : ''}
+      ${pedras.length   ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">Tipo Pedra</div><div class="fab-fv2-panel-items" id="fab-fp-pedra">${mkItems(pedras,'tipo_pedra')}</div></div>` : ''}
+      <div class="fab-fv2-right">
+        <div>
+          <div class="fab-fv2-count" id="fab-filtros-count">${data.length}</div>
+          <div class="fab-fv2-count-label">itens</div>
+        </div>
         <button class="fab-filtro-clear" onclick="clearFabFiltros()"><i class="ti ti-x"></i> Limpar</button>
       </div>
     `;
@@ -4240,36 +4244,31 @@ window.addEventListener('load', () => {
   }
 
   window.applyFabFiltros = function() {
-    const busca   = (document.getElementById('fab-f-busca')?.value  || '').toLowerCase();
-    const pedra   =  document.getElementById('fab-f-pedra')?.value  || '';
-    const subtipo =  document.getElementById('fab-f-subtipo')?.value || '';
+    const busca   = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
+    const selProd = new Set([...document.querySelectorAll('#fab-fp-produto input:checked')].map(el => el.value));
+    const selSub  = new Set([...document.querySelectorAll('#fab-fp-subtipo input:checked')].map(el => el.value));
+    const selPed  = new Set([...document.querySelectorAll('#fab-fp-pedra input:checked')].map(el => el.value));
 
     let filtered = _fabListaData;
-    if (busca)   filtered = filtered.filter(r =>
+    if (busca)       filtered = filtered.filter(r =>
       (r.referencia||'').toLowerCase().includes(busca) ||
       (r.produto||'').toLowerCase().includes(busca));
-    if (pedra)   filtered = filtered.filter(r => r.tipo_pedra === pedra);
-    if (subtipo) filtered = filtered.filter(r => r.subtipo    === subtipo);
+    if (selProd.size) filtered = filtered.filter(r => selProd.has(r.produto));
+    if (selSub.size)  filtered = filtered.filter(r => selSub.has(r.subtipo));
+    if (selPed.size)  filtered = filtered.filter(r => selPed.has(r.tipo_pedra));
 
     const countEl = document.getElementById('fab-filtros-count');
-    if (countEl) {
-      const active = filtered.length < _fabListaData.length;
-      countEl.style.display = active ? '' : 'none';
-      countEl.textContent   = active ? `${filtered.length} de ${_fabListaData.length}` : '';
-    }
+    if (countEl) countEl.textContent = filtered.length;
 
-    const tbody = document.getElementById('fab-lista-tbody');
-    const thead = document.getElementById('fab-lista-thead');
-    renderFabLista(filtered, _fabListaSec, thead, tbody);
+    renderFabLista(filtered, _fabListaSec,
+      document.getElementById('fab-lista-thead'),
+      document.getElementById('fab-lista-tbody'));
   };
 
   window.clearFabFiltros = function() {
-    const b = document.getElementById('fab-f-busca');
-    const p = document.getElementById('fab-f-pedra');
-    const s = document.getElementById('fab-f-subtipo');
-    if (b) b.value = '';
-    if (p) { p.value = ''; p.classList.remove('active'); }
-    if (s) { s.value = ''; s.classList.remove('active'); }
+    const busca = document.getElementById('fab-f-busca');
+    if (busca) busca.value = '';
+    document.querySelectorAll('#fab-filtros-bar input[type=checkbox]').forEach(cb => cb.checked = false);
     applyFabFiltros();
   };
 
