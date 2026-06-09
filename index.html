@@ -840,6 +840,8 @@ tbody tr:last-child{border-bottom:none;}
 }
 .fab-fv2-item:hover { background: rgba(79,110,247,.07); color: var(--fab-text); }
 .fab-fv2-item:has(input:checked) { color: #7fa3ff; background: rgba(79,110,247,.13); font-weight: 500; }
+.fab-fv2-item.unavailable { opacity: 0.28; pointer-events: none; }
+.fab-fv2-item.unavailable:has(input:checked) { opacity: 1; pointer-events: auto; }
 .fab-fv2-item input[type=checkbox] {
   accent-color: var(--fab-accent); cursor: pointer;
   flex-shrink: 0; margin: 0; width: 12px; height: 12px;
@@ -4268,24 +4270,42 @@ window.addEventListener('load', () => {
   }
 
   window.applyFabFiltros = function() {
-    const busca    = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
-    const selProd  = new Set([...document.querySelectorAll('#fab-fp-produto    input:checked')].map(el => el.value));
-    const selSub   = new Set([...document.querySelectorAll('#fab-fp-subtipo    input:checked')].map(el => el.value));
-    const selPed   = new Set([...document.querySelectorAll('#fab-fp-pedra      input:checked')].map(el => el.value));
-    const selLap   = new Set([...document.querySelectorAll('#fab-fp-lapidacao  input:checked')].map(el => el.value));
-    const selDest  = new Set([...document.querySelectorAll('#fab-fp-destino    input:checked')].map(el => el.value));
-    const selFab   = new Set([...document.querySelectorAll('#fab-fp-fabricante input:checked')].map(el => el.value));
+    const busca = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
 
-    let filtered = _fabListaData;
-    if (busca)        filtered = filtered.filter(r =>
-      (r.referencia||'').toLowerCase().includes(busca) ||
-      (r.produto||'').toLowerCase().includes(busca));
-    if (selProd.size)  filtered = filtered.filter(r => selProd.has(r.produto));
-    if (selSub.size)   filtered = filtered.filter(r => selSub.has(r.subtipo));
-    if (selPed.size)   filtered = filtered.filter(r => selPed.has(r.tipo_pedra));
-    if (selLap.size)   filtered = filtered.filter(r => selLap.has(r.lapidacao));
-    if (selDest.size)  filtered = filtered.filter(r => selDest.has(r.destino));
-    if (selFab.size)   filtered = filtered.filter(r => selFab.has(r.fabricante));
+    const dims = [
+      { id: 'fab-fp-produto',    field: 'produto'     },
+      { id: 'fab-fp-subtipo',    field: 'subtipo'     },
+      { id: 'fab-fp-destino',    field: 'destino'     },
+      { id: 'fab-fp-fabricante', field: 'fabricante'  },
+      { id: 'fab-fp-pedra',      field: 'tipo_pedra'  },
+      { id: 'fab-fp-lapidacao',  field: 'lapidacao'   },
+    ];
+    dims.forEach(d => {
+      d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
+    });
+
+    const base = busca
+      ? _fabListaData.filter(r =>
+          (r.referencia||'').toLowerCase().includes(busca) ||
+          (r.produto||'').toLowerCase().includes(busca))
+      : _fabListaData;
+
+    const filterExcept = excludeField => base.filter(r =>
+      dims.every(d => d.field === excludeField || d.sel.size === 0 || d.sel.has(r[d.field]))
+    );
+
+    let filtered = filterExcept(null);
+
+    // cross-filter: cada painel mostra só valores presentes após aplicar os outros filtros
+    dims.forEach(d => {
+      const panel = document.getElementById(d.id);
+      if (!panel) return;
+      const available = new Set(filterExcept(d.field).map(r => r[d.field]).filter(Boolean));
+      panel.querySelectorAll('label.fab-fv2-item').forEach(label => {
+        const val = label.querySelector('input').value;
+        label.classList.toggle('unavailable', !available.has(val));
+      });
+    });
 
     if (_fabSortCol) {
       filtered = [...filtered].sort((a, b) => {
