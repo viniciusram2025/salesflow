@@ -4429,7 +4429,7 @@ window.addEventListener('load', () => {
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
         ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
-        ${srt('preco_avista','right')}Preço À Vista</th>
+        ${srt('preco_cobrado','right')}Preço Cobrado</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
         <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
       </tr>`;
@@ -4443,7 +4443,7 @@ window.addEventListener('load', () => {
         <td>${r.fabricante||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
-        <td class="right" style="font-weight:700">${r.preco_avista?fmt.moeda(r.preco_avista):'—'}</td>
+        <td class="right" style="font-weight:700">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
         <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
         <td class="right">${r.cts_diamantes||'—'}</td>
         <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
