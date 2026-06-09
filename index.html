@@ -4466,8 +4466,16 @@ window.addEventListener('load', () => {
     if (filtro === 'criticos')   dados = dados.filter(d => Number(d.estoque) <= 3 && Number(d.vendidos_90d) > 0);
     if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
 
+    const _statusPri = d => {
+      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+      if (e === 0 && v > 0) return 1;
+      if (e <= 2  && v >= 2) return 2;
+      if (v >= 2  && e > 0)  return 3;
+      return 4;
+    };
     if (_catSortCol) {
       dados = [...dados].sort((a, b) => {
+        if (_catSortCol === '_status') return (_statusPri(a) - _statusPri(b)) * _catSortDir;
         const av = a[_catSortCol] ?? '';
         const bv = b[_catSortCol] ?? '';
         const an = Number(av), bn = Number(bv);
@@ -4484,7 +4492,7 @@ window.addEventListener('load', () => {
       <th class="sortable${sc('vendidos_90d')}" style="min-width:130px" onclick="sortCatBy('vendidos_90d')">Vel. 90d</th>
       <th class="sortable right${sc('vendidos_total')}" onclick="sortCatBy('vendidos_total')">Total Vend.</th>
       <th class="sortable right${sc('ticket_medio')}" onclick="sortCatBy('ticket_medio')">Ticket Médio</th>
-      <th class="right">Status</th>
+      <th class="sortable right${sc('_status')}" onclick="sortCatBy('_status')">Status</th>
     </tr>`;
 
     if (!dados.length) {
