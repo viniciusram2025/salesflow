@@ -4456,21 +4456,39 @@ window.addEventListener('load', () => {
     }
   }
 
+  // ── CARROS CHEFE — lista definida pelo negócio ────────────────
+  const _isCarroChefe = d => {
+    const s = (d.subtipo  || '').toUpperCase();
+    const p = (d.produto  || '').toUpperCase();
+    if (s === 'SOLITÁRIO'  && p.includes('ANEL'))     return true;
+    if (s === 'SOLITÁRIO'  && p.includes('BRINCO'))   return true;
+    if (s === 'PONTO DE LUZ')                          return true;
+    if (s === 'MEIA ALIANÇA')                          return true;
+    if (s === 'RIVIERA'    && p.includes('COLAR'))    return true;
+    if (s === 'RIVIERA'    && p.includes('PULSEIRA')) return true;
+    if (p.includes('ALIANÇA RIVIERA'))                 return true;
+    if (s === 'MARACANÃ'   && p.includes('ANEL'))     return true;
+    if (s === 'MARACANÃ'   && p.includes('COLAR'))    return true;
+    if (s === 'MARACANÃ'   && p.includes('BRINCO'))   return true;
+    if (s === 'PARA RIVIERA' && p.includes('PINGENTE')) return true;
+    return false;
+  };
+
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
   function renderCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('fab-categoria-tbody');
     const thead = document.getElementById('fab-categoria-thead');
     let dados = [..._categoriaDados];
 
-    if (filtro === 'carroChefe') dados = dados.filter(d => Number(d.vendidos_90d) >= 2);
+    if (filtro === 'carroChefe') dados = dados.filter(d => _isCarroChefe(d));
     if (filtro === 'criticos')   dados = dados.filter(d => Number(d.estoque) <= 3 && Number(d.vendidos_90d) > 0);
     if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
 
     const _statusPri = d => {
       const e = Number(d.estoque), v = Number(d.vendidos_90d);
-      if (e === 0 && v > 0) return 1;
+      if (e === 0 && v > 0)  return 1;
       if (e <= 2  && v >= 2) return 2;
-      if (v >= 2  && e > 0)  return 3;
+      if (_isCarroChefe(d))  return 3;
       return 4;
     };
     if (_catSortCol) {
@@ -4516,7 +4534,7 @@ window.addEventListener('load', () => {
         badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
       } else if (est <= 2 && v90 >= 2) {
         badge = '<span class="fab-status-badge critico">Crítico</span>';
-      } else if (v90 >= 2 && est > 0) {
+      } else if (_isCarroChefe(d)) {
         badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
       }
 
