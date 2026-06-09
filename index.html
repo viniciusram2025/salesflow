@@ -774,7 +774,7 @@ tbody tr:last-child{border-bottom:none;}
 .fab-tabs { display: flex; gap: 2px; padding: 0 18px; border-bottom: 1px solid var(--fab-border); }
 .fab-tab {
   padding: 9px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  color: var(--fab-muted); border-bottom: 2px solid transparent;
+  color: var(--fab-muted); border-bottom: 2px solid transparent; outline: none;
   transition: color .2s, border-color .2s; text-transform: uppercase; letter-spacing: .4px;
 }
 .fab-tab.active { color: var(--fab-accent); border-bottom-color: var(--fab-accent); }
@@ -4565,7 +4565,7 @@ window.addEventListener('load', () => {
 
   window.fabFiltrarSubtipo = function(filtro, tabEl) {
     _catFiltro = filtro;
-    document.querySelectorAll('#fab-sec-estoque .fab-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#fab-sec-producao .fab-tab').forEach(t => t.classList.remove('active'));
     tabEl.classList.add('active');
     renderCategoriaTabela(filtro);
   };
