@@ -883,9 +883,10 @@ body.light .fab-filtros { background: #f0f2f5; }
 /* Garante fundo sólido independente do contexto de composição do pai */
 #fab-filtros-bar   { background: #161921 !important; }
 #fab-period-slot   { background: #111318 !important; position: relative; z-index: 2; }
-#fab-shared-card   { overflow: visible  !important; }
+#fab-shared-card   { overflow: visible  !important; background: #111318 !important; }
 body.light #fab-filtros-bar { background: #f0f2f5 !important; }
 body.light #fab-period-slot { background: #ffffff !important; }
+body.light #fab-shared-card { background: #ffffff !important; }
 .fab-fv2-search {
   flex: 0 0 auto; min-width: 145px; max-width: 175px;
   padding: 8px 12px; border-right: 1px solid var(--fab-border);
@@ -1709,7 +1710,7 @@ canvas.fab-canvas { width: 100% !important; }
   </div>
 
   <!-- ═══ TABELA COMPARTILHADA (muda com o nav) ═══ -->
-  <div id="fab-shared-card" class="fab-card" style="margin-top:16px;background:#111318">
+  <div id="fab-shared-card" class="fab-card" style="margin-top:16px">
     <div class="fab-card-header">
       <div class="fab-card-header-left">
         <i id="fab-lista-icon" class="ti ti-box" style="color:var(--c-accent)"></i>
