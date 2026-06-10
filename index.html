@@ -943,6 +943,14 @@ body.light #fab-period-slot { background: #ffffff !important; }
   padding: 4px 9px; border-radius: 5px; cursor: pointer; transition: .15s; white-space: nowrap;
 }
 .fab-filtro-clear:hover { border-color: var(--fab-red); color: var(--fab-red); background: rgba(239,68,68,.06); }
+.fab-export-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: transparent; border: 1px solid var(--fab-border);
+  color: var(--fab-muted); font-family: var(--fab-font); font-size: 11px;
+  padding: 5px 11px; border-radius: 6px; cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.fab-export-btn:hover { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,.07); }
+.fab-export-btn i { font-size: 12px; }
 /* ── Cabeçalhos ordenáveis ── */
 .fab-table thead th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .fab-table thead th.sortable:hover { color: var(--fab-accent); }
@@ -1666,10 +1674,15 @@ canvas.fab-canvas { width: 100% !important; }
           <i class="ti ti-layout-grid" style="color:var(--c-accent)"></i>
           <span class="fab-card-title">Categorias de Produto</span>
         </div>
-        <div class="fab-legend">
-          <span><i class="fab-dot" style="background:var(--c-accent)"></i>Estoque</span>
-          <span><i class="fab-dot" style="background:#f59e0b"></i>Em Fab.</span>
-          <span><i class="fab-dot" style="background:var(--c-green)"></i>Vel. 90d</span>
+        <div style="display:flex;align-items:center;gap:16px;margin-left:auto">
+          <div class="fab-legend">
+            <span><i class="fab-dot" style="background:var(--c-accent)"></i>Estoque</span>
+            <span><i class="fab-dot" style="background:#f59e0b"></i>Em Fab.</span>
+            <span><i class="fab-dot" style="background:var(--c-green)"></i>Vel. 90d</span>
+          </div>
+          <button class="fab-export-btn" onclick="catExportCSV()" title="Exportar CSV">
+            <i class="ti ti-download"></i> Exportar
+          </button>
         </div>
       </div>
       <div style="padding:8px 16px;border-bottom:1px solid var(--fab-border)">
@@ -1705,6 +1718,9 @@ canvas.fab-canvas { width: 100% !important; }
       <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
         <span id="fab-lista-total" style="display:none;font-size:13px;font-weight:700;color:#22c55e"></span>
         <span class="fab-badge-count" id="fab-lista-count">—</span>
+        <button class="fab-export-btn" onclick="fabExportCSV()" title="Exportar CSV">
+          <i class="ti ti-download"></i> Exportar
+        </button>
       </div>
     </div>
     <div id="fab-period-slot"></div>
@@ -4132,7 +4148,9 @@ window.addEventListener('load', () => {
   let _catFiltro      = 'todos';
   let _chartVendas    = null;
   let _fabCurrentSec  = 'resumo';
-  let _fabListaData   = [];
+  let _fabListaData     = [];
+  let _fabFilteredData  = [];
+  let _catFilteredData  = [];
   let _fabListaSec    = 'resumo';
   let _fabSortCol     = null;
   let _fabSortDir     = 1;
@@ -4634,6 +4652,7 @@ window.addEventListener('load', () => {
       }
     }
 
+    _fabFilteredData = filtered;
     renderFabLista(filtered, _fabListaSec,
       document.getElementById('fab-lista-thead'),
       document.getElementById('fab-lista-tbody'));
@@ -4808,6 +4827,7 @@ window.addEventListener('load', () => {
       });
     }
 
+    _catFilteredData = dados;
     const sc = col => _catSortCol === col ? (_catSortDir === 1 ? ' sort-asc' : ' sort-desc') : '';
     if (thead) thead.innerHTML = `<tr>
       <th class="sortable${sc('subtipo')}" onclick="sortCatBy('subtipo')">Categoria</th>
@@ -4878,6 +4898,81 @@ window.addEventListener('load', () => {
   };
 
   window.setCatBusca = function() { renderCategoriaTabela(_catFiltro); };
+
+  // ── EXPORT CSV ───────────────────────────────────────────────
+  function _csvCell(v) {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    return (s.includes(';') || s.includes('"') || s.includes('\n'))
+      ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function _csvNum(v) {
+    if (v === null || v === undefined || v === '') return '';
+    const n = Number(v);
+    return isNaN(n) ? '' : String(n).replace('.', ',');
+  }
+  function _csvDownload(filename, rows) {
+    const csv = rows.map(r => r.map(_csvCell).join(';')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+  function _todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  window.fabExportCSV = function() {
+    const data = _fabFilteredData;
+    if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
+    const sec = _fabListaSec;
+    let rows, filename;
+
+    if (sec === 'vendas') {
+      filename = `vendas_${_fabDateFrom || _todayStr()}_${_fabDateTo || _todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
+        (r.data_venda||'').slice(0,10),
+        r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
+      ]));
+    } else if (sec === 'producao') {
+      filename = `em_fabricacao_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','DATA ENVIO','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        (r.data_envio_fabricacao||'').slice(0,10),
+        r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
+      ]));
+    } else {
+      filename = `estoque_disponivel_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
+        r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
+      ]));
+    }
+    _csvDownload(filename, rows);
+  };
+
+  window.catExportCSV = function() {
+    const data = _catFilteredData;
+    if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
+    const rows = [['PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','ESTOQUE','EM FAB.','VENDIDOS TOTAL','VENDIDOS 90D','TICKET MÉDIO']];
+    data.forEach(r => rows.push([
+      r.produto||'', r.subtipo||'', r.tipo_pedra||'', r.lapidacao||'',
+      r.estoque, r.em_fabricacao, r.vendidos_total, r.vendidos_90d,
+      _csvNum(r.ticket_medio)
+    ]));
+    _csvDownload(`controle_categorias_${_todayStr()}.csv`, rows);
+  };
 
   window.sortCatBy = function(col) {
     if (_catSortCol === col) _catSortDir *= -1;
