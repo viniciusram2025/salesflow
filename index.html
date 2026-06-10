@@ -967,7 +967,9 @@ body.light .fab-export-btn:hover { background: rgba(34,197,94,.15); border-color
 .fab-status-badge { display:inline-block; font-size:9px; font-weight:800; letter-spacing:.7px; padding:2px 8px; border-radius:10px; text-transform:uppercase; white-space:nowrap; }
 .fab-status-badge.ruptura  { background:rgba(239,68,68,.15);  color:#ef4444; border:1px solid rgba(239,68,68,.3);  }
 .fab-status-badge.critico  { background:rgba(245,158,11,.15); color:#f59e0b; border:1px solid rgba(245,158,11,.3); }
+.fab-status-badge.atencao  { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
 .fab-status-badge.destaque { background:rgba(168,85,247,.15); color:#a855f7; border:1px solid rgba(168,85,247,.3); }
+.fab-status-badge.ok       { background:rgba(34,197,94,.1);   color:#22c55e; border:1px solid rgba(34,197,94,.25); }
 
 /* ── Gráficos ── */
 .fab-chart-wrap { padding: 16px 18px 20px; }
@@ -4861,10 +4863,14 @@ window.addEventListener('load', () => {
       let badge = '';
       if (est === 0 && v90 > 0) {
         badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
-      } else if (est <= 2 && v90 >= 2) {
+      } else if (est <= 2 && v90 >= 3) {
         badge = '<span class="fab-status-badge critico">Crítico</span>';
+      } else if (est <= 5 && v90 >= 5) {
+        badge = '<span class="fab-status-badge atencao">Atenção</span>';
       } else if (_isCarroChefe(d)) {
         badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
+      } else {
+        badge = '<span class="fab-status-badge ok">OK</span>';
       }
 
       return `
