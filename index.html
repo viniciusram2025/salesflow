@@ -4974,12 +4974,21 @@ window.addEventListener('load', () => {
   window.catExportCSV = function() {
     const data = _catFilteredData;
     if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
-    const rows = [['PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','ESTOQUE','EM FAB.','VENDIDOS TOTAL','VENDIDOS 90D','TICKET MÉDIO']];
-    data.forEach(r => rows.push([
-      r.produto||'', r.subtipo||'', r.tipo_pedra||'', r.lapidacao||'',
-      r.estoque, r.em_fabricacao, r.vendidos_total, r.vendidos_90d,
-      _csvNum(r.ticket_medio)
-    ]));
+    const rows = [['PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','ESTOQUE','EM FAB.','VENDIDOS TOTAL','VENDIDOS 90D','TICKET MÉDIO','STATUS']];
+    data.forEach(r => {
+      const est = Number(r.estoque), v90 = Number(r.vendidos_90d);
+      let status;
+      if (est === 0 && v90 > 0)       status = 'Ruptura';
+      else if (est <= 2 && v90 >= 3)  status = 'Crítico';
+      else if (est <= 5 && v90 >= 5)  status = 'Atenção';
+      else if (_isCarroChefe(r))      status = 'Carro Chefe';
+      else                            status = 'OK';
+      rows.push([
+        r.produto||'', r.subtipo||'', r.tipo_pedra||'', r.lapidacao||'',
+        r.estoque, r.em_fabricacao, r.vendidos_total, r.vendidos_90d,
+        _csvNum(r.ticket_medio), status
+      ]);
+    });
     _csvDownload(`controle_categorias_${_todayStr()}.csv`, rows);
   };
 
