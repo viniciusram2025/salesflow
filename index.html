@@ -1952,8 +1952,11 @@ canvas.fab-canvas { width: 100% !important; }
       <button class="fab-nav-btn active" data-sec="resumo" onclick="fabGoTo('resumo',this)">
         <i class="ti ti-layout-dashboard"></i><span>Resumo</span>
       </button>
+      <button class="fab-nav-btn" data-sec="fabricacao" onclick="fabGoTo('fabricacao',this)">
+        <i class="ti ti-hammer"></i><span>Fabricação</span>
+      </button>
       <button class="fab-nav-btn" data-sec="producao" onclick="fabGoTo('producao',this)">
-        <i class="ti ti-hammer"></i><span>Controle</span>
+        <i class="ti ti-table"></i><span>Controle</span>
       </button>
       <button class="fab-nav-btn" data-sec="vendas" onclick="fabGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
@@ -2023,6 +2026,7 @@ canvas.fab-canvas { width: 100% !important; }
 
   <!-- ═══ SEÇÃO: ESTOQUE (vazia — conteúdo movido para Controle) ═══ -->
   <div id="fab-sec-estoque" class="fab-section fab-hidden"></div>
+  <div id="fab-sec-fabricacao" class="fab-section fab-hidden"></div>
 
   <!-- ═══ SEÇÃO: CONTROLE / FABRICAÇÃO ═══ -->
   <div id="fab-sec-producao" class="fab-section fab-hidden">
@@ -4783,10 +4787,11 @@ window.addEventListener('load', () => {
 
   // ── TABELA COMPARTILHADA ──────────────────────────────────────
   const _fabListaCfg = {
-    resumo:   { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
-    estoque:  { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
-    producao: { url: 'em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
-    vendas:   { url: 'lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
+    resumo:      { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    estoque:     { url: 'lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    fabricacao:  { url: 'em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    producao:    { url: 'em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    vendas:      { url: 'lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
   // ── DATE RANGE PICKER ───────────────────────────────────────────
@@ -5205,7 +5210,7 @@ window.addEventListener('load', () => {
       const dir    = active ? (_fabSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
       return `<th class="sortable ${cls} ${dir}" onclick="sortFabBy('${col}')">`;
     };
-    if (sec === 'producao') {
+    if (sec === 'fabricacao' || sec === 'producao') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
