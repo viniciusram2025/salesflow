@@ -1760,6 +1760,9 @@ canvas.fab-canvas { width: 100% !important; }
       <button class="jm-nav-btn active" data-sec="resumo" onclick="jmGoTo('resumo',this)">
         <i class="ti ti-layout-dashboard"></i><span>Resumo</span>
       </button>
+      <button class="jm-nav-btn" data-sec="fabricacao" onclick="jmGoTo('fabricacao',this)">
+        <i class="ti ti-hammer"></i><span>Fabricação</span>
+      </button>
       <button class="jm-nav-btn" data-sec="vendas" onclick="jmGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
       </button>
@@ -1788,12 +1791,12 @@ canvas.fab-canvas { width: 100% !important; }
           <div class="fab-kpi-sub">peças prontas p/ venda</div>
         </div>
       </div>
-      <div class="fab-kpi" onclick="loadJmLista('producao')" title="Ver peças em andamento" style="cursor:pointer">
+      <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(245,158,11,.15);color:#f59e0b"><i class="ti ti-hammer"></i></div>
         <div class="fab-kpi-body">
           <div class="fab-kpi-label">Em Fabricação</div>
           <div class="fab-kpi-value" id="jm-kpi-fabricacao" style="color:#f59e0b">—</div>
-          <div class="fab-kpi-sub">peças em andamento <i class="ti ti-chevron-right" style="font-size:10px;opacity:.5"></i></div>
+          <div class="fab-kpi-sub">peças em andamento</div>
         </div>
       </div>
       <div class="fab-kpi">
@@ -1824,6 +1827,8 @@ canvas.fab-canvas { width: 100% !important; }
   </div>
 
   <div id="jm-sec-estoque" class="jm-section fab-hidden"></div>
+
+  <div id="jm-sec-fabricacao" class="jm-section fab-hidden"></div>
 
   <div id="jm-sec-producao" class="jm-section fab-hidden">
     <div class="fab-card" style="margin-bottom:16px">
@@ -5353,10 +5358,11 @@ window.addEventListener('load', () => {
   };
 
   const _jmListaCfg = {
-    resumo:   { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
-    estoque:  { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
-    producao: { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
-    vendas:   { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
+    resumo:     { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    estoque:    { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    fabricacao: { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    producao:   { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    vendas:     { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
   function _jmDrpIso(date) {
