@@ -2112,6 +2112,9 @@ canvas.fab-canvas { width: 100% !important; }
       <button class="jm-nav-btn" data-sec="fabricacao" onclick="jmGoTo('fabricacao',this)">
         <i class="ti ti-hammer"></i><span>Modificação</span>
       </button>
+      <button class="jm-nav-btn" data-sec="manutencao" onclick="jmGoTo('manutencao',this)">
+        <i class="ti ti-tool"></i><span>Manutenção</span>
+      </button>
       <button class="jm-nav-btn" data-sec="vendas" onclick="jmGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
       </button>
@@ -2149,6 +2152,14 @@ canvas.fab-canvas { width: 100% !important; }
         </div>
       </div>
       <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(20,184,166,.15);color:#14b8a6"><i class="ti ti-tool"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Em Manutenção</div>
+          <div class="fab-kpi-value" id="jm-kpi-manutencao" style="color:#14b8a6">—</div>
+          <div class="fab-kpi-sub">peças em manutenção</div>
+        </div>
+      </div>
+      <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(34,197,94,.15);color:var(--c-green)"><i class="ti ti-shopping-cart"></i></div>
         <div class="fab-kpi-body">
           <div class="fab-kpi-label">Vendidos Total</div>
@@ -2178,6 +2189,8 @@ canvas.fab-canvas { width: 100% !important; }
   <div id="jm-sec-estoque" class="jm-section fab-hidden"></div>
 
   <div id="jm-sec-fabricacao" class="jm-section fab-hidden"></div>
+
+  <div id="jm-sec-manutencao" class="jm-section fab-hidden"></div>
 
   <div id="jm-sec-producao" class="jm-section fab-hidden">
     <div class="fab-card" style="margin-bottom:16px">
@@ -5708,6 +5721,7 @@ window.addEventListener('load', () => {
   function renderJmResumo(d) {
     document.getElementById("jm-kpi-estoque").textContent     = fmt.num(d.estoque);
     document.getElementById("jm-kpi-fabricacao").textContent  = fmt.num(d.em_fabricacao);
+    document.getElementById("jm-kpi-manutencao").textContent  = fmt.num(d.em_manutencao);
     document.getElementById("jm-kpi-vendidos").textContent    = fmt.num(d.vendidos);
     document.getElementById("jm-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
     document.getElementById("jm-kpi-ticket").textContent      = fmt.moeda(d.ticket_medio);
@@ -5748,6 +5762,7 @@ window.addEventListener('load', () => {
     estoque:    { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
     fabricacao: { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
     producao:   { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
+    manutencao: { url: 'jm/em-manutencao',     titulo: 'Em Manutenção',      icon: 'ti-tool',    color: '#14b8a6' },
     vendas:     { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
@@ -6121,12 +6136,14 @@ window.addEventListener('load', () => {
       const dir    = active ? (_jmSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
       return `<th class="sortable ${cls} ${dir}" onclick="jmSortBy('${col}')">`;
     };
-    if (sec === 'fabricacao' || sec === 'producao') {
+    if (sec === 'fabricacao' || sec === 'producao' || sec === 'manutencao') {
+      const emptyMsg = sec === 'manutencao' ? 'Nenhuma peça em manutenção' : 'Nenhuma peça em modificação';
+      const saidaLbl = 'Saída Manut.';
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
         ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
-        ${srt('data_saida_manutencao','right')}Saída Manut.</th>
+        ${srt('data_saida_manutencao','right')}${saidaLbl}</th>
         ${srt('dias','right')}Dias</th>${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
@@ -6136,7 +6153,7 @@ window.addEventListener('load', () => {
         <td class="right">${fmt.data(r.data_saida_manutencao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em modificação</td></tr>';
+      </tr>`).join('') : `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">${emptyMsg}</td></tr>`;
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
@@ -6320,6 +6337,15 @@ window.addEventListener('load', () => {
       ]));
     } else if (sec === 'fabricacao' || sec === 'producao') {
       filename = `jm_em_modificacao_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        (r.data_saida_manutencao||'').slice(0,10),
+        r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
+      ]));
+    } else if (sec === 'manutencao') {
+      filename = `jm_em_manutencao_${_todayStr()}.csv`;
       rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
       data.forEach(r => rows.push([
         r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
