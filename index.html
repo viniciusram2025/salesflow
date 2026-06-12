@@ -5348,9 +5348,7 @@ window.addEventListener('load', () => {
     if (el) el.classList.remove("fab-hidden");
     if (btn) btn.classList.add("active");
     _jmCurrentSec = sec;
-    const sharedCard = document.getElementById('jm-shared-card');
-    if (sharedCard) sharedCard.style.display = sec === 'producao' ? 'none' : '';
-    if (sec !== 'producao') loadJmLista(sec);
+    loadJmLista(sec);
   };
 
   const _jmListaCfg = {
@@ -5951,17 +5949,9 @@ window.addEventListener('load', () => {
     const btn = document.getElementById("jm-btn-refresh");
     btn.classList.add("spinning");
     try {
-      const [resumo, fabricacao, categorias] = await Promise.all([
-        apiFetch("jm/resumo"),
-        apiFetch("jm/em-fabricacao"),
-        apiFetch("jm/estoque-categoria"),
-      ]);
+      const resumo = await apiFetch("jm/resumo");
       renderJmResumo(resumo);
-      renderJmFabricacao(fabricacao);
       loadJmLista(_jmCurrentSec);
-      _jmCategoriaDados = categorias;
-      _jmCatSortCol = null; _jmCatSortDir = 1; _jmCatFiltro = 'todos';
-      renderJmCategoriaTabela('todos');
       document.getElementById("jm-last-update").textContent =
         "Atualizado: " + new Date().toLocaleTimeString("pt-BR");
     } catch (err) {
