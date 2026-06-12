@@ -572,7 +572,7 @@ tbody tr:last-child{border-bottom:none;}
   padding: 4px;
 }
 
-.fab-nav-btn {
+.fab-nav-btn, .jm-nav-btn {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -590,11 +590,11 @@ tbody tr:last-child{border-bottom:none;}
   transition: background .15s, color .15s;
   white-space: nowrap;
 }
-.fab-nav-btn i { font-size: 15px; }
-.fab-nav-btn:hover { background: var(--c-accent-dim); color: var(--fab-text); }
-.fab-nav-btn:focus { outline: none; }
-.fab-nav-btn.active { background: #4f6ef7; color: #fff; }
-.fab-nav-btn.active:hover { background: #4f6ef7; }
+.fab-nav-btn i, .jm-nav-btn i { font-size: 15px; }
+.fab-nav-btn:hover, .jm-nav-btn:hover { background: var(--c-accent-dim); color: var(--fab-text); }
+.fab-nav-btn:focus, .jm-nav-btn:focus { outline: none; }
+.fab-nav-btn.active, .jm-nav-btn.active { background: #4f6ef7; color: #fff; }
+.fab-nav-btn.active:hover, .jm-nav-btn.active:hover { background: #4f6ef7; }
 /* ── DATE RANGE PICKER ── */
 .fab-drp { position: relative; display: inline-block; }
 .fab-drp-btn {
@@ -739,7 +739,7 @@ body.light .fab-drp-popup { background: #ffffff; }
 }
 @media (max-width: 860px) {
   .fab-grid-2 { grid-template-columns: 1fr; }
-  .fab-nav-btn span { display: none; }
+  .fab-nav-btn span, .jm-nav-btn span { display: none; }
   .fab-kpis { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 560px) {
