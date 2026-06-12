@@ -5084,7 +5084,7 @@ window.addEventListener('load', () => {
     const pedras      = uniq('tipo_pedra');
     const lapidacoes  = uniq('lapidacao');
     const destinos    = uniq('destino');
-    const fabricantes = uniq('fabricante');
+    const tipos       = uniq('tipo');
 
     const mkPanel = (id, title, list, dim) => list.length
       ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">${title}</div><div class="fab-fv2-panel-items" id="${id}">${mkItems(list, dim)}</div></div>`
@@ -5098,10 +5098,10 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
         </div>
       </div>
+      ${mkPanel('fab-fp-tipo',       'Tipo',       tipos,       'tipo')}
       ${mkPanel('fab-fp-produto',    'Produto',    produtos,    'produto')}
       ${mkPanel('fab-fp-subtipo',    'Subtipo',    subtipos,    'subtipo')}
       ${mkPanel('fab-fp-destino',    'Destino',    destinos,    'destino')}
-      ${mkPanel('fab-fp-fabricante', 'Fabricante', fabricantes, 'fabricante')}
       ${mkPanel('fab-fp-pedra',      'Tipo Pedra', pedras,      'tipo_pedra')}
       ${mkPanel('fab-fp-lapidacao',  'Lapidação',  lapidacoes,  'lapidacao')}
       <div class="fab-fv2-right">
@@ -5120,10 +5120,10 @@ window.addEventListener('load', () => {
     const busca = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
 
     const dims = [
+      { id: 'fab-fp-tipo',       field: 'tipo'        },
       { id: 'fab-fp-produto',    field: 'produto'     },
       { id: 'fab-fp-subtipo',    field: 'subtipo'     },
       { id: 'fab-fp-destino',    field: 'destino'     },
-      { id: 'fab-fp-fabricante', field: 'fabricante'  },
       { id: 'fab-fp-pedra',      field: 'tipo_pedra'  },
       { id: 'fab-fp-lapidacao',  field: 'lapidacao'   },
     ];
@@ -5224,29 +5224,29 @@ window.addEventListener('load', () => {
     };
     if (sec === 'fabricacao' || sec === 'producao') {
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
+        ${srt('lapidacao')}Lapidação</th>
         ${srt('data_envio_fabricacao','right')}Envio Fab.</th>
         ${srt('dias','right')}Dias</th>
         ${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td>
-        <td>${r.fabricante||'—'}</td>
         <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
       </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
         ${srt('preco_cobrado','right')}Valor Total</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
@@ -5254,12 +5254,12 @@ window.addEventListener('load', () => {
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td>
         <td>${r.destino||'—'}</td>
-        <td>${r.fabricante||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -5270,9 +5270,9 @@ window.addEventListener('load', () => {
       </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
     } else {
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
         ${srt('preco_cobrado','right')}Preço Cobrado</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
@@ -5280,12 +5280,12 @@ window.addEventListener('load', () => {
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td>
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td>
         <td>${r.destino||'—'}</td>
-        <td>${r.fabricante||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -5499,29 +5499,28 @@ window.addEventListener('load', () => {
 
     if (sec === 'vendas') {
       filename = `vendas_${_fabDateFrom || _todayStr()}_${_fabDateTo || _todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'',
         _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
         (r.data_venda||'').slice(0,10),
         r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
       ]));
     } else if (sec === 'producao') {
       filename = `em_fabricacao_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','DATA ENVIO','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DATA ENVIO','DIAS','PREÇO MÍN.','PREÇO LOJA']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
         (r.data_envio_fabricacao||'').slice(0,10),
         r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
       ]));
     } else {
       filename = `estoque_disponivel_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'',
         _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
         r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
       ]));
@@ -6027,10 +6026,10 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="jm-f-busca" placeholder="Ref ou produto…" oninput="applyJmFiltros()">
         </div>
       </div>
+      ${mkPanel('jm-fp-tipo',        'Tipo',       uniq('tipo'))}
       ${mkPanel('jm-fp-produto',    'Produto',    uniq('produto'))}
       ${mkPanel('jm-fp-subtipo',    'Subtipo',    uniq('subtipo'))}
       ${mkPanel('jm-fp-destino',    'Destino',    uniq('destino'))}
-      ${mkPanel('jm-fp-fabricante', 'Fabricante', uniq('fabricante'))}
       ${mkPanel('jm-fp-pedra',      'Tipo Pedra', uniq('tipo_pedra'))}
       ${mkPanel('jm-fp-lapidacao',  'Lapidação',  uniq('lapidacao'))}
       <div class="fab-fv2-right">
@@ -6046,10 +6045,10 @@ window.addEventListener('load', () => {
   window.applyJmFiltros = function() {
     const busca = (document.getElementById('jm-f-busca')?.value || '').toLowerCase();
     const dims = [
+      { id: 'jm-fp-tipo',        field: 'tipo'       },
       { id: 'jm-fp-produto',    field: 'produto'    },
       { id: 'jm-fp-subtipo',    field: 'subtipo'    },
       { id: 'jm-fp-destino',    field: 'destino'    },
-      { id: 'jm-fp-fabricante', field: 'fabricante' },
       { id: 'jm-fp-pedra',      field: 'tipo_pedra' },
       { id: 'jm-fp-lapidacao',  field: 'lapidacao'  },
     ];
@@ -6138,27 +6137,27 @@ window.addEventListener('load', () => {
     };
     if (sec === 'fabricacao' || sec === 'producao' || sec === 'manutencao') {
       const emptyMsg = sec === 'manutencao' ? 'Nenhuma peça em manutenção' : 'Nenhuma peça em modificação';
-      const saidaLbl = 'Saída Manut.';
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
-        ${srt('data_saida_manutencao','right')}${saidaLbl}</th>
+        ${srt('lapidacao')}Lapidação</th>
+        ${srt('data_saida_manutencao','right')}Saída Manut.</th>
         ${srt('dias','right')}Dias</th>${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
-        <td>${r.lapidacao||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td>${r.lapidacao||'—'}</td>
         <td class="right">${fmt.data(r.data_saida_manutencao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
       </tr>`).join('') : `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">${emptyMsg}</td></tr>`;
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
         ${srt('preco_cobrado','right')}Valor Total</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
@@ -6166,8 +6165,9 @@ window.addEventListener('load', () => {
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
-        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -6178,9 +6178,9 @@ window.addEventListener('load', () => {
       </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
     } else {
       thead.innerHTML = `<tr>
-        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
-        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>
         ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
         ${srt('preco_cobrado','right')}Preço Cobrado</th>
         <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
@@ -6188,8 +6188,9 @@ window.addEventListener('load', () => {
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
-        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td>
         <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
         <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
         <td class="right" style="font-weight:700">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
@@ -6327,38 +6328,36 @@ window.addEventListener('load', () => {
     let rows, filename;
     if (sec === 'vendas') {
       filename = `jm_vendas_${_jmDateFrom||_todayStr()}_${_jmDateTo||_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'',
         _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
         (r.data_venda||'').slice(0,10),
         r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
       ]));
     } else if (sec === 'fabricacao' || sec === 'producao') {
       filename = `jm_em_modificacao_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
         (r.data_saida_manutencao||'').slice(0,10),
         r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
       ]));
     } else if (sec === 'manutencao') {
       filename = `jm_em_manutencao_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
         (r.data_saida_manutencao||'').slice(0,10),
         r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
       ]));
     } else {
       filename = `jm_estoque_disponivel_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
       data.forEach(r => rows.push([
-        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        r.destino||'', r.fabricante||'',
+        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'',
         _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
         r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
       ]));
