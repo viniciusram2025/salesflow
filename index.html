@@ -2110,7 +2110,7 @@ canvas.fab-canvas { width: 100% !important; }
         <i class="ti ti-layout-dashboard"></i><span>Resumo</span>
       </button>
       <button class="jm-nav-btn" data-sec="fabricacao" onclick="jmGoTo('fabricacao',this)">
-        <i class="ti ti-hammer"></i><span>Fabricação</span>
+        <i class="ti ti-hammer"></i><span>Modificação</span>
       </button>
       <button class="jm-nav-btn" data-sec="vendas" onclick="jmGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
@@ -2143,9 +2143,9 @@ canvas.fab-canvas { width: 100% !important; }
       <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(245,158,11,.15);color:#f59e0b"><i class="ti ti-hammer"></i></div>
         <div class="fab-kpi-body">
-          <div class="fab-kpi-label">Em Fabricação</div>
+          <div class="fab-kpi-label">Em Modificação</div>
           <div class="fab-kpi-value" id="jm-kpi-fabricacao" style="color:#f59e0b">—</div>
-          <div class="fab-kpi-sub">peças em andamento</div>
+          <div class="fab-kpi-sub">peças em modificação</div>
         </div>
       </div>
       <div class="fab-kpi">
@@ -5746,8 +5746,8 @@ window.addEventListener('load', () => {
   const _jmListaCfg = {
     resumo:     { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
     estoque:    { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
-    fabricacao: { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
-    producao:   { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    fabricacao: { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
+    producao:   { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
     vendas:     { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
@@ -6121,22 +6121,22 @@ window.addEventListener('load', () => {
       const dir    = active ? (_jmSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
       return `<th class="sortable ${cls} ${dir}" onclick="jmSortBy('${col}')">`;
     };
-    if (sec === 'producao') {
+    if (sec === 'fabricacao' || sec === 'producao') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
         ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
-        ${srt('data_envio_fabricacao','right')}Envio Fab.</th>
+        ${srt('data_saida_manutencao','right')}Saída Manut.</th>
         ${srt('dias','right')}Dias</th>${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
       tbody.innerHTML = data.length ? data.map(r => `<tr>
         <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
         <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td><td>${r.fabricante||'—'}</td>
-        <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
+        <td class="right">${fmt.data(r.data_saida_manutencao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em modificação</td></tr>';
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
@@ -6318,13 +6318,13 @@ window.addEventListener('load', () => {
         (r.data_venda||'').slice(0,10),
         r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
       ]));
-    } else if (sec === 'producao') {
-      filename = `jm_em_fabricacao_${_todayStr()}.csv`;
-      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','DATA ENVIO','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+    } else if (sec === 'fabricacao' || sec === 'producao') {
+      filename = `jm_em_modificacao_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
       data.forEach(r => rows.push([
         r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
         r.destino||'', r.fabricante||'',
-        (r.data_envio_fabricacao||'').slice(0,10),
+        (r.data_saida_manutencao||'').slice(0,10),
         r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
       ]));
     } else {
