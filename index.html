@@ -1403,6 +1403,7 @@ canvas.fab-canvas { width: 100% !important; }
     <div class="nav-item" onclick="goTo('metais')" data-page="metais"><i class="ti ti-weight"></i>Controle de Metais</div>
     <div class="nav-item" onclick="goTo('fabricacoes')" data-page="fabricacoes"><i class="ti ti-hammer"></i>Fabricações JF</div>
     <div class="nav-item" onclick="goTo('fabricacoes-jm')" data-page="fabricacoes-jm"><i class="ti ti-hammer"></i>Fabricações JM</div>
+    <div class="nav-item" onclick="goTo('manutencao')" data-page="manutencao"><i class="ti ti-tool"></i>Manutenções</div>
 
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
@@ -2112,9 +2113,6 @@ canvas.fab-canvas { width: 100% !important; }
       <button class="jm-nav-btn" data-sec="fabricacao" onclick="jmGoTo('fabricacao',this)">
         <i class="ti ti-hammer"></i><span>Modificação</span>
       </button>
-      <button class="jm-nav-btn" data-sec="manutencao" onclick="jmGoTo('manutencao',this)">
-        <i class="ti ti-tool"></i><span>Manutenção</span>
-      </button>
       <button class="jm-nav-btn" data-sec="vendas" onclick="jmGoTo('vendas',this)">
         <i class="ti ti-chart-bar"></i><span>Vendas</span>
       </button>
@@ -2152,14 +2150,6 @@ canvas.fab-canvas { width: 100% !important; }
         </div>
       </div>
       <div class="fab-kpi">
-        <div class="fab-kpi-icon" style="background:rgba(20,184,166,.15);color:#14b8a6"><i class="ti ti-tool"></i></div>
-        <div class="fab-kpi-body">
-          <div class="fab-kpi-label">Em Manutenção</div>
-          <div class="fab-kpi-value" id="jm-kpi-manutencao" style="color:#14b8a6">—</div>
-          <div class="fab-kpi-sub">peças em manutenção</div>
-        </div>
-      </div>
-      <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(34,197,94,.15);color:var(--c-green)"><i class="ti ti-shopping-cart"></i></div>
         <div class="fab-kpi-body">
           <div class="fab-kpi-label">Vendidos Total</div>
@@ -2189,8 +2179,6 @@ canvas.fab-canvas { width: 100% !important; }
   <div id="jm-sec-estoque" class="jm-section fab-hidden"></div>
 
   <div id="jm-sec-fabricacao" class="jm-section fab-hidden"></div>
-
-  <div id="jm-sec-manutencao" class="jm-section fab-hidden"></div>
 
   <div id="jm-sec-producao" class="jm-section fab-hidden">
     <div class="fab-card" style="margin-bottom:16px">
@@ -2263,6 +2251,62 @@ canvas.fab-canvas { width: 100% !important; }
 
 </div>
 
+
+      <!-- ══════ PAGE: MANUTENÇÕES ══════ -->
+      <div id="page-manutencao" class="page">
+
+  <div class="fab-topbar">
+    <nav class="fab-nav"></nav>
+    <div class="fab-sync">
+      <span id="manut-last-update" class="fab-sync-time">—</span>
+      <button class="fab-refresh-btn" id="manut-btn-refresh" onclick="manutRefresh()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M3 21v-5h5"/>
+        </svg>
+        Atualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="fab-kpis" style="margin-bottom:16px">
+    <div class="fab-kpi">
+      <div class="fab-kpi-icon" style="background:rgba(20,184,166,.15);color:#14b8a6"><i class="ti ti-tool"></i></div>
+      <div class="fab-kpi-body">
+        <div class="fab-kpi-label">Em Manutenção</div>
+        <div class="fab-kpi-value" id="manut-kpi-total" style="color:#14b8a6">—</div>
+        <div class="fab-kpi-sub">peças em manutenção</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fab-card">
+    <div class="fab-card-header">
+      <div class="fab-card-header-left">
+        <i class="ti ti-tool" style="color:#14b8a6"></i>
+        <span class="fab-card-title">Peças em Manutenção</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
+        <span class="fab-badge-count" id="manut-count">—</span>
+        <button class="fab-export-btn" onclick="manutExportCSV()" title="Exportar CSV">
+          <i class="ti ti-download"></i> Exportar
+        </button>
+      </div>
+    </div>
+    <div class="fab-filtros" id="manut-filtros-bar"></div>
+    <div class="fab-table-wrap">
+      <table class="fab-table">
+        <thead id="manut-thead"></thead>
+        <tbody id="manut-tbody">
+          <tr><td colspan="9"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
 
       <!-- ══════ PAGE: USUÁRIOS ══════ -->
       <div id="page-usuarios" class="page">
@@ -2677,7 +2721,8 @@ const PAGE_TITLES = {
   configuracoes:{title:'Configurações',sub:'Gerenciar campos selecionáveis do sistema'},
   fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
   fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
-  'fabricacoes-jm':{title:'Fabricações JM',sub:'Estoque · Em fabricação · Vendidos — tempo real'}
+  'fabricacoes-jm':{title:'Fabricações JM',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
+  'manutencao':{title:'Manutenções',sub:'Controle geral de peças em manutenção — JF · JM · JR'}
 };
 
 function goTo(name){
@@ -2701,6 +2746,7 @@ function goTo(name){
   if(name==='fabricacoes')     { fabLoad(); fabStartAutoRefresh(); }
   if(name==='fabricacoes')     { fabLoad(); }
   if(name==='fabricacoes-jm') { jmLoad(); }
+  if(name==='manutencao')     { manutencaoLoad(); }
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -3356,6 +3402,7 @@ const ALL_PAGES = [
   {key:'metais',      label:'Controle de Metais', icon:'ti-weight'},
   {key:'fabricacoes',    label:'Fabricações JF', icon:'ti-hammer'},
   {key:'fabricacoes-jm', label:'Fabricações JM', icon:'ti-hammer'},
+  {key:'manutencao',     label:'Manutenções',    icon:'ti-tool'},
   {key:'ia',             label:'IA de Reuniões', icon:'ti-brain'},
 ];
 
@@ -5720,7 +5767,6 @@ window.addEventListener('load', () => {
   function renderJmResumo(d) {
     document.getElementById("jm-kpi-estoque").textContent     = fmt.num(d.estoque);
     document.getElementById("jm-kpi-fabricacao").textContent  = fmt.num(d.em_fabricacao);
-    document.getElementById("jm-kpi-manutencao").textContent  = fmt.num(d.em_manutencao);
     document.getElementById("jm-kpi-vendidos").textContent    = fmt.num(d.vendidos);
     document.getElementById("jm-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
     document.getElementById("jm-kpi-ticket").textContent      = fmt.moeda(d.ticket_medio);
@@ -5761,7 +5807,6 @@ window.addEventListener('load', () => {
     estoque:    { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
     fabricacao: { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
     producao:   { url: 'jm/em-fabricacao',     titulo: 'Em Modificação',     icon: 'ti-hammer',  color: '#f59e0b' },
-    manutencao: { url: 'jm/em-manutencao',     titulo: 'Em Manutenção',      icon: 'ti-tool',    color: '#14b8a6' },
     vendas:     { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
   };
 
@@ -6135,8 +6180,8 @@ window.addEventListener('load', () => {
       const dir    = active ? (_jmSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
       return `<th class="sortable ${cls} ${dir}" onclick="jmSortBy('${col}')">`;
     };
-    if (sec === 'fabricacao' || sec === 'producao' || sec === 'manutencao') {
-      const emptyMsg = sec === 'manutencao' ? 'Nenhuma peça em manutenção' : 'Nenhuma peça em modificação';
+    if (sec === 'fabricacao' || sec === 'producao') {
+      const emptyMsg = 'Nenhuma peça em modificação';
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
@@ -6344,14 +6389,6 @@ window.addEventListener('load', () => {
         (r.data_saida_manutencao||'').slice(0,10),
         r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
       ]));
-    } else if (sec === 'manutencao') {
-      filename = `jm_em_manutencao_${_todayStr()}.csv`;
-      rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
-      data.forEach(r => rows.push([
-        r.referencia, r.tipo||'', r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
-        (r.data_saida_manutencao||'').slice(0,10),
-        r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
-      ]));
     } else {
       filename = `jm_estoque_disponivel_${_todayStr()}.csv`;
       rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
@@ -6411,8 +6448,203 @@ window.addEventListener('load', () => {
 
   window.jmRefresh = jmLoad;
 
-
 </script>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// MANUTENÇÕES — módulo geral
+// ══════════════════════════════════════════════════════════════
+(function() {
+
+  let _manutData         = [];
+  let _manutFilteredData = [];
+  let _manutSortCol      = null;
+  let _manutSortDir      = 1;
+
+  function fmt_manut_data(d) {
+    if (!d) return '—';
+    const s = typeof d === 'string' ? d : d.toISOString();
+    const [y,m,dd] = s.slice(0,10).split('-');
+    return `${dd}/${m}/${y.slice(2)}`;
+  }
+  function fmt_manut_moeda(v) {
+    if (v == null || v === '') return '—';
+    return Number(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  }
+
+  function renderManutTabela() {
+    const thead = document.getElementById('manut-thead');
+    const tbody = document.getElementById('manut-tbody');
+    if (!thead || !tbody) return;
+    const srt = (col, cls='') => {
+      const active = _manutSortCol === col;
+      const dir = active ? (_manutSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+      return `<th class="sortable ${cls} ${dir}" onclick="manutSortBy('${col}')">`;
+    };
+    thead.innerHTML = `<tr>
+      ${srt('referencia')}Ref</th>
+      ${srt('tipo')}Tipo</th>
+      ${srt('produto')}Produto</th>
+      ${srt('subtipo')}Subtipo</th>
+      ${srt('tipo_pedra')}Pedra</th>
+      ${srt('lapidacao')}Lapidação</th>
+      ${srt('destino')}Destino</th>
+      ${srt('data_saida_manutencao','right')}Saída Manut.</th>
+      ${srt('dias','right')}Dias</th>
+      ${srt('preco_minimo','right')}Preço Mín.</th>
+    </tr>`;
+    const data = _manutFilteredData;
+    tbody.innerHTML = data.length ? data.map(r => `<tr>
+      <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+      <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
+      <td>${r.produto||'—'}</td>
+      <td>${r.subtipo||'—'}</td>
+      <td>${r.tipo_pedra||'—'}</td>
+      <td>${r.lapidacao||'—'}</td>
+      <td>${r.destino||'—'}</td>
+      <td class="right">${fmt_manut_data(r.data_saida_manutencao)}</td>
+      <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
+      <td class="right">${r.preco_minimo?fmt_manut_moeda(r.preco_minimo):'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em manutenção</td></tr>';
+  }
+
+  function buildManutFiltros(data) {
+    _manutData = data;
+    const bar = document.getElementById('manut-filtros-bar');
+    if (!bar) return;
+    const esc   = v => v.replace(/"/g, '&quot;');
+    const uniq  = key => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+    const mkItems = list => list.map(v =>
+      `<label class="fab-fv2-item"><input type="checkbox" value="${esc(v)}" onchange="applyManutFiltros()"> ${v}</label>`
+    ).join('');
+    const mkPanel = (id, title, list) => list.length
+      ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">${title}</div><div class="fab-fv2-panel-items" id="${id}">${mkItems(list)}</div></div>`
+      : '';
+    bar.innerHTML = `
+      <div class="fab-fv2-search">
+        <span class="fab-fv2-search-label">Buscar</span>
+        <div class="fab-fv2-search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="fab-filtro-busca" id="manut-f-busca" placeholder="Ref ou produto…" oninput="applyManutFiltros()">
+        </div>
+      </div>
+      ${mkPanel('manut-fp-tipo',      'Tipo',       uniq('tipo'))}
+      ${mkPanel('manut-fp-produto',   'Produto',    uniq('produto'))}
+      ${mkPanel('manut-fp-subtipo',   'Subtipo',    uniq('subtipo'))}
+      ${mkPanel('manut-fp-destino',   'Destino',    uniq('destino'))}
+      ${mkPanel('manut-fp-pedra',     'Tipo Pedra', uniq('tipo_pedra'))}
+      ${mkPanel('manut-fp-lapidacao', 'Lapidação',  uniq('lapidacao'))}
+      <div class="fab-fv2-right">
+        <div>
+          <div class="fab-fv2-count" id="manut-filtros-count">${data.length}</div>
+          <div class="fab-fv2-count-label">itens</div>
+        </div>
+        <button class="fab-filtro-clear" onclick="clearManutFiltros()"><i class="ti ti-x"></i> Limpar</button>
+      </div>`;
+    applyManutFiltros();
+  }
+
+  window.applyManutFiltros = function() {
+    const busca = (document.getElementById('manut-f-busca')?.value || '').toLowerCase();
+    const dims = [
+      { id: 'manut-fp-tipo',      field: 'tipo'       },
+      { id: 'manut-fp-produto',   field: 'produto'    },
+      { id: 'manut-fp-subtipo',   field: 'subtipo'    },
+      { id: 'manut-fp-destino',   field: 'destino'    },
+      { id: 'manut-fp-pedra',     field: 'tipo_pedra' },
+      { id: 'manut-fp-lapidacao', field: 'lapidacao'  },
+    ];
+    dims.forEach(d => {
+      d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
+    });
+    const base = busca
+      ? _manutData.filter(r => (r.referencia||'').toLowerCase().includes(busca) || (r.produto||'').toLowerCase().includes(busca))
+      : _manutData;
+    const filterExcept = excludeField => base.filter(r =>
+      dims.every(d => d.field === excludeField || d.sel.size === 0 || d.sel.has(r[d.field]))
+    );
+    let filtered = filterExcept(null);
+    dims.forEach(d => {
+      const panel = document.getElementById(d.id);
+      if (!panel) return;
+      const available = new Set(filterExcept(d.field).map(r => r[d.field]).filter(Boolean));
+      panel.querySelectorAll('label.fab-fv2-item').forEach(label => {
+        const val = label.querySelector('input').value;
+        label.style.display = available.has(val) || label.querySelector('input').checked ? '' : 'none';
+      });
+    });
+    if (_manutSortCol) {
+      filtered = [...filtered].sort((a, b) => {
+        const av = a[_manutSortCol] ?? '', bv = b[_manutSortCol] ?? '';
+        if (!isNaN(av) && !isNaN(bv)) return (Number(av) - Number(bv)) * _manutSortDir;
+        return String(av).localeCompare(String(bv), 'pt-BR') * _manutSortDir;
+      });
+    }
+    const countEl = document.getElementById('manut-filtros-count');
+    if (countEl) countEl.textContent = filtered.length;
+    const badgeEl = document.getElementById('manut-count');
+    if (badgeEl) badgeEl.textContent = filtered.length;
+    _manutFilteredData = filtered;
+    renderManutTabela();
+  };
+
+  window.clearManutFiltros = function() {
+    document.querySelectorAll('#manut-filtros-bar input[type=checkbox]').forEach(el => el.checked = false);
+    const busca = document.getElementById('manut-f-busca');
+    if (busca) busca.value = '';
+    applyManutFiltros();
+  };
+
+  window.manutSortBy = function(col) {
+    if (_manutSortCol === col) _manutSortDir *= -1;
+    else { _manutSortCol = col; _manutSortDir = 1; }
+    applyManutFiltros();
+  };
+
+  window.manutExportCSV = function() {
+    const data = _manutFilteredData;
+    if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
+    const todayStr = () => new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const rows = [['REF','TIPO','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','SAÍDA MANUT.','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+    data.forEach(r => rows.push([
+      r.referencia, r.tipo||'', r.produto||'', r.subtipo||'', r.tipo_pedra||'', r.lapidacao||'',
+      r.destino||'', (r.data_saida_manutencao||'').slice(0,10),
+      r.dias, r.preco_minimo||'', r.preco_loja||''
+    ]));
+    const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(csv);
+    a.download = `manutencoes_${todayStr()}.csv`;
+    a.click();
+  };
+
+  async function manutencaoLoad() {
+    const btn = document.getElementById('manut-btn-refresh');
+    if (btn) btn.classList.add('spinning');
+    const tbody = document.getElementById('manut-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
+    try {
+      const API = 'https://goldtech-fabricacoes-api.onrender.com';
+      const r = await fetch(`${API}/manutencao`);
+      const data = await r.json();
+      const kpi = document.getElementById('manut-kpi-total');
+      if (kpi) kpi.textContent = data.length;
+      buildManutFiltros(data);
+      const upd = document.getElementById('manut-last-update');
+      if (upd) upd.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+    } catch(e) {
+      console.error('Manutenções — erro:', e);
+      const tbody2 = document.getElementById('manut-tbody');
+      if (tbody2) tbody2.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-red)">Erro ao carregar dados</td></tr>';
+    } finally {
+      if (btn) btn.classList.remove('spinning');
+    }
+  }
+
+  window.manutencaoLoad = manutencaoLoad;
+  window.manutRefresh   = manutencaoLoad;
+
+})()
 
 <script>
 
