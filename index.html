@@ -977,6 +977,13 @@ body.light .fab-export-btn:hover { background: rgba(34,197,94,.15); border-color
 .fab-status-badge.destaque { background:rgba(168,85,247,.15); color:#a855f7; border:1px solid rgba(168,85,247,.3); }
 .fab-status-badge.ok       { background:rgba(34,197,94,.1);   color:#22c55e; border:1px solid rgba(34,197,94,.25); }
 
+/* ── Category expand/collapse ── */
+.cat-expand-btn { background:none; border:none; color:var(--fab-muted); cursor:pointer; font-size:15px; padding:0; margin-right:4px; transition:transform .18s; display:inline-block; vertical-align:middle; line-height:1; flex-shrink:0; }
+.cat-expand-btn.open { transform:rotate(90deg); color:var(--c-accent); }
+.cat-sub-row > td { background:rgba(255,255,255,.025); font-size:12px; }
+.cat-sub-row > td:first-child { padding-left:38px !important; }
+.cat-lap-name { color:var(--fab-muted); font-style:italic; }
+
 /* ── Gráficos ── */
 .fab-chart-wrap { padding: 16px 18px 20px; }
 canvas.fab-canvas { width: 100% !important; }
@@ -5294,6 +5301,33 @@ window.addEventListener('load', () => {
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
   const _PEDRAS_CONTROLE = ['esmeralda','esmeralda colombiana','turmalina paraíba','rubi','safira','diamante','tanzanita'];
 
+  function _groupByCategoria(dados) {
+    const map = new Map();
+    dados.forEach(d => {
+      const key = `${d.subtipo||''}||${d.produto||''}||${d.tipo_pedra||''}`;
+      if (!map.has(key)) map.set(key, {
+        subtipo: d.subtipo, produto: d.produto, tipo_pedra: d.tipo_pedra,
+        estoque: 0, em_fabricacao: 0, vendidos_90d: 0, vendidos_total: 0,
+        _tSum: 0, _tCnt: 0, ticket_medio: null, lapidacoes: []
+      });
+      const g = map.get(key);
+      g.estoque        += Number(d.estoque        || 0);
+      g.em_fabricacao  += Number(d.em_fabricacao  || 0);
+      g.vendidos_90d   += Number(d.vendidos_90d   || 0);
+      g.vendidos_total += Number(d.vendidos_total || 0);
+      const tm = Number(d.ticket_medio), vt = Number(d.vendidos_total || 0);
+      if (tm > 0 && vt > 0) { g._tSum += tm * vt; g._tCnt += vt; }
+      g.lapidacoes.push(d);
+    });
+    map.forEach(g => { g.ticket_medio = g._tCnt > 0 ? g._tSum / g._tCnt : null; });
+    return Array.from(map.values());
+  }
+
+  window.toggleCatGroup = function(gid, btn) {
+    const open = btn.classList.toggle('open');
+    document.querySelectorAll(`[data-parent="${gid}"]`).forEach(r => r.style.display = open ? '' : 'none');
+  };
+
   function renderCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('fab-categoria-tbody');
     const thead = document.getElementById('fab-categoria-thead');
@@ -5308,32 +5342,33 @@ window.addEventListener('load', () => {
       (d.tipo_pedra || '').toLowerCase().includes(busca)
     );
 
-    if (filtro === 'carroChefe') dados = dados.filter(d => _isCarroChefe(d));
-    if (filtro === 'criticos')   dados = dados.filter(d => {
-      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+    let groups = _groupByCategoria(dados);
+
+    if (filtro === 'carroChefe') groups = groups.filter(g => _isCarroChefe(g));
+    if (filtro === 'criticos')   groups = groups.filter(g => {
+      const e = g.estoque, v = g.vendidos_90d;
       return (e === 0 && v > 0) || (e <= 2 && v >= 2);
     });
-    if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
+    if (filtro === 'fabricando') groups = groups.filter(g => g.em_fabricacao > 0);
 
-    const _statusPri = d => {
-      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+    const _statusPri = g => {
+      const e = g.estoque, v = g.vendidos_90d;
       if (e === 0 && v > 0)  return 1;
       if (e <= 2  && v >= 2) return 2;
-      if (_isCarroChefe(d))  return 3;
+      if (_isCarroChefe(g))  return 3;
       return 4;
     };
     if (_catSortCol) {
-      dados = [...dados].sort((a, b) => {
+      groups = [...groups].sort((a, b) => {
         if (_catSortCol === '_status') return (_statusPri(a) - _statusPri(b)) * _catSortDir;
-        const av = a[_catSortCol] ?? '';
-        const bv = b[_catSortCol] ?? '';
+        const av = a[_catSortCol] ?? '', bv = b[_catSortCol] ?? '';
         const an = Number(av), bn = Number(bv);
         if (!isNaN(an) && !isNaN(bn) && av !== '' && bv !== '') return (an - bn) * _catSortDir;
         return String(av).localeCompare(String(bv), 'pt-BR') * _catSortDir;
       });
     }
 
-    _catFilteredData = dados;
+    _catFilteredData = groups.flatMap(g => g.lapidacoes);
     const sc = col => _catSortCol === col ? (_catSortDir === 1 ? ' sort-asc' : ' sort-desc') : '';
     if (thead) thead.innerHTML = `<tr>
       <th class="sortable${sc('subtipo')}" onclick="sortCatBy('subtipo')">Categoria</th>
@@ -5345,58 +5380,63 @@ window.addEventListener('load', () => {
       <th class="sortable right${sc('_status')}" onclick="sortCatBy('_status')">Status</th>
     </tr>`;
 
-    if (!dados.length) {
+    if (!groups.length) {
       tbody.innerHTML = `<tr><td colspan="7"><div class="fab-empty">Nenhum registro</div></td></tr>`;
       return;
     }
 
-    const max90 = Math.max(...dados.map(d => Number(d.vendidos_90d)), 1);
+    const max90 = Math.max(...groups.map(g => g.vendidos_90d), 1);
 
-    tbody.innerHTML = dados.map(d => {
-      const est  = Number(d.estoque);
-      const fab  = Number(d.em_fabricacao);
-      const v90  = Number(d.vendidos_90d);
-      const vtot = Number(d.vendidos_total);
-      const vel  = Math.round((v90 / max90) * 100);
-
-      const subtitle = [d.produto, d.tipo_pedra, d.lapidacao].filter(Boolean).join(' · ');
+    tbody.innerHTML = groups.map((g, gi) => {
+      const est = g.estoque, fab = g.em_fabricacao;
+      const v90 = g.vendidos_90d, vtot = g.vendidos_total;
+      const vel = Math.round((v90 / max90) * 100);
+      const subtitle = [g.produto, g.tipo_pedra].filter(Boolean).join(' · ');
+      const hasLaps = g.lapidacoes.some(l => l.lapidacao);
+      const gid = `catg-${gi}`;
 
       let badge = '';
-      if (est === 0 && v90 > 0) {
-        badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
-      } else if (est <= 2 && v90 >= 3) {
-        badge = '<span class="fab-status-badge critico">Crítico</span>';
-      } else if (est <= 5 && v90 >= 5) {
-        badge = '<span class="fab-status-badge atencao">Atenção</span>';
-      } else if (_isCarroChefe(d)) {
-        badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
-      } else {
-        badge = '<span class="fab-status-badge ok">OK</span>';
-      }
+      if (est === 0 && v90 > 0)      badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
+      else if (est <= 2 && v90 >= 3) badge = '<span class="fab-status-badge critico">Crítico</span>';
+      else if (est <= 5 && v90 >= 5) badge = '<span class="fab-status-badge atencao">Atenção</span>';
+      else if (_isCarroChefe(g))     badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
+      else                           badge = '<span class="fab-status-badge ok">OK</span>';
 
-      return `
-        <tr>
-          <td>
-            <div style="font-weight:700;line-height:1.3">${d.subtipo}</div>
+      const expandBtn = hasLaps
+        ? `<button class="cat-expand-btn" onclick="toggleCatGroup('${gid}',this)" title="Ver lapidações">›</button>`
+        : `<span style="display:inline-block;width:18px;flex-shrink:0"></span>`;
+
+      const mainRow = `<tr>
+        <td><div style="display:flex;align-items:center;gap:2px">
+          ${expandBtn}
+          <div>
+            <div style="font-weight:700;line-height:1.3">${g.subtipo||'—'}</div>
             ${subtitle ? `<div style="font-size:11px;color:var(--fab-muted);margin-top:1px">${subtitle}</div>` : ''}
-          </td>
-          <td class="right" style="font-weight:700;color:${est === 0 ? 'var(--fab-red)' : est <= 3 ? 'var(--fab-orange)' : 'var(--fab-accent)'}">
-            ${fmt.num(est)}
-          </td>
-          <td class="right" style="color:${fab > 0 ? '#f59e0b' : 'var(--fab-muted)'}">
-            ${fmt.num(fab)}
-          </td>
-          <td>
-            <div class="fab-bar-wrap">
-              <div class="fab-bar-bg"><div class="fab-bar-fill vendidos" style="width:${vel}%"></div></div>
-              <span class="fab-num">${fmt.num(v90)}</span>
-            </div>
-          </td>
-          <td class="right" style="color:var(--fab-muted)">${fmt.num(vtot)}</td>
-          <td class="right" style="color:var(--fab-muted)">${d.ticket_medio ? fmt.moeda(d.ticket_medio) : '—'}</td>
-          <td class="right">${badge}</td>
-        </tr>
-      `;
+          </div>
+        </div></td>
+        <td class="right" style="font-weight:700;color:${est===0?'var(--fab-red)':est<=3?'var(--fab-orange)':'var(--fab-accent)'}">${fmt.num(est)}</td>
+        <td class="right" style="color:${fab>0?'#f59e0b':'var(--fab-muted)'}">${fmt.num(fab)}</td>
+        <td><div class="fab-bar-wrap"><div class="fab-bar-bg"><div class="fab-bar-fill vendidos" style="width:${vel}%"></div></div><span class="fab-num">${fmt.num(v90)}</span></div></td>
+        <td class="right" style="color:var(--fab-muted)">${fmt.num(vtot)}</td>
+        <td class="right" style="color:var(--fab-muted)">${g.ticket_medio ? fmt.moeda(g.ticket_medio) : '—'}</td>
+        <td class="right">${badge}</td>
+      </tr>`;
+
+      const subRows = hasLaps ? g.lapidacoes.map(l => {
+        const le = Number(l.estoque||0), lf = Number(l.em_fabricacao||0);
+        const lv = Number(l.vendidos_90d||0), lt = Number(l.vendidos_total||0);
+        return `<tr class="cat-sub-row" data-parent="${gid}" style="display:none">
+          <td><span class="cat-lap-name">${l.lapidacao||'Sem lapidação'}</span></td>
+          <td class="right" style="color:${le===0?'var(--fab-muted)':'var(--fab-accent)'}">${fmt.num(le)}</td>
+          <td class="right" style="color:${lf>0?'#f59e0b':'var(--fab-muted)'}">${fmt.num(lf)}</td>
+          <td style="color:var(--fab-muted);padding-left:8px">${fmt.num(lv)} / 90d</td>
+          <td class="right" style="color:var(--fab-muted)">${fmt.num(lt)}</td>
+          <td class="right" style="color:var(--fab-muted)">${l.ticket_medio ? fmt.moeda(l.ticket_medio) : '—'}</td>
+          <td></td>
+        </tr>`;
+      }).join('') : '';
+
+      return mainRow + subRows;
     }).join('');
   }
 
@@ -6140,6 +6180,11 @@ window.addEventListener('load', () => {
     }
   }
 
+  window.toggleJmCatGroup = function(gid, btn) {
+    const open = btn.classList.toggle('open');
+    document.querySelectorAll(`[data-parent="${gid}"]`).forEach(r => r.style.display = open ? '' : 'none');
+  };
+
   function renderJmCategoriaTabela(filtro = 'todos') {
     const tbody = document.getElementById('jm-categoria-tbody');
     const thead = document.getElementById('jm-categoria-thead');
@@ -6152,21 +6197,24 @@ window.addEventListener('load', () => {
       (d.produto||'').toLowerCase().includes(busca) ||
       (d.tipo_pedra||'').toLowerCase().includes(busca)
     );
-    if (filtro === 'carroChefe') dados = dados.filter(d => _isCarroChefe(d));
-    if (filtro === 'criticos')   dados = dados.filter(d => {
-      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+
+    let groups = _groupByCategoria(dados);
+
+    if (filtro === 'carroChefe') groups = groups.filter(g => _isCarroChefe(g));
+    if (filtro === 'criticos')   groups = groups.filter(g => {
+      const e = g.estoque, v = g.vendidos_90d;
       return (e === 0 && v > 0) || (e <= 2 && v >= 2);
     });
-    if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
-    const _statusPri = d => {
-      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+    if (filtro === 'fabricando') groups = groups.filter(g => g.em_fabricacao > 0);
+    const _statusPri = g => {
+      const e = g.estoque, v = g.vendidos_90d;
       if (e === 0 && v > 0)  return 1;
       if (e <= 2  && v >= 2) return 2;
-      if (_isCarroChefe(d))  return 3;
+      if (_isCarroChefe(g))  return 3;
       return 4;
     };
     if (_jmCatSortCol) {
-      dados = [...dados].sort((a, b) => {
+      groups = [...groups].sort((a, b) => {
         if (_jmCatSortCol === '_status') return (_statusPri(a) - _statusPri(b)) * _jmCatSortDir;
         const av = a[_jmCatSortCol] ?? '', bv = b[_jmCatSortCol] ?? '';
         const an = Number(av), bn = Number(bv);
@@ -6174,7 +6222,7 @@ window.addEventListener('load', () => {
         return String(av).localeCompare(String(bv), 'pt-BR') * _jmCatSortDir;
       });
     }
-    _jmCatFilteredData = dados;
+    _jmCatFilteredData = groups.flatMap(g => g.lapidacoes);
     const sc = col => _jmCatSortCol === col ? (_jmCatSortDir === 1 ? ' sort-asc' : ' sort-desc') : '';
     if (thead) thead.innerHTML = `<tr>
       <th class="sortable${sc('subtipo')}" onclick="jmSortCatBy('subtipo')">Categoria</th>
@@ -6185,39 +6233,60 @@ window.addEventListener('load', () => {
       <th class="sortable right${sc('ticket_medio')}" onclick="jmSortCatBy('ticket_medio')">Ticket Médio</th>
       <th class="sortable right${sc('_status')}" onclick="jmSortCatBy('_status')">Status</th>
     </tr>`;
-    if (!dados.length) {
+    if (!groups.length) {
       tbody.innerHTML = `<tr><td colspan="7"><div class="fab-empty">Nenhum registro</div></td></tr>`;
       return;
     }
-    const max90 = Math.max(...dados.map(d => Number(d.vendidos_90d)), 1);
-    tbody.innerHTML = dados.map(d => {
-      const est = Number(d.estoque), fab = Number(d.em_fabricacao);
-      const v90 = Number(d.vendidos_90d), vtot = Number(d.vendidos_total);
+    const max90 = Math.max(...groups.map(g => g.vendidos_90d), 1);
+    tbody.innerHTML = groups.map((g, gi) => {
+      const est = g.estoque, fab = g.em_fabricacao;
+      const v90 = g.vendidos_90d, vtot = g.vendidos_total;
       const vel = Math.round((v90 / max90) * 100);
-      const subtitle = [d.produto, d.tipo_pedra, d.lapidacao].filter(Boolean).join(' · ');
+      const subtitle = [g.produto, g.tipo_pedra].filter(Boolean).join(' · ');
+      const hasLaps = g.lapidacoes.some(l => l.lapidacao);
+      const gid = `jmcatg-${gi}`;
       let badge = '';
       if (est === 0 && v90 > 0)      badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
       else if (est <= 2 && v90 >= 3) badge = '<span class="fab-status-badge critico">Crítico</span>';
       else if (est <= 5 && v90 >= 5) badge = '<span class="fab-status-badge atencao">Atenção</span>';
-      else if (_isCarroChefe(d))     badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
+      else if (_isCarroChefe(g))     badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
       else                           badge = '<span class="fab-status-badge ok">OK</span>';
-      return `<tr>
-        <td>
-          <div style="font-weight:700;line-height:1.3">${d.subtipo}</div>
-          ${subtitle ? `<div style="font-size:11px;color:var(--fab-muted);margin-top:1px">${subtitle}</div>` : ''}
-        </td>
-        <td class="right" style="font-weight:700;color:${est===0?'var(--fab-red)':est<=3?'var(--fab-orange)':'var(--fab-accent)'}">
-          ${fmt.num(est)}</td>
-        <td class="right" style="color:${fab>0?'#f59e0b':'var(--fab-muted)'}">
-          ${fmt.num(fab)}</td>
-        <td><div class="fab-bar-wrap">
-          <div class="fab-bar-bg"><div class="fab-bar-fill vendidos" style="width:${vel}%"></div></div>
-          <span class="fab-num">${fmt.num(v90)}</span>
+
+      const expandBtn = hasLaps
+        ? `<button class="cat-expand-btn" onclick="toggleJmCatGroup('${gid}',this)" title="Ver lapidações">›</button>`
+        : `<span style="display:inline-block;width:18px;flex-shrink:0"></span>`;
+
+      const mainRow = `<tr>
+        <td><div style="display:flex;align-items:center;gap:2px">
+          ${expandBtn}
+          <div>
+            <div style="font-weight:700;line-height:1.3">${g.subtipo||'—'}</div>
+            ${subtitle ? `<div style="font-size:11px;color:var(--fab-muted);margin-top:1px">${subtitle}</div>` : ''}
+          </div>
         </div></td>
+        <td class="right" style="font-weight:700;color:${est===0?'var(--fab-red)':est<=3?'var(--fab-orange)':'var(--fab-accent)'}">${fmt.num(est)}</td>
+        <td class="right" style="color:${fab>0?'#f59e0b':'var(--fab-muted)'}">${fmt.num(fab)}</td>
+        <td><div class="fab-bar-wrap"><div class="fab-bar-bg"><div class="fab-bar-fill vendidos" style="width:${vel}%"></div></div><span class="fab-num">${fmt.num(v90)}</span></div></td>
         <td class="right" style="color:var(--fab-muted)">${fmt.num(vtot)}</td>
-        <td class="right" style="color:var(--fab-muted)">${d.ticket_medio?fmt.moeda(d.ticket_medio):'—'}</td>
+        <td class="right" style="color:var(--fab-muted)">${g.ticket_medio?fmt.moeda(g.ticket_medio):'—'}</td>
         <td class="right">${badge}</td>
       </tr>`;
+
+      const subRows = hasLaps ? g.lapidacoes.map(l => {
+        const le = Number(l.estoque||0), lf = Number(l.em_fabricacao||0);
+        const lv = Number(l.vendidos_90d||0), lt = Number(l.vendidos_total||0);
+        return `<tr class="cat-sub-row" data-parent="${gid}" style="display:none">
+          <td><span class="cat-lap-name">${l.lapidacao||'Sem lapidação'}</span></td>
+          <td class="right" style="color:${le===0?'var(--fab-muted)':'var(--fab-accent)'}">${fmt.num(le)}</td>
+          <td class="right" style="color:${lf>0?'#f59e0b':'var(--fab-muted)'}">${fmt.num(lf)}</td>
+          <td style="color:var(--fab-muted);padding-left:8px">${fmt.num(lv)} / 90d</td>
+          <td class="right" style="color:var(--fab-muted)">${fmt.num(lt)}</td>
+          <td class="right" style="color:var(--fab-muted)">${l.ticket_medio?fmt.moeda(l.ticket_medio):'—'}</td>
+          <td></td>
+        </tr>`;
+      }).join('') : '';
+
+      return mainRow + subRows;
     }).join('');
   }
 
