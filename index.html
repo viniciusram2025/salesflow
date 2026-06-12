@@ -887,6 +887,12 @@ body.light .fab-filtros { background: #f0f2f5; }
 body.light #fab-filtros-bar { background: #f0f2f5 !important; }
 body.light #fab-period-slot { background: #ffffff !important; }
 body.light #fab-shared-card { background: #ffffff !important; }
+#jm-filtros-bar    { background: #161921 !important; }
+#jm-period-slot    { background: #111318 !important; position: relative; z-index: 2; }
+#jm-shared-card    { overflow: visible  !important; background: #111318 !important; }
+body.light #jm-filtros-bar { background: #f0f2f5 !important; }
+body.light #jm-period-slot { background: #ffffff !important; }
+body.light #jm-shared-card { background: #ffffff !important; }
 .fab-fv2-search {
   flex: 0 0 auto; min-width: 145px; max-width: 175px;
   padding: 8px 12px; border-right: 1px solid var(--fab-border);
@@ -1050,6 +1056,7 @@ canvas.fab-canvas { width: 100% !important; }
     <div class="nav-section">Estoque</div>
     <div class="nav-item" onclick="goTo('metais')" data-page="metais"><i class="ti ti-weight"></i>Controle de Metais</div>
     <div class="nav-item" onclick="goTo('fabricacoes')" data-page="fabricacoes"><i class="ti ti-hammer"></i>Fabricações JF</div>
+    <div class="nav-item" onclick="goTo('fabricacoes-jm')" data-page="fabricacoes-jm"><i class="ti ti-hammer"></i>Fabricações JM</div>
 
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
@@ -1745,6 +1752,153 @@ canvas.fab-canvas { width: 100% !important; }
 
 </div>
 
+      <!-- ══════ PAGE: FABRICAÇÕES JM ══════ -->
+      <div id="page-fabricacoes-jm" class="page">
+
+  <div class="fab-topbar">
+    <nav class="fab-nav">
+      <button class="jm-nav-btn active" data-sec="resumo" onclick="jmGoTo('resumo',this)">
+        <i class="ti ti-layout-dashboard"></i><span>Resumo</span>
+      </button>
+      <button class="jm-nav-btn" data-sec="producao" onclick="jmGoTo('producao',this)">
+        <i class="ti ti-hammer"></i><span>Controle</span>
+      </button>
+      <button class="jm-nav-btn" data-sec="vendas" onclick="jmGoTo('vendas',this)">
+        <i class="ti ti-chart-bar"></i><span>Vendas</span>
+      </button>
+    </nav>
+    <div class="fab-sync">
+      <span id="jm-last-update" class="fab-sync-time">—</span>
+      <button class="fab-refresh-btn" id="jm-btn-refresh" onclick="jmRefresh()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M3 21v-5h5"/>
+        </svg>
+        Atualizar
+      </button>
+    </div>
+  </div>
+
+  <div id="jm-sec-resumo" class="jm-section">
+    <div class="fab-kpis">
+      <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(79,110,247,.15);color:var(--c-accent)"><i class="ti ti-box"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Estoque Disponível</div>
+          <div class="fab-kpi-value" id="jm-kpi-estoque" style="color:var(--c-accent)">—</div>
+          <div class="fab-kpi-sub">peças prontas p/ venda</div>
+        </div>
+      </div>
+      <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(245,158,11,.15);color:#f59e0b"><i class="ti ti-hammer"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Em Fabricação</div>
+          <div class="fab-kpi-value" id="jm-kpi-fabricacao" style="color:#f59e0b">—</div>
+          <div class="fab-kpi-sub">peças em andamento</div>
+        </div>
+      </div>
+      <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(34,197,94,.15);color:var(--c-green)"><i class="ti ti-shopping-cart"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Vendidos Total</div>
+          <div class="fab-kpi-value" id="jm-kpi-vendidos" style="color:var(--c-green)">—</div>
+          <div class="fab-kpi-sub" id="jm-kpi-vendidos-mes">— vendidos este mês</div>
+        </div>
+      </div>
+      <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(249,115,22,.15);color:#f97316"><i class="ti ti-receipt"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Ticket Médio</div>
+          <div class="fab-kpi-value" id="jm-kpi-ticket" style="color:#f97316">—</div>
+          <div class="fab-kpi-sub">mês atual</div>
+        </div>
+      </div>
+      <div class="fab-kpi">
+        <div class="fab-kpi-icon" style="background:rgba(168,85,247,.15);color:#a855f7"><i class="ti ti-currency-dollar"></i></div>
+        <div class="fab-kpi-body">
+          <div class="fab-kpi-label">Faturamento Mês</div>
+          <div class="fab-kpi-value" id="jm-kpi-faturamento" style="color:#a855f7">—</div>
+          <div class="fab-kpi-sub">mês atual</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="jm-sec-estoque" class="jm-section fab-hidden"></div>
+
+  <div id="jm-sec-producao" class="jm-section fab-hidden">
+    <div class="fab-card" style="margin-bottom:16px">
+      <div class="fab-card-header">
+        <div class="fab-card-header-left">
+          <i class="ti ti-layout-grid" style="color:var(--c-accent)"></i>
+          <span class="fab-card-title">Categorias de Produto</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-left:auto">
+          <div class="fab-legend">
+            <span><i class="fab-dot" style="background:var(--c-accent)"></i>Estoque</span>
+            <span><i class="fab-dot" style="background:#f59e0b"></i>Em Fab.</span>
+            <span><i class="fab-dot" style="background:var(--c-green)"></i>Vel. 90d</span>
+          </div>
+          <button class="fab-export-btn" onclick="jmCatExportCSV()" title="Exportar CSV">
+            <i class="ti ti-download"></i> Exportar
+          </button>
+        </div>
+      </div>
+      <div style="padding:8px 16px;border-bottom:1px solid var(--fab-border)">
+        <div class="fab-fv2-search-wrap" style="max-width:320px">
+          <i class="ti ti-search"></i>
+          <input class="fab-filtro-busca" id="jm-cat-busca" placeholder="Buscar subtipo, produto ou pedra…" oninput="jmSetCatBusca()">
+        </div>
+      </div>
+      <div class="fab-tabs">
+        <div class="fab-tab active" onclick="jmFiltrarSubtipo('todos',this)">Todos</div>
+        <div class="fab-tab" onclick="jmFiltrarSubtipo('carroChefe',this)">Carro Chefe</div>
+        <div class="fab-tab" onclick="jmFiltrarSubtipo('criticos',this)">Críticos</div>
+        <div class="fab-tab" onclick="jmFiltrarSubtipo('fabricando',this)">Em Fab.</div>
+      </div>
+      <div class="fab-table-wrap">
+        <table class="fab-table">
+          <thead id="jm-categoria-thead"></thead>
+          <tbody id="jm-categoria-tbody">
+            <tr><td colspan="7"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="jm-shared-card" class="fab-card" style="margin-top:16px">
+    <div class="fab-card-header">
+      <div class="fab-card-header-left">
+        <i id="jm-lista-icon" class="ti ti-box" style="color:var(--c-accent)"></i>
+        <span class="fab-card-title" id="jm-lista-titulo">Estoque Disponível</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-left:auto">
+        <span id="jm-lista-total" style="display:none;font-size:13px;font-weight:700;color:#22c55e"></span>
+        <span class="fab-badge-count" id="jm-lista-count">—</span>
+        <button class="fab-export-btn" onclick="jmExportCSV()" title="Exportar CSV">
+          <i class="ti ti-download"></i> Exportar
+        </button>
+      </div>
+    </div>
+    <div id="jm-period-slot"></div>
+    <div class="fab-filtros" id="jm-filtros-bar"></div>
+    <div class="fab-table-wrap">
+      <table class="fab-table">
+        <thead id="jm-lista-thead"></thead>
+        <tbody id="jm-lista-tbody">
+          <tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="jm-sec-vendas" class="jm-section fab-hidden"></div>
+
+</div>
+
       <!-- ══════ PAGE: USUÁRIOS ══════ -->
       <div id="page-usuarios" class="page">
         <div class="row-gap mb-20">
@@ -2156,7 +2310,8 @@ const PAGE_TITLES = {
   metais:{title:'Controle de Metais',sub:'Ouro · Prata · Platina — Second Hand & Scrap'},
   usuarios:{title:'Usuários & Acesso',sub:'Gerencie a equipe e as permissões de cada pessoa'},
   configuracoes:{title:'Configurações',sub:'Gerenciar campos selecionáveis do sistema'},
-  fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'}
+  fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
+  'fabricacoes-jm':{title:'Fabricações JM',sub:'Estoque · Em fabricação · Vendidos — tempo real'}
 };
 
 function goTo(name){
@@ -2178,6 +2333,7 @@ function goTo(name){
   if(name==='calendario')      renderCalendar();
   if(name==='relatorios')      {} // static page
   if(name==='fabricacoes')     { fabLoad(); }
+  if(name==='fabricacoes-jm') { jmLoad(); }
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -5137,6 +5293,689 @@ window.addEventListener('load', () => {
   // ── REFRESH MANUAL ───────────────────────────────────────────
   window.fabRefresh = fabLoad;
 
+
+  // ════════════════════════════════════════════════════════════
+  // FABRICAÇÕES JM — idêntico ao JF, tipo IN ('JMCP','JMSP')
+  // ════════════════════════════════════════════════════════════
+
+  let _jmCategoriaDados  = [];
+  let _jmCatSortCol      = null;
+  let _jmCatSortDir      = 1;
+  let _jmCatFiltro       = 'todos';
+  let _jmChartVendas     = null;
+  let _jmCurrentSec      = 'resumo';
+  let _jmListaData       = [];
+  let _jmFilteredData    = [];
+  let _jmCatFilteredData = [];
+  let _jmListaSec        = 'resumo';
+  let _jmSortCol         = null;
+  let _jmSortDir         = 1;
+  let _jmDateFrom = '';
+  let _jmDateTo   = '';
+  let _jmDrpLY = 0, _jmDrpLM = 0;
+  let _jmDrpPickStart = null;
+  let _jmChartPedras  = null;
+
+  function renderJmResumo(d) {
+    document.getElementById("jm-kpi-estoque").textContent     = fmt.num(d.estoque);
+    document.getElementById("jm-kpi-fabricacao").textContent  = fmt.num(d.em_fabricacao);
+    document.getElementById("jm-kpi-vendidos").textContent    = fmt.num(d.vendidos);
+    document.getElementById("jm-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
+    document.getElementById("jm-kpi-ticket").textContent      = fmt.moeda(d.ticket_medio);
+    document.getElementById("jm-kpi-faturamento").textContent = fmt.moeda(d.faturamento_mes);
+  }
+
+  function renderJmFabricacao(lista) {
+    const elFull = document.getElementById("jm-fab-lista-full");
+    const badge2 = document.getElementById("jm-badge-fab2");
+    if (badge2) badge2.textContent = lista.length;
+    const empty = '<div class="fab-empty">Nenhuma peça em fabricação</div>';
+    if (!lista.length) { if (elFull) elFull.innerHTML = empty; return; }
+    if (elFull) {
+      elFull.innerHTML = lista.map(p => `
+        <div class="fab-prod-card">
+          <div class="fab-prod-ref">${p.referencia}</div>
+          <div class="fab-prod-subtipo">${p.subtipo || "—"}</div>
+          ${p.tipo_pedra ? `<div class="fab-prod-pedra"><i class="ti ti-diamond"></i>${p.tipo_pedra}</div>` : ""}
+          <div class="fab-prod-footer">
+            <span class="fab-dias ${diasClass(p.dias)}">${p.dias}d em aberto</span>
+          </div>
+        </div>`).join("");
+    }
+  }
+
+  window.jmGoTo = function(sec, btn) {
+    document.querySelectorAll(".jm-section").forEach(s => s.classList.add("fab-hidden"));
+    document.querySelectorAll(".jm-nav-btn").forEach(b => b.classList.remove("active"));
+    const el = document.getElementById("jm-sec-" + sec);
+    if (el) el.classList.remove("fab-hidden");
+    if (btn) btn.classList.add("active");
+    _jmCurrentSec = sec;
+    const sharedCard = document.getElementById('jm-shared-card');
+    if (sharedCard) sharedCard.style.display = sec === 'producao' ? 'none' : '';
+    if (sec !== 'producao') loadJmLista(sec);
+  };
+
+  const _jmListaCfg = {
+    resumo:   { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    estoque:  { url: 'jm/lista-estoque',     titulo: 'Estoque Disponível', icon: 'ti-box',     color: 'var(--c-accent)' },
+    producao: { url: 'jm/em-fabricacao',     titulo: 'Em Fabricação',      icon: 'ti-hammer',  color: '#f59e0b' },
+    vendas:   { url: 'jm/lista-faturamento', titulo: 'Vendas',             icon: 'ti-receipt', color: '#a855f7' },
+  };
+
+  function _jmDrpIso(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  }
+  function _jmDrpFmtBR(ymd) {
+    if (!ymd) return '—';
+    const [y,m,d] = ymd.split('-');
+    return `${d}/${_drpMN[+m-1]}/${y.slice(2)}`;
+  }
+
+  function _jmDrpMkMonth(y, m, isLeft) {
+    const first = new Date(y, m, 1).getDay();
+    const days  = new Date(y, m+1, 0).getDate();
+    const today = _jmDrpIso(new Date());
+    let cells = '';
+    for (let i = 0; i < first; i++) cells += `<div class="fab-drp-day empty"></div>`;
+    for (let d = 1; d <= days; d++) {
+      const ymd  = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const pickA = _jmDrpPickStart ? _jmDrpIso(_jmDrpPickStart) : null;
+      const rA = pickA || _jmDateFrom;
+      const rB = pickA ? (window._jmDrpHover || null) : _jmDateTo;
+      const lo = rA && rB ? (rA <= rB ? rA : rB) : rA;
+      const hi = rA && rB ? (rA <= rB ? rB : rA) : null;
+      let cls = 'fab-drp-day';
+      if (ymd === today) cls += ' today';
+      if (lo && hi) {
+        if (ymd === lo && ymd === hi) cls += ' range-single';
+        else if (ymd === lo) cls += ' range-start';
+        else if (ymd === hi) cls += ' range-end';
+        else if (ymd > lo && ymd < hi) cls += ' in-range';
+      } else if (lo && ymd === lo) cls += ' range-single';
+      cells += `<div class="${cls}" data-date="${ymd}">${d}</div>`;
+    }
+    const navL = isLeft  ? `<button class="fab-drp-mnav" onclick="jmDrpNav(-1)">&#8249;</button>` : `<div style="width:28px"></div>`;
+    const navR = !isLeft ? `<button class="fab-drp-mnav" onclick="jmDrpNav(1)">&#8250;</button>`  : `<div style="width:28px"></div>`;
+    return `<div class="fab-drp-month">
+      <div class="fab-drp-mhead">${navL}<span class="fab-drp-mname">${_drpMN[m]} ${y}</span>${navR}</div>
+      <div class="fab-drp-grid">
+        ${_drpWD.map(w=>`<div class="fab-drp-wday">${w}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>`;
+  }
+
+  function _jmDrpRender() {
+    const popup = document.getElementById('jm-drp-popup');
+    if (!popup || !popup.classList.contains('open')) return;
+    const ry = _jmDrpLM === 11 ? _jmDrpLY+1 : _jmDrpLY;
+    const rm = _jmDrpLM === 11 ? 0 : _jmDrpLM+1;
+    const lo = _jmDateFrom && _jmDateTo ? (_jmDateFrom<=_jmDateTo?_jmDateFrom:_jmDateTo) : _jmDateFrom;
+    const hi = _jmDateFrom && _jmDateTo ? (_jmDateFrom<=_jmDateTo?_jmDateTo:_jmDateFrom) : _jmDateTo;
+    const fmtInput = ymd => ymd ? ymd.split('-').reverse().join('/') : '';
+    popup.innerHTML = `
+      <div class="fab-drp-inputs">
+        <div class="fab-drp-input-group">
+          <label class="fab-drp-input-label">Início:</label>
+          <input class="fab-drp-input" id="jm-drp-from" type="text" placeholder="dd/mm/aaaa"
+            value="${fmtInput(lo)}" oninput="jmDrpTypeFrom(this.value)">
+        </div>
+        <div class="fab-drp-input-group">
+          <label class="fab-drp-input-label">Fim:</label>
+          <input class="fab-drp-input" id="jm-drp-to" type="text" placeholder="dd/mm/aaaa"
+            value="${fmtInput(hi)}" oninput="jmDrpTypeTo(this.value)">
+        </div>
+      </div>
+      <div class="fab-drp-months">
+        ${_jmDrpMkMonth(_jmDrpLY, _jmDrpLM, true)}
+        <div class="fab-drp-sep"></div>
+        ${_jmDrpMkMonth(ry, rm, false)}
+      </div>
+      <div class="fab-drp-footer">
+        <button class="fab-drp-apply" onclick="jmDrpApply()">Aplicar</button>
+      </div>`;
+  }
+
+  function _jmDrpUpdateCells(lo, hi) {
+    const popup = document.getElementById('jm-drp-popup');
+    if (!popup) return;
+    const a = lo && hi ? (lo <= hi ? lo : hi) : lo;
+    const b = lo && hi ? (lo <= hi ? hi : lo) : null;
+    popup.querySelectorAll('[data-date]').forEach(function(cell) {
+      const d = cell.dataset.date;
+      cell.classList.remove('in-range','range-start','range-end','range-single');
+      if (a && b) {
+        if (d === a && d === b) cell.classList.add('range-single');
+        else if (d === a)       cell.classList.add('range-start');
+        else if (d === b)       cell.classList.add('range-end');
+        else if (d > a && d < b) cell.classList.add('in-range');
+      } else if (a && d === a) cell.classList.add('range-single');
+    });
+  }
+
+  function _jmDrpClose() {
+    document.getElementById('jm-drp-popup')?.classList.remove('open');
+    document.getElementById('jm-drp-backdrop')?.remove();
+  }
+
+  window.jmDrpToggle = function(e) {
+    e && e.stopPropagation();
+    let popup = document.getElementById('jm-drp-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.className = 'fab-drp-popup';
+      popup.id = 'jm-drp-popup';
+      document.body.appendChild(popup);
+    } else if (popup.classList.contains('open')) {
+      _jmDrpClose(); return;
+    }
+    if (!popup._jmDrpInit) {
+      popup.addEventListener('click', function(ev) {
+        const cell = ev.target.closest('[data-date]');
+        if (cell) window.jmDrpDay(cell.dataset.date);
+      });
+      popup.addEventListener('mouseover', function(ev) {
+        const cell = ev.target.closest('[data-date]');
+        if (cell) window.jmDrpHover(cell.dataset.date);
+      });
+      popup._jmDrpInit = true;
+    }
+    popup.style.background = document.body.classList.contains('light') ? '#ffffff' : '#111318';
+    popup.style.zIndex = '9999';
+    const btn = document.getElementById('jm-drp-btn');
+    if (btn) {
+      const r = btn.getBoundingClientRect();
+      popup.style.top  = (r.bottom + 8) + 'px';
+      popup.style.left = r.left + 'px';
+    }
+    const bd = document.createElement('div');
+    bd.id = 'jm-drp-backdrop'; bd.className = 'fab-drp-backdrop open';
+    bd.onclick = _jmDrpClose;
+    document.body.appendChild(bd);
+    const ref = _jmDateFrom ? new Date(_jmDateFrom+'T00:00:00') : new Date();
+    _jmDrpLY = ref.getFullYear(); _jmDrpLM = ref.getMonth();
+    _jmDrpPickStart = null; window._jmDrpHover = null;
+    popup.classList.add('open');
+    _jmDrpRender();
+  };
+
+  window.jmDrpNav = function(dir) {
+    _jmDrpLM += dir;
+    if (_jmDrpLM < 0)  { _jmDrpLM = 11; _jmDrpLY--; }
+    if (_jmDrpLM > 11) { _jmDrpLM = 0;  _jmDrpLY++; }
+    _jmDrpRender();
+  };
+
+  window.jmDrpDay = function(ymd) {
+    if (!_jmDrpPickStart) {
+      _jmDrpPickStart = new Date(ymd+'T00:00:00');
+      _jmDateFrom = ymd; _jmDateTo = '';
+      window._jmDrpHover = null;
+      _jmDrpRender();
+    } else {
+      const start = _jmDrpIso(_jmDrpPickStart);
+      _jmDateFrom = start <= ymd ? start : ymd;
+      _jmDateTo   = start <= ymd ? ymd   : start;
+      _jmDrpPickStart = null; window._jmDrpHover = null;
+      _jmDrpRender();
+      _jmDrpUpdateBtn();
+    }
+  };
+
+  window.jmDrpHover = function(ymd) {
+    if (!_jmDrpPickStart) return;
+    window._jmDrpHover = ymd;
+    _jmDrpUpdateCells(_jmDrpIso(_jmDrpPickStart), ymd);
+  };
+
+  window.jmDrpTypeFrom = function(val) {
+    const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) return;
+    _jmDateFrom = `${m[3]}-${m[2]}-${m[1]}`;
+    _jmDrpPickStart = null;
+    _jmDrpUpdateCells(_jmDateFrom, _jmDateTo);
+  };
+
+  window.jmDrpTypeTo = function(val) {
+    const m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) return;
+    _jmDateTo = `${m[3]}-${m[2]}-${m[1]}`;
+    _jmDrpUpdateCells(_jmDateFrom, _jmDateTo);
+  };
+
+  window.jmDrpApply = function() {
+    _jmDrpClose();
+    _jmDrpPickStart = null; window._jmDrpHover = null;
+    _jmDrpUpdateBtn();
+    applyJmDateRange();
+  };
+
+  function _jmDrpUpdateBtn() {
+    const lo = _jmDateFrom && _jmDateTo ? (_jmDateFrom<=_jmDateTo?_jmDateFrom:_jmDateTo) : _jmDateFrom;
+    const hi = _jmDateFrom && _jmDateTo ? (_jmDateFrom<=_jmDateTo?_jmDateTo:_jmDateFrom) : '';
+    const el = document.getElementById('jm-drp-label');
+    if (el) el.textContent = hi ? `${_jmDrpFmtBR(lo)} → ${_jmDrpFmtBR(hi)}` : _jmDrpFmtBR(lo);
+  }
+
+  function _jmBuildPeriodSlot() {
+    const today = new Date();
+    const bom   = new Date(today.getFullYear(), today.getMonth(), 1);
+    const fmtD  = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (!_jmDateFrom) _jmDateFrom = fmtD(bom);
+    if (!_jmDateTo)   _jmDateTo   = fmtD(today);
+    const lo = _jmDateFrom <= _jmDateTo ? _jmDateFrom : _jmDateTo;
+    const hi = _jmDateFrom <= _jmDateTo ? _jmDateTo   : _jmDateFrom;
+    return `
+      <div style="padding:10px 16px 4px">
+        <div class="fab-drp">
+          <button class="fab-drp-btn" id="jm-drp-btn" onclick="jmDrpToggle(event)">
+            <i class="ti ti-calendar" style="font-size:13px;opacity:.7"></i>
+            <span id="jm-drp-label">${_jmDrpFmtBR(lo)} → ${_jmDrpFmtBR(hi)}</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;opacity:.5"></i>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  async function loadJmLista(sec) {
+    const cfg = _jmListaCfg[sec] || _jmListaCfg.resumo;
+    document.getElementById('jm-lista-titulo').textContent = cfg.titulo;
+    const iconEl = document.getElementById('jm-lista-icon');
+    iconEl.className = 'ti ' + cfg.icon;
+    iconEl.style.color = cfg.color;
+    document.getElementById('jm-lista-count').textContent = '—';
+    document.getElementById('jm-filtros-bar').innerHTML = '';
+    const slot = document.getElementById('jm-period-slot');
+    slot.innerHTML = sec === 'vendas' ? _jmBuildPeriodSlot() : '';
+    const totalEl = document.getElementById('jm-lista-total');
+    if (totalEl) totalEl.style.display = 'none';
+    const tbody = document.getElementById('jm-lista-tbody');
+    tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
+    try {
+      const r    = await fetch(`${API_BASE}/${cfg.url}`);
+      const data = await r.json();
+      document.getElementById('jm-lista-count').textContent = data.length;
+      buildJmFiltros(data, sec);
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-red)">Erro ao carregar dados</td></tr>';
+    }
+  }
+
+  function buildJmFiltros(data, sec) {
+    _jmListaData = data;
+    _jmListaSec  = sec;
+    _jmSortCol   = null;
+    _jmSortDir   = 1;
+    const bar = document.getElementById('jm-filtros-bar');
+    const esc     = v => v.replace(/"/g, '&quot;');
+    const uniq    = key => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+    const mkItems = list => list.map(v =>
+      `<label class="fab-fv2-item"><input type="checkbox" value="${esc(v)}" onchange="applyJmFiltros()"> ${v}</label>`
+    ).join('');
+    const mkPanel = (id, title, list) => list.length
+      ? `<div class="fab-fv2-panel"><div class="fab-fv2-panel-title">${title}</div><div class="fab-fv2-panel-items" id="${id}">${mkItems(list)}</div></div>`
+      : '';
+    bar.innerHTML = `
+      <div class="fab-fv2-search">
+        <span class="fab-fv2-search-label">Buscar</span>
+        <div class="fab-fv2-search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="fab-filtro-busca" id="jm-f-busca" placeholder="Ref ou produto…" oninput="applyJmFiltros()">
+        </div>
+      </div>
+      ${mkPanel('jm-fp-produto',    'Produto',    uniq('produto'))}
+      ${mkPanel('jm-fp-subtipo',    'Subtipo',    uniq('subtipo'))}
+      ${mkPanel('jm-fp-destino',    'Destino',    uniq('destino'))}
+      ${mkPanel('jm-fp-fabricante', 'Fabricante', uniq('fabricante'))}
+      ${mkPanel('jm-fp-pedra',      'Tipo Pedra', uniq('tipo_pedra'))}
+      ${mkPanel('jm-fp-lapidacao',  'Lapidação',  uniq('lapidacao'))}
+      <div class="fab-fv2-right">
+        <div>
+          <div class="fab-fv2-count" id="jm-filtros-count">${data.length}</div>
+          <div class="fab-fv2-count-label">itens</div>
+        </div>
+        <button class="fab-filtro-clear" onclick="clearJmFiltros()"><i class="ti ti-x"></i> Limpar</button>
+      </div>`;
+    applyJmFiltros();
+  }
+
+  window.applyJmFiltros = function() {
+    const busca = (document.getElementById('jm-f-busca')?.value || '').toLowerCase();
+    const dims = [
+      { id: 'jm-fp-produto',    field: 'produto'    },
+      { id: 'jm-fp-subtipo',    field: 'subtipo'    },
+      { id: 'jm-fp-destino',    field: 'destino'    },
+      { id: 'jm-fp-fabricante', field: 'fabricante' },
+      { id: 'jm-fp-pedra',      field: 'tipo_pedra' },
+      { id: 'jm-fp-lapidacao',  field: 'lapidacao'  },
+    ];
+    dims.forEach(d => {
+      d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
+    });
+    const byPeriod = _jmListaSec === 'vendas'
+      ? _jmListaData.filter(r => _jmInPeriod(r.data_venda))
+      : _jmListaData;
+    const base = busca
+      ? byPeriod.filter(r => (r.referencia||'').toLowerCase().includes(busca) || (r.produto||'').toLowerCase().includes(busca))
+      : byPeriod;
+    const filterExcept = excludeField => base.filter(r =>
+      dims.every(d => d.field === excludeField || d.sel.size === 0 || d.sel.has(r[d.field]))
+    );
+    let filtered = filterExcept(null);
+    dims.forEach(d => {
+      const panel = document.getElementById(d.id);
+      if (!panel) return;
+      const available = new Set(filterExcept(d.field).map(r => r[d.field]).filter(Boolean));
+      panel.querySelectorAll('label.fab-fv2-item').forEach(label => {
+        const val = label.querySelector('input').value;
+        label.style.display = available.has(val) || label.querySelector('input').checked ? '' : 'none';
+      });
+    });
+    if (_jmSortCol) {
+      filtered = [...filtered].sort((a, b) => {
+        const av = a[_jmSortCol] ?? '', bv = b[_jmSortCol] ?? '';
+        if (!isNaN(av) && !isNaN(bv)) return (Number(av) - Number(bv)) * _jmSortDir;
+        return String(av).localeCompare(String(bv), 'pt-BR') * _jmSortDir;
+      });
+    }
+    const countEl = document.getElementById('jm-filtros-count');
+    if (countEl) countEl.textContent = filtered.length;
+    const badgeEl = document.getElementById('jm-lista-count');
+    if (badgeEl) badgeEl.textContent = filtered.length;
+    const totalEl = document.getElementById('jm-lista-total');
+    if (totalEl) {
+      if (_jmListaSec === 'vendas') {
+        const sum = filtered.reduce((s, r) => s + Number(r.preco_cobrado || 0), 0);
+        totalEl.textContent = fmt.moeda(sum);
+        totalEl.style.display = '';
+      } else {
+        totalEl.style.display = 'none';
+      }
+    }
+    _jmFilteredData = filtered;
+    renderJmLista(filtered, _jmListaSec,
+      document.getElementById('jm-lista-thead'),
+      document.getElementById('jm-lista-tbody'));
+  };
+
+  window.clearJmFiltros = function() {
+    const busca = document.getElementById('jm-f-busca');
+    if (busca) busca.value = '';
+    document.querySelectorAll('#jm-filtros-bar input[type=checkbox]').forEach(cb => cb.checked = false);
+    applyJmFiltros();
+  };
+
+  function _jmInPeriod(dateStr) {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (_jmDateFrom && d < new Date(_jmDateFrom + 'T00:00:00')) return false;
+    if (_jmDateTo   && d > new Date(_jmDateTo   + 'T23:59:59')) return false;
+    return true;
+  }
+
+  window.applyJmDateRange = function() {
+    const fmtBR  = s => s ? s.split('-').reverse().join('/') : '—';
+    const titleEl = document.getElementById('jm-lista-titulo');
+    if (titleEl) titleEl.textContent = `Vendas — ${fmtBR(_jmDateFrom)} a ${fmtBR(_jmDateTo)}`;
+    applyJmFiltros();
+  };
+
+  window.jmSortBy = function(col) {
+    if (_jmSortCol === col) { _jmSortDir *= -1; }
+    else { _jmSortCol = col; _jmSortDir = 1; }
+    applyJmFiltros();
+  };
+
+  function renderJmLista(data, sec, thead, tbody) {
+    const srt = (col, cls='') => {
+      const active = _jmSortCol === col;
+      const dir    = active ? (_jmSortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+      return `<th class="sortable ${cls} ${dir}" onclick="jmSortBy('${col}')">`;
+    };
+    if (sec === 'producao') {
+      thead.innerHTML = `<tr>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('fabricante')}Fabricante</th>
+        ${srt('data_envio_fabricacao','right')}Envio Fab.</th>
+        ${srt('dias','right')}Dias</th>${srt('preco_minimo','right')}Preço Mín.</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
+        <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
+        <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
+    } else if (sec === 'vendas') {
+      thead.innerHTML = `<tr>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
+        ${srt('preco_cobrado','right')}Valor Total</th>
+        <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
+        <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
+        <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
+        <td class="right" style="font-weight:700;color:var(--c-green)">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
+        <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
+        <td class="right">${r.cts_diamantes||'—'}</td>
+        <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
+        <td class="right">${r.cts_pedra_colorida||'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma venda este mês</td></tr>';
+    } else {
+      thead.innerHTML = `<tr>
+        ${srt('referencia')}Ref</th>${srt('produto')}Produto</th>
+        ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Tipo Pedra</th>
+        ${srt('lapidacao')}Lapidação</th>${srt('destino')}Destino</th>${srt('fabricante')}Fabricante</th>
+        ${srt('peso','right')}Peso</th>${srt('custo_real','right')}Custo</th>
+        ${srt('preco_cobrado','right')}Preço Cobrado</th>
+        <th>Diamantes</th>${srt('cts_diamantes','right')}Cts Diam.</th>
+        <th>Pedra Colorida</th>${srt('cts_pedra_colorida','right')}Cts PC</th>
+      </tr>`;
+      tbody.innerHTML = data.length ? data.map(r => `<tr>
+        <td style="font-family:monospace;font-size:12px">${r.referencia||'—'}</td>
+        <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
+        <td>${r.lapidacao||'—'}</td><td>${r.destino||'—'}</td><td>${r.fabricante||'—'}</td>
+        <td class="right">${r.peso?Number(r.peso).toFixed(2)+'g':'—'}</td>
+        <td class="right">${r.custo_real?fmt.moeda(r.custo_real):'—'}</td>
+        <td class="right" style="font-weight:700">${r.preco_cobrado?fmt.moeda(r.preco_cobrado):'—'}</td>
+        <td style="font-size:11px;max-width:160px">${r.diamantes||'—'}</td>
+        <td class="right">${r.cts_diamantes||'—'}</td>
+        <td style="font-size:11px;max-width:140px">${r.pedra_colorida||'—'}</td>
+        <td class="right">${r.cts_pedra_colorida||'—'}</td>
+      </tr>`).join('') : '<tr><td colspan="14" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhum item em estoque</td></tr>';
+    }
+  }
+
+  function renderJmCategoriaTabela(filtro = 'todos') {
+    const tbody = document.getElementById('jm-categoria-tbody');
+    const thead = document.getElementById('jm-categoria-thead');
+    const busca = (document.getElementById('jm-cat-busca')?.value || '').toLowerCase();
+    let dados = [..._jmCategoriaDados].filter(d =>
+      _PEDRAS_CONTROLE.includes((d.tipo_pedra || '').toLowerCase())
+    );
+    if (busca) dados = dados.filter(d =>
+      (d.subtipo||'').toLowerCase().includes(busca) ||
+      (d.produto||'').toLowerCase().includes(busca) ||
+      (d.tipo_pedra||'').toLowerCase().includes(busca)
+    );
+    if (filtro === 'carroChefe') dados = dados.filter(d => _isCarroChefe(d));
+    if (filtro === 'criticos')   dados = dados.filter(d => {
+      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+      return (e === 0 && v > 0) || (e <= 2 && v >= 2);
+    });
+    if (filtro === 'fabricando') dados = dados.filter(d => Number(d.em_fabricacao) > 0);
+    const _statusPri = d => {
+      const e = Number(d.estoque), v = Number(d.vendidos_90d);
+      if (e === 0 && v > 0)  return 1;
+      if (e <= 2  && v >= 2) return 2;
+      if (_isCarroChefe(d))  return 3;
+      return 4;
+    };
+    if (_jmCatSortCol) {
+      dados = [...dados].sort((a, b) => {
+        if (_jmCatSortCol === '_status') return (_statusPri(a) - _statusPri(b)) * _jmCatSortDir;
+        const av = a[_jmCatSortCol] ?? '', bv = b[_jmCatSortCol] ?? '';
+        const an = Number(av), bn = Number(bv);
+        if (!isNaN(an) && !isNaN(bn) && av !== '' && bv !== '') return (an - bn) * _jmCatSortDir;
+        return String(av).localeCompare(String(bv), 'pt-BR') * _jmCatSortDir;
+      });
+    }
+    _jmCatFilteredData = dados;
+    const sc = col => _jmCatSortCol === col ? (_jmCatSortDir === 1 ? ' sort-asc' : ' sort-desc') : '';
+    if (thead) thead.innerHTML = `<tr>
+      <th class="sortable${sc('subtipo')}" onclick="jmSortCatBy('subtipo')">Categoria</th>
+      <th class="sortable right${sc('estoque')}" onclick="jmSortCatBy('estoque')">Estoque</th>
+      <th class="sortable right${sc('em_fabricacao')}" onclick="jmSortCatBy('em_fabricacao')">Em Fab.</th>
+      <th class="sortable${sc('vendidos_90d')}" style="min-width:130px" onclick="jmSortCatBy('vendidos_90d')">Vel. 90d</th>
+      <th class="sortable right${sc('vendidos_total')}" onclick="jmSortCatBy('vendidos_total')">Total Vend.</th>
+      <th class="sortable right${sc('ticket_medio')}" onclick="jmSortCatBy('ticket_medio')">Ticket Médio</th>
+      <th class="sortable right${sc('_status')}" onclick="jmSortCatBy('_status')">Status</th>
+    </tr>`;
+    if (!dados.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="fab-empty">Nenhum registro</div></td></tr>`;
+      return;
+    }
+    const max90 = Math.max(...dados.map(d => Number(d.vendidos_90d)), 1);
+    tbody.innerHTML = dados.map(d => {
+      const est = Number(d.estoque), fab = Number(d.em_fabricacao);
+      const v90 = Number(d.vendidos_90d), vtot = Number(d.vendidos_total);
+      const vel = Math.round((v90 / max90) * 100);
+      const subtitle = [d.produto, d.tipo_pedra].filter(Boolean).join(' · ');
+      let badge = '';
+      if (est === 0 && v90 > 0)      badge = '<span class="fab-status-badge ruptura">Ruptura</span>';
+      else if (est <= 2 && v90 >= 3) badge = '<span class="fab-status-badge critico">Crítico</span>';
+      else if (est <= 5 && v90 >= 5) badge = '<span class="fab-status-badge atencao">Atenção</span>';
+      else if (_isCarroChefe(d))     badge = '<span class="fab-status-badge destaque">★ Carro chefe</span>';
+      else                           badge = '<span class="fab-status-badge ok">OK</span>';
+      return `<tr>
+        <td>
+          <div style="font-weight:700;line-height:1.3">${d.subtipo}</div>
+          ${subtitle ? `<div style="font-size:11px;color:var(--fab-muted);margin-top:1px">${subtitle}</div>` : ''}
+        </td>
+        <td class="right" style="font-weight:700;color:${est===0?'var(--fab-red)':est<=3?'var(--fab-orange)':'var(--fab-accent)'}">
+          ${fmt.num(est)}</td>
+        <td class="right" style="color:${fab>0?'#f59e0b':'var(--fab-muted)'}">
+          ${fmt.num(fab)}</td>
+        <td><div class="fab-bar-wrap">
+          <div class="fab-bar-bg"><div class="fab-bar-fill vendidos" style="width:${vel}%"></div></div>
+          <span class="fab-num">${fmt.num(v90)}</span>
+        </div></td>
+        <td class="right" style="color:var(--fab-muted)">${fmt.num(vtot)}</td>
+        <td class="right" style="color:var(--fab-muted)">${d.ticket_medio?fmt.moeda(d.ticket_medio):'—'}</td>
+        <td class="right">${badge}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.jmFiltrarSubtipo = function(filtro, tabEl) {
+    _jmCatFiltro = filtro;
+    document.querySelectorAll('#jm-sec-producao .fab-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    renderJmCategoriaTabela(filtro);
+  };
+
+  window.jmSetCatBusca = function() { renderJmCategoriaTabela(_jmCatFiltro); };
+
+  window.jmExportCSV = function() {
+    const data = _jmFilteredData;
+    if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
+    const sec = _jmListaSec;
+    let rows, filename;
+    if (sec === 'vendas') {
+      filename = `jm_vendas_${_jmDateFrom||_todayStr()}_${_jmDateTo||_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DATA VENDA','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
+        (r.data_venda||'').slice(0,10),
+        r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
+      ]));
+    } else if (sec === 'producao') {
+      filename = `jm_em_fabricacao_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','DATA ENVIO','DIAS','PREÇO MÍN.','PREÇO LOJA']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        (r.data_envio_fabricacao||'').slice(0,10),
+        r.dias, _csvNum(r.preco_minimo), _csvNum(r.preco_loja)
+      ]));
+    } else {
+      filename = `jm_estoque_disponivel_${_todayStr()}.csv`;
+      rows = [['REF','PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','DESTINO','FABRICANTE','PESO (g)','CUSTO','VALOR TOTAL','DIAMANTES','CTS DIAM.','PEDRA COLORIDA','CTS PC']];
+      data.forEach(r => rows.push([
+        r.referencia, r.produto, r.subtipo, r.tipo_pedra||'', r.lapidacao||'',
+        r.destino||'', r.fabricante||'',
+        _csvNum(r.peso), _csvNum(r.custo_real), _csvNum(r.preco_cobrado),
+        r.diamantes||'', _csvNum(r.cts_diamantes), r.pedra_colorida||'', _csvNum(r.cts_pedra_colorida)
+      ]));
+    }
+    _csvDownload(filename, rows);
+  };
+
+  window.jmCatExportCSV = function() {
+    const data = _jmCatFilteredData;
+    if (!data || !data.length) { alert('Nenhum dado para exportar.'); return; }
+    const rows = [['PRODUTO','SUBTIPO','TIPO PEDRA','LAPIDAÇÃO','ESTOQUE','EM FAB.','VENDIDOS TOTAL','VENDIDOS 90D','TICKET MÉDIO','STATUS']];
+    data.forEach(r => {
+      const est = Number(r.estoque), v90 = Number(r.vendidos_90d);
+      let status;
+      if (est === 0 && v90 > 0)       status = 'Ruptura';
+      else if (est <= 2 && v90 >= 3)  status = 'Crítico';
+      else if (est <= 5 && v90 >= 5)  status = 'Atenção';
+      else if (_isCarroChefe(r))      status = 'Carro Chefe';
+      else                            status = 'OK';
+      rows.push([
+        r.produto||'', r.subtipo||'', r.tipo_pedra||'', r.lapidacao||'',
+        r.estoque, r.em_fabricacao, r.vendidos_total, r.vendidos_90d,
+        _csvNum(r.ticket_medio), status
+      ]);
+    });
+    _csvDownload(`jm_controle_categorias_${_todayStr()}.csv`, rows);
+  };
+
+  window.jmSortCatBy = function(col) {
+    if (_jmCatSortCol === col) _jmCatSortDir *= -1;
+    else { _jmCatSortCol = col; _jmCatSortDir = 1; }
+    renderJmCategoriaTabela(_jmCatFiltro);
+  };
+
+  async function jmLoad() {
+    const btn = document.getElementById("jm-btn-refresh");
+    btn.classList.add("spinning");
+    try {
+      const [resumo, fabricacao, categorias] = await Promise.all([
+        apiFetch("jm/resumo"),
+        apiFetch("jm/em-fabricacao"),
+        apiFetch("jm/estoque-categoria"),
+      ]);
+      renderJmResumo(resumo);
+      renderJmFabricacao(fabricacao);
+      loadJmLista(_jmCurrentSec);
+      _jmCategoriaDados = categorias;
+      _jmCatSortCol = null; _jmCatSortDir = 1; _jmCatFiltro = 'todos';
+      renderJmCategoriaTabela('todos');
+      document.getElementById("jm-last-update").textContent =
+        "Atualizado: " + new Date().toLocaleTimeString("pt-BR");
+    } catch (err) {
+      console.error("Fabricações JM — erro ao carregar:", err);
+      document.getElementById("jm-last-update").textContent = "⚠ Erro ao carregar dados";
+    } finally {
+      btn.classList.remove("spinning");
+    }
+  }
+
+  window.jmRefresh = jmLoad;
 
 
 </script>
