@@ -1788,12 +1788,12 @@ canvas.fab-canvas { width: 100% !important; }
           <div class="fab-kpi-sub">peças prontas p/ venda</div>
         </div>
       </div>
-      <div class="fab-kpi">
+      <div class="fab-kpi" onclick="loadJmLista('producao')" title="Ver peças em andamento" style="cursor:pointer">
         <div class="fab-kpi-icon" style="background:rgba(245,158,11,.15);color:#f59e0b"><i class="ti ti-hammer"></i></div>
         <div class="fab-kpi-body">
           <div class="fab-kpi-label">Em Fabricação</div>
           <div class="fab-kpi-value" id="jm-kpi-fabricacao" style="color:#f59e0b">—</div>
-          <div class="fab-kpi-sub">peças em andamento</div>
+          <div class="fab-kpi-sub">peças em andamento <i class="ti ti-chevron-right" style="font-size:10px;opacity:.5"></i></div>
         </div>
       </div>
       <div class="fab-kpi">
@@ -2984,8 +2984,9 @@ const ALL_PAGES = [
   {key:'dashboard', label:'Dashboard',          icon:'ti-chart-bar'},
   {key:'relatorios',label:'Relatórios',         icon:'ti-file-analytics'},
   {key:'metais',      label:'Controle de Metais', icon:'ti-weight'},
-  {key:'fabricacoes', label:'Fabricações JF',    icon:'ti-hammer'},
-  {key:'ia',          label:'IA de Reuniões',    icon:'ti-brain'},
+  {key:'fabricacoes',    label:'Fabricações JF', icon:'ti-hammer'},
+  {key:'fabricacoes-jm', label:'Fabricações JM', icon:'ti-hammer'},
+  {key:'ia',             label:'IA de Reuniões', icon:'ti-brain'},
 ];
 
 // Aplica permissões no menu lateral conforme perfil do usuário
