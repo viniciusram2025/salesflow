@@ -37,6 +37,16 @@ window._db   = db;
 window._auth = auth;
 window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy };
 
+// Fetch autenticado — injeta token Firebase em chamadas à API interna
+window.apiFetch = async function(url) {
+  const headers = {};
+  try {
+    const u = auth.currentUser;
+    if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
+  } catch(e) {}
+  return fetch(url, { headers });
+};
+
 // ── Login via Firebase Auth ───────────────────────────
 window._doFirebaseLogin = async function(email, pass){
   const err = document.getElementById('login-err');
@@ -2785,7 +2795,7 @@ function saveNewPassword() {
   if (newPass !== confirm) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display='block'; return; }
   btn.disabled = true;
   btn.textContent = 'Salvando…';
-  const user = firebase.auth().currentUser;
+  const user = window._auth && window._auth.currentUser;
   if (!user) { errEl.textContent = 'Sessão expirada. Faça login novamente.'; errEl.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Salvar'; return; }
   user.updatePassword(newPass)
     .then(() => { okEl.style.display='block'; btn.innerHTML='<i class="ti ti-check"></i> Salvar'; setTimeout(() => closeModal('modal-change-password'), 1800); })
@@ -4893,6 +4903,12 @@ window.addEventListener('load', () => {
   let _chartPedras  = null;
   let _autoRefresh  = null;
 
+  async function apiGet(endpoint) {
+    const r = await window.apiFetch(`${API_BASE}/${endpoint}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.json();
+  }
+
   // ── UTILITÁRIOS ─────────────────────────────────────────────
   const fmt = {
     num:     (n) => Number(n || 0).toLocaleString("pt-BR"),
@@ -4915,13 +4931,6 @@ window.addEventListener('load', () => {
     if (d <= 30) return "mid";
     if (d <= 60) return "high";
     return "danger";
-  }
-
-  // ── FETCH ────────────────────────────────────────────────────
-  async function apiFetch(endpoint) {
-    const r = await fetch(`${API_BASE}/${endpoint}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
   }
 
   // ── RENDER RESUMO ────────────────────────────────────────────
@@ -5260,7 +5269,7 @@ window.addEventListener('load', () => {
     const thead = document.getElementById('fab-lista-thead');
     tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
     try {
-      const r = await fetch(`${API_BASE}/${cfg.url}`);
+      const r = await apiFetch(`${API_BASE}/${cfg.url}`);
       const data = await r.json();
       document.getElementById('fab-lista-count').textContent = data.length;
       buildFabFiltros(data, sec);
@@ -5870,9 +5879,9 @@ window.addEventListener('load', () => {
 
     try {
       const [resumo, fabricacao, categorias] = await Promise.all([
-        apiFetch("resumo"),
-        apiFetch("em-fabricacao"),
-        apiFetch("estoque-categoria"),
+        apiGet("resumo"),
+        apiGet("em-fabricacao"),
+        apiGet("estoque-categoria"),
       ]);
 
       renderResumo(resumo);
@@ -6589,7 +6598,7 @@ window.addEventListener('load', () => {
     const btn = document.getElementById("jm-btn-refresh");
     btn.classList.add("spinning");
     try {
-      const resumo = await apiFetch("jm/resumo");
+      const resumo = await apiGet("jm/resumo");
       renderJmResumo(resumo);
       loadJmLista(_jmCurrentSec);
       document.getElementById("jm-last-update").textContent =
@@ -6781,7 +6790,7 @@ window.addEventListener('load', () => {
     if (tbody) tbody.innerHTML = '<tr><td colspan="10"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
     try {
       const API = 'https://goldtech-fabricacoes-api.onrender.com';
-      const r = await fetch(`${API}/manutencao`);
+      const r = await apiFetch(`${API}/manutencao`);
       const data = await r.json();
       const kpi = document.getElementById('manut-kpi-total');
       if (kpi) kpi.textContent = data.length;
@@ -6835,13 +6844,6 @@ window.addEventListener('load', () => {
     if (d <= 30) return "mid";
     if (d <= 60) return "high";
     return "danger";
-  }
-
-  // ── FETCH ────────────────────────────────────────────────────
-  async function apiFetch(endpoint) {
-    const r = await fetch(`${API_BASE}/${endpoint}`);
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
   }
 
   // ── RENDER RESUMO ────────────────────────────────────────────
@@ -7075,12 +7077,12 @@ window.addEventListener('load', () => {
 
     try {
       const [resumo, alertas, fabricacao, subtipo, vendasMes, vendasPedra] = await Promise.all([
-        apiFetch("resumo"),
-        apiFetch("alertas"),
-        apiFetch("em-fabricacao"),
-        apiFetch("estoque-subtipo"),
-        apiFetch("vendas-mes"),
-        apiFetch("vendas-pedra"),
+        apiGet("resumo"),
+        apiGet("alertas"),
+        apiGet("em-fabricacao"),
+        apiGet("estoque-subtipo"),
+        apiGet("vendas-mes"),
+        apiGet("vendas-pedra"),
       ]);
 
       renderResumo(resumo);
