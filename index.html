@@ -179,6 +179,13 @@ window._initFirebaseListeners = function(){
     const pg = document.getElementById('page-usuarios');
     if(pg && pg.classList.contains('active')) renderUsuariosPage();
   });
+
+  // SOLICITAÇÕES DE EXCLUSÃO DE TAREFAS
+  onSnapshot(collection(db,'task_delete_requests'), snap => {
+    DELETE_REQUESTS = snap.docs.map(d => ({docId: d.id, ...d.data()}));
+    renderDeleteRequests();
+    applyFilter();
+  });
 };
 </script>
 <style>
@@ -366,6 +373,8 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .task-item{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid var(--c-border);transition:background .1s;}
 .task-item:last-child{border-bottom:none;}
 .task-item:hover{background:rgba(255,255,255,.01);margin:0 -20px;padding:13px 20px;}
+.task-pending-delete{opacity:.65;}
+.task-title-faded{text-decoration:line-through;opacity:.6;}
 .task-check{width:18px;height:18px;border:1.5px solid var(--c-border2);border-radius:5px;flex-shrink:0;margin-top:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
 .task-check:hover{border-color:var(--c-green);}
 .task-check.done{background:var(--c-green);border-color:var(--c-green);}
@@ -1639,6 +1648,9 @@ canvas.fab-canvas { width: 100% !important; }
           <div class="chip" onclick="filterTasks('concluidas',this)">Concluídas</div>
         </div>
 
+        <!-- Painel de solicitações de exclusão — só aparece para admins com pedidos pendentes -->
+        <div id="delete-requests-panel" style="display:none;margin-bottom:16px;"></div>
+
         <div class="card" id="task-list">
           <!-- tasks rendered by JS -->
         </div>
@@ -2648,22 +2660,29 @@ canvas.fab-canvas { width: 100% !important; }
   </div>
 </div>
 
-<!-- ══════ MODAL: SENHA PARA EXCLUIR ══════ -->
-<div class="modal-overlay" id="modal-senha">
-  <div class="modal" style="max-width:360px;">
+<!-- ══════ MODAL: EXCLUIR TAREFA ══════ -->
+<div class="modal-overlay" id="modal-delete">
+  <div class="modal" style="max-width:400px;">
     <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-lock" style="color:var(--c-red);"></i> Confirmação de exclusão</div>
-      <button class="modal-close" onclick="closeModal('modal-senha')">&times;</button>
+      <div class="modal-title"><i class="ti ti-trash" style="color:var(--c-red);"></i> <span id="modal-delete-title">Excluir Tarefa</span></div>
+      <button class="modal-close" onclick="closeModal('modal-delete')">&times;</button>
     </div>
-    <div style="font-size:13px;color:var(--c-muted);margin-bottom:16px;">Esta ação é irreversível. Digite a senha master para confirmar a exclusão.</div>
-    <div class="form-group">
-      <label class="form-label">Senha master</label>
-      <input type="password" id="senha-input" placeholder="••••••" onkeydown="if(event.key==='Enter')confirmDelete()"/>
+    <!-- Seção admin: exclusão direta -->
+    <div id="modal-delete-admin">
+      <div style="font-size:13px;color:var(--c-muted);margin-bottom:20px;">Esta ação é irreversível. A tarefa será excluída permanentemente.</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
+        <button class="btn" style="background:var(--c-red);" onclick="adminDeleteTask()"><i class="ti ti-trash"></i> Excluir definitivamente</button>
+      </div>
     </div>
-    <div id="senha-erro" style="font-size:12px;color:var(--c-red);display:none;margin-bottom:8px;"><i class="ti ti-alert-circle"></i> Senha incorreta.</div>
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn-ghost" onclick="closeModal('modal-senha')">Cancelar</button>
-      <button class="btn" style="background:var(--c-red);" onclick="confirmDelete()"><i class="ti ti-trash"></i>Excluir definitivamente</button>
+    <!-- Seção não-admin: solicitação de exclusão -->
+    <div id="modal-delete-request">
+      <div style="font-size:13px;color:var(--c-muted);margin-bottom:12px;">Você não pode excluir tarefas diretamente. A solicitação será enviada para um administrador aprovar.</div>
+      <div id="modal-delete-req-info" style="font-size:12px;background:var(--c-surface2);border-radius:8px;padding:10px 14px;margin-bottom:16px;border:1px solid var(--c-border2);line-height:1.6;"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeModal('modal-delete')">Cancelar</button>
+        <button class="btn" style="background:var(--c-amber);color:#111;" onclick="requestDeleteTask()"><i class="ti ti-send"></i> Enviar solicitação</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2950,7 +2969,8 @@ function initials(name){
 }
 
 // ─── TASKS — começa vazio ─────────────────────────────
-let TASKS = [];
+let TASKS          = [];
+let DELETE_REQUESTS = [];
 
 // Kanban base — também zerado
 const KB_TASKS_BASE = [];
@@ -3054,23 +3074,26 @@ function renderTasks(list){
   }
 
   updateKPIs(list);
+  const pendingDeletes = new Set(DELETE_REQUESTS.map(r => String(r.taskId)));
   el.innerHTML = list.map(t=>{
     const p = pm[t.person]||{name:t.person||'—',bg:'rgba(107,114,128,.2)',color:'var(--c-muted)'};
     const ini = t.person ? initials(p.name) : '?';
+    const isPendingDelete = pendingDeletes.has(String(t.id));
     return `
-    <div class="task-item" id="task-row-${t.id}">
+    <div class="task-item${isPendingDelete?' task-pending-delete':''}" id="task-row-${t.id}">
       <div class="task-check ${t.status==='done'?'done':''}" onclick="toggleTask(${t.id})"></div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:1px;">
         <div class="av" style="background:${p.bg};color:${p.color};font-size:9px;" title="${p.name}">${ini}</div>
       </div>
       <div style="flex:1;">
-        <div class="task-title${t.status==='done'?' done':''}">${t.title}</div>
+        <div class="task-title${t.status==='done'?' done':''}${isPendingDelete?' task-title-faded':''}">${t.title}</div>
         ${t.desc ? `<div style="font-size:12px;color:var(--c-muted);margin-top:3px;line-height:1.4;">${t.desc}</div>` : ''}
         <div class="task-meta">
           <span class="tag ${t.priority}">${cap(t.priority)}</span>
           <span class="meta-text"><i class="ti ti-calendar" style="font-size:11px;"></i> ${t.due || 'Sem prazo'}</span>
           ${t.late>0?`<span class="meta-text" style="color:var(--c-red);"><i class="ti ti-clock" style="font-size:11px;"></i> ${t.late}d atraso</span>`:''}
           ${statusLabel(t.status,t.late)}
+          ${isPendingDelete?`<span class="tag" style="background:rgba(240,82,82,.15);color:var(--c-red);border:1px solid rgba(240,82,82,.3);"><i class="ti ti-clock-pause" style="font-size:10px;"></i> Exclusão pendente</span>`:''}
           <span class="meta-text" style="color:var(--c-muted2);">${p.name}</span>
         </div>
       </div>
@@ -3399,7 +3422,6 @@ function openEditTask(id){
     inp.disabled = false;
     inp.style.opacity = '1';
   }
-  document.getElementById('senha-erro').style.display='none';
   document.getElementById('edit-desc').value = t.desc || '';
   openModal('modal-edit');
 }
@@ -3426,28 +3448,116 @@ function saveEditTask(){
   toast('Tarefa atualizada!');
 }
 
-// ─── EXCLUIR COM SENHA ────────────────────────────────
-const MASTER_PASS = '105055';
+// ─── EXCLUSÃO DE TAREFAS ──────────────────────────────
 
 function promptDeleteTask(){
-  document.getElementById('senha-input').value='';
-  document.getElementById('senha-erro').style.display='none';
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  const t = TASKS.find(x => x.id === editingId);
   closeModal('modal-edit');
-  openModal('modal-senha');
-}
 
-function confirmDelete(){
-  const v = document.getElementById('senha-input').value;
-  if(v !== MASTER_PASS){
-    document.getElementById('senha-erro').style.display='block';
-    shake('senha-input');
+  if(isAdmin){
+    document.getElementById('modal-delete-admin').style.display   = '';
+    document.getElementById('modal-delete-request').style.display = 'none';
+    openModal('modal-delete');
     return;
   }
+
+  // Não-admin: verifica se já existe solicitação pendente
+  const existing = DELETE_REQUESTS.find(r => String(r.taskId) === String(editingId));
+  if(existing){
+    toast('Já existe uma solicitação de exclusão pendente para esta tarefa.', 'amber');
+    return;
+  }
+
+  document.getElementById('modal-delete-admin').style.display   = 'none';
+  document.getElementById('modal-delete-request').style.display = '';
+  const title = t ? t.title : '—';
+  document.getElementById('modal-delete-req-info').innerHTML =
+    `<strong>Tarefa:</strong> ${title}<br><span style="color:var(--c-muted);">A exclusão só ocorrerá após aprovação de um administrador.</span>`;
+  openModal('modal-delete');
+}
+
+// Admin exclui diretamente
+function adminDeleteTask(){
   const { doc, deleteDoc } = window._fbModules;
   deleteDoc(doc(window._db,'tasks', String(editingId)));
-  closeModal('modal-senha');
+  // Remove também qualquer solicitação pendente para esta tarefa
+  const req = DELETE_REQUESTS.find(r => String(r.taskId) === String(editingId));
+  if(req) deleteDoc(doc(window._db,'task_delete_requests', req.docId));
+  closeModal('modal-delete');
   editingId = null;
   toast('Tarefa excluída.', 'red');
+}
+
+// Não-admin envia solicitação de exclusão
+function requestDeleteTask(){
+  const t = TASKS.find(x => x.id === editingId);
+  if(!t) return;
+  const { doc, setDoc } = window._fbModules;
+  setDoc(doc(window._db,'task_delete_requests', 'dr_' + String(editingId)), {
+    taskId:          String(editingId),
+    taskTitle:       t.title,
+    requestedBy:     currentUser.personKey,
+    requestedByName: currentUser.name || currentUser.personKey,
+    requestedAt:     Date.now()
+  });
+  closeModal('modal-delete');
+  editingId = null;
+  toast('Solicitação enviada. Um administrador precisará aprovar a exclusão.', 'amber');
+}
+
+// Admin aprova solicitação — exclui a tarefa e o pedido
+function approveDeleteRequest(docId, taskId){
+  const { doc, deleteDoc } = window._fbModules;
+  deleteDoc(doc(window._db,'tasks', String(taskId)));
+  deleteDoc(doc(window._db,'task_delete_requests', docId));
+  toast('Tarefa excluída.', 'red');
+}
+
+// Admin rejeita solicitação — remove apenas o pedido
+function rejectDeleteRequest(docId){
+  const { doc, deleteDoc } = window._fbModules;
+  deleteDoc(doc(window._db,'task_delete_requests', docId));
+  toast('Solicitação rejeitada.', 'amber');
+}
+
+// Renderiza o painel de solicitações pendentes (só para admins)
+function renderDeleteRequests(){
+  const panel = document.getElementById('delete-requests-panel');
+  if(!panel) return;
+  const isAdmin = currentUser && currentUser.role === 'admin';
+  if(!isAdmin || !DELETE_REQUESTS.length){
+    panel.style.display = 'none';
+    return;
+  }
+  panel.style.display = '';
+  panel.innerHTML = `
+    <div class="card" style="padding:0;border-left:3px solid var(--c-red);">
+      <div style="padding:12px 18px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:8px;">
+        <i class="ti ti-trash" style="color:var(--c-red);font-size:14px;"></i>
+        <span style="font-weight:600;font-size:13px;">Solicitações de exclusão</span>
+        <span style="background:var(--c-red);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">${DELETE_REQUESTS.length}</span>
+      </div>
+      <div style="padding:4px 0;">
+        ${DELETE_REQUESTS.map(r => {
+          const dt = r.requestedAt ? new Date(r.requestedAt).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+          return `<div style="display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--c-border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.taskTitle||'Sem título'}</div>
+              <div style="font-size:11px;color:var(--c-muted);margin-top:2px;">
+                Solicitado por <strong>${r.requestedByName||r.requestedBy||'—'}</strong> · ${dt}
+              </div>
+            </div>
+            <button class="btn-ghost btn-sm" style="flex-shrink:0;border-color:var(--c-green);color:var(--c-green);" onclick="approveDeleteRequest('${r.docId}','${r.taskId}')">
+              <i class="ti ti-check"></i> Aprovar
+            </button>
+            <button class="btn-ghost btn-sm" style="flex-shrink:0;" onclick="rejectDeleteRequest('${r.docId}')">
+              <i class="ti ti-x"></i> Rejeitar
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
 }
 
 // ─── GERENCIAR COLABORADORES ──────────────────────────
