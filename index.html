@@ -221,8 +221,8 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .user-name{font-size:13px;font-weight:500;white-space:nowrap;}
 .user-role{font-size:10px;color:var(--c-muted);white-space:nowrap;}
 /* ── Sidebar collapse ── */
-.sidebar-collapse-btn{position:absolute;top:24px;right:-11px;width:22px;height:22px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;color:var(--c-muted);font-size:12px;transition:all .15s;}
-.sidebar-collapse-btn:hover{background:var(--c-accent-dim);color:var(--c-accent);}
+.sidebar-collapse-btn{position:absolute;top:28px;right:-13px;width:26px;height:26px;background:var(--c-surface);border:1.5px solid var(--c-border2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;color:var(--c-text);font-size:13px;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+.sidebar-collapse-btn:hover{background:var(--c-accent);border-color:var(--c-accent);color:#fff;box-shadow:0 2px 12px rgba(79,110,247,.45);}
 .sidebar.collapsed{width:64px;}
 .sidebar.collapsed .logo-text,.sidebar.collapsed .logo-sub{display:none;}
 .sidebar.collapsed .nav-section{opacity:0;pointer-events:none;height:0;margin:0;padding:0;}
@@ -369,11 +369,11 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .alert-desc{font-size:11px;color:var(--c-muted);margin-top:2px;}
 
 /* ── FORMS ── */
-input[type=text],input[type=date],input[type=email],select,textarea{
+input[type=text],input[type=date],input[type=email],input[type=password],select,textarea{
   background:var(--c-surface2);border:1px solid var(--c-border2);border-radius:var(--r);
   padding:9px 12px;color:var(--c-text);font-family:var(--font);font-size:13px;
-  outline:none;transition:border .2s;width:100%;}
-input[type=text]:focus,input[type=date]:focus,select:focus,textarea:focus{border-color:rgba(79,110,247,.5);}
+  outline:none;transition:border .2s;width:100%;box-sizing:border-box;}
+input[type=text]:focus,input[type=date]:focus,input[type=email]:focus,input[type=password]:focus,select:focus,textarea:focus{border-color:rgba(79,110,247,.5);box-shadow:0 0 0 3px rgba(79,110,247,.08);}
 textarea{resize:vertical;min-height:90px;}
 select option{background:var(--c-bg);}
 .form-label{font-size:12px;color:var(--c-muted);font-weight:500;margin-bottom:5px;display:block;}
