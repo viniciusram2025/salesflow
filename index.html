@@ -7126,13 +7126,14 @@ window.addEventListener('load', () => {
     btn.classList.add("spinning");
 
     try {
-      const [resumo, alertas, fabricacao, subtipo, vendasMes, vendasPedra] = await Promise.all([
+      const [resumo, alertas, fabricacao, subtipo, vendasMes, vendasPedra, categorias] = await Promise.all([
         apiGet("resumo"),
         apiGet("alertas"),
         apiGet("em-fabricacao"),
         apiGet("estoque-subtipo"),
         apiGet("vendas-mes"),
         apiGet("vendas-pedra"),
+        apiGet("estoque-categoria"),
       ]);
 
       renderResumo(resumo);
@@ -7144,6 +7145,11 @@ window.addEventListener('load', () => {
 
       renderChartVendas(vendasMes);
       renderChartPedras(vendasPedra);
+
+      // Preenche aba Controle (Categorias de Produto)
+      _categoriaDados = categorias;
+      _catSortCol = null; _catSortDir = 1; _catFiltro = "todos";
+      if (typeof renderCategoriaTabela === "function") renderCategoriaTabela("todos");
 
       // Preenche a tabela compartilhada (fab-lista-tbody) que fica na página HTML
       if (typeof loadFabLista === "function") loadFabLista(_fabCurrentSec || "resumo");
