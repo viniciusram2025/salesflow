@@ -2240,9 +2240,9 @@ canvas.fab-canvas { width: 100% !important; }
       <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(34,197,94,.15);color:var(--c-green)"><i class="ti ti-shopping-cart"></i></div>
         <div class="fab-kpi-body">
-          <div class="fab-kpi-label">Vendidos Total</div>
+          <div class="fab-kpi-label">Vendidos Mês</div>
           <div class="fab-kpi-value" id="jm-kpi-vendidos" style="color:var(--c-green)">—</div>
-          <div class="fab-kpi-sub" id="jm-kpi-vendidos-mes">— vendidos este mês</div>
+          <div class="fab-kpi-sub" id="jm-kpi-vendidos-mes">mês atual</div>
         </div>
       </div>
       <div class="fab-kpi">
@@ -5997,8 +5997,8 @@ window.addEventListener('load', () => {
   function renderJmResumo(d) {
     document.getElementById("jm-kpi-estoque").textContent     = fmt.num(d.estoque);
     document.getElementById("jm-kpi-fabricacao").textContent  = fmt.num(d.em_fabricacao);
-    document.getElementById("jm-kpi-vendidos").textContent    = fmt.num(d.vendidos);
-    document.getElementById("jm-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
+    document.getElementById("jm-kpi-vendidos").textContent    = fmt.num(d.vendidos_mes);
+    document.getElementById("jm-kpi-vendidos-mes").textContent = "mês atual";
     document.getElementById("jm-kpi-ticket").textContent      = fmt.moeda(d.ticket_medio);
     document.getElementById("jm-kpi-faturamento").textContent = fmt.moeda(d.faturamento_mes);
   }
