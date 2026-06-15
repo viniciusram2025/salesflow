@@ -44,13 +44,17 @@ window.apiFetch = async function(url) {
     const u = auth && auth.currentUser;
     if (u) {
       const token = await u.getIdToken();
-      headers['Authorization'] = 'Bearer ' + token;
-      console.log('[apiFetch] token obtido para user:', u.email, '| URL:', url);
+      if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+        console.log('[apiFetch] token obtido para user:', u.email, '| URL:', url);
+      } else {
+        console.warn('[apiFetch] getIdToken retornou vazio — usando apenas cookie | URL:', url);
+      }
     } else {
-      console.warn('[apiFetch] sem usuário autenticado no Firebase | URL:', url);
+      console.warn('[apiFetch] sem usuário Firebase — usando apenas cookie | URL:', url);
     }
   } catch(e) {
-    console.error('[apiFetch] erro ao obter token:', e.message, '| URL:', url);
+    console.error('[apiFetch] erro ao obter token, usando apenas cookie:', e.message, '| URL:', url);
   }
   return fetch(url, { headers, credentials: 'include' });
 };
@@ -6260,7 +6264,7 @@ window.addEventListener('load', () => {
     const tbody = document.getElementById('jm-lista-tbody');
     tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div></div></td></tr>';
     try {
-      const r    = await fetch(`${API_BASE}/${cfg.url}`);
+      const r    = await window.apiFetch(`${API_BASE}/${cfg.url}`);
       const data = await r.json();
       document.getElementById('jm-lista-count').textContent = data.length;
       buildJmFiltros(data, sec);
