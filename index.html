@@ -31,7 +31,6 @@ const firebaseConfig = {
 const fireApp = initializeApp(firebaseConfig);
 const auth    = getAuth(fireApp);
 const db      = getFirestore(fireApp);
-
 // Expõe apenas o necessário para os scripts não-module (Firestore real-time)
 window._db        = db;
 window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy };
@@ -43,8 +42,16 @@ window.apiFetch = async function(url) {
   const headers = {};
   try {
     const u = auth && auth.currentUser;
-    if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
-  } catch(e) {}
+    if (u) {
+      const token = await u.getIdToken();
+      headers['Authorization'] = 'Bearer ' + token;
+      console.log('[apiFetch] token obtido para user:', u.email, '| URL:', url);
+    } else {
+      console.warn('[apiFetch] sem usuário autenticado no Firebase | URL:', url);
+    }
+  } catch(e) {
+    console.error('[apiFetch] erro ao obter token:', e.message, '| URL:', url);
+  }
   return fetch(url, { headers, credentials: 'include' });
 };
 
@@ -56,20 +63,24 @@ window._doFirebaseLogin = async function(email, pass){
   btn.disabled    = true;
   try {
     // Backend autentica, cria session cookie HttpOnly e devolve custom token
+    console.log('[login] Iniciando POST /api/login para:', email);
     const resp = await fetch(`${window._API}/api/login`, {
       method:      'POST',
       headers:     { 'Content-Type': 'application/json' },
       body:        JSON.stringify({ email, password: pass }),
       credentials: 'include',
     });
+    console.log('[login] Resposta /api/login — status:', resp.status, resp.ok ? 'OK' : 'ERRO');
     if (!resp.ok) {
       const data = await resp.json();
       throw new Error(data.error || 'Credenciais inválidas');
     }
     const { customToken } = await resp.json();
+    console.log('[login] customToken recebido:', !!customToken);
 
     // Usa custom token só para autenticar o SDK do Firestore (listeners em tempo real)
     await signInWithCustomToken(auth, customToken);
+    console.log('[login] signInWithCustomToken OK — user:', auth.currentUser?.email);
 
     // Busca perfil no Firestore
     const snap = await getDoc(doc(db, 'usuarios', email));
@@ -6859,29 +6870,11 @@ window.addEventListener('load', () => {
 <script>
 // @ts-nocheck
 
-  // ── CONFIGURAÇÃO ────────────────────────────────────────────
-  const API_BASE = "https://goldtech-fabricacoes-api.onrender.com";
-
-  let _subtipoDados = [];
-  let _chartVendas  = null;
-  let _chartPedras  = null;
-  let _autoRefresh  = null;
-
-  // ── UTILITÁRIOS ─────────────────────────────────────────────
-  const fmt = {
-    num:     (n) => Number(n || 0).toLocaleString("pt-BR"),
-    moeda:   (n) => Number(n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }),
-    moedaK:  (n) => {
-      const v = Number(n || 0);
-      return v >= 1000 ? "R$" + (v / 1000).toFixed(0) + "k" : fmt.moeda(v);
-    },
-    data:    (d) => d ? new Date(d).toLocaleDateString("pt-BR") : "—",
-    mes:     (s) => {
-      if (!s) return "—";
-      const [y, m] = s.split("-");
-      return new Date(y, m - 1).toLocaleDateString("pt-BR", { month: "short", year: "2-digit" });
-    },
-  };
+  // ── ESTADO LOCAL ────────────────────────────────────────────
+  let _subtipoDados   = [];
+  let _jfChartVendas  = null;
+  let _jfChartPedras  = null;
+  let _jfAutoRefresh  = null;
 
   function diasClass(d) {
     if (d <= 15) return "low";
@@ -7012,9 +7005,9 @@ window.addEventListener('load', () => {
   // ── RENDER GRÁFICO VENDAS MÊS ────────────────────────────────
   function renderChartVendas(dados) {
     const ctx = document.getElementById("fab-chart-vendas").getContext("2d");
-    if (_chartVendas) _chartVendas.destroy();
+    if (_jfChartVendas) _jfChartVendas.destroy();
 
-    _chartVendas = new Chart(ctx, {
+    _jfChartVendas = new Chart(ctx, {
       type: "bar",
       data: {
         labels: dados.map(d => fmt.mes(d.mes)),
@@ -7077,14 +7070,14 @@ window.addEventListener('load', () => {
   // ── RENDER GRÁFICO PEDRAS ────────────────────────────────────
   function renderChartPedras(dados) {
     const ctx = document.getElementById("fab-chart-pedras").getContext("2d");
-    if (_chartPedras) _chartPedras.destroy();
+    if (_jfChartPedras) _jfChartPedras.destroy();
 
     const cores = [
       "#4f6ef7","#22c55e","#f59e0b","#ef4444","#a855f7",
       "#06b6d4","#f97316","#ec4899","#84cc16","#14b8a6",
     ];
 
-    _chartPedras = new Chart(ctx, {
+    _jfChartPedras = new Chart(ctx, {
       type: "bar",
       data: {
         labels: dados.map(d => d.tipo_pedra),
@@ -7155,8 +7148,8 @@ window.addEventListener('load', () => {
 
   // ── AUTO-REFRESH A CADA 60s ──────────────────────────────────
   function fabStartAutoRefresh() {
-    if (_autoRefresh) clearInterval(_autoRefresh);
-    _autoRefresh = setInterval(fabLoad, 60_000);
+    if (_jfAutoRefresh) clearInterval(_jfAutoRefresh);
+    _jfAutoRefresh = setInterval(fabLoad, 60_000);
   }
 
   // ── INICIALIZAR QUANDO NAVEGAR PARA FABRICAÇÕES ──────────────
@@ -7169,7 +7162,7 @@ window.addEventListener('load', () => {
         fabLoad();
         fabStartAutoRefresh();
       } else {
-        if (_autoRefresh) clearInterval(_autoRefresh);
+        if (_jfAutoRefresh) clearInterval(_jfAutoRefresh);
       }
     };
   } else {
