@@ -3014,10 +3014,13 @@ function statusLabel(s,late){
 function buildPersonOptions(selectId, selectedKey){
   const sel = document.getElementById(selectId);
   if(!sel) return;
-  const people = getPeople();
+  let people = getPeople();
   if(!people.length){
     sel.innerHTML='<option value="">— Nenhum colaborador —</option>';
     return;
+  }
+  if(currentUser && currentUser.role !== 'admin'){
+    people = people.filter(p => p.key === currentUser.personKey);
   }
   sel.innerHTML = people.map(p=>
     `<option value="${p.key}" ${p.key===selectedKey?'selected':''}>${p.name}</option>`
@@ -3108,9 +3111,14 @@ function applyFilter(){
   let list = [...TASKS];
 
   // Não-admin vê apenas suas próprias tarefas
-  if(currentUser && currentUser.role !== 'admin'){
+  const isAdminUser = currentUser && currentUser.role === 'admin';
+  if(!isAdminUser && currentUser){
     list = list.filter(t => t.person === currentUser.personKey);
   }
+
+  // Esconde filtro de responsável para não-admins (só admin gerencia tarefas de outros)
+  const fpWrap = document.getElementById('filter-person')?.parentElement;
+  if(fpWrap) fpWrap.style.display = isAdminUser ? '' : 'none';
 
   // Filtro por chip de data
   const _fToday = new Date(); _fToday.setHours(0,0,0,0);
@@ -3325,7 +3333,8 @@ function openNewTask(){
     openPessoas();
     return;
   }
-  buildPersonOptions('new-person', people[0].key);
+  const defaultPerson = (currentUser && currentUser.personKey) ? currentUser.personKey : people[0].key;
+  buildPersonOptions('new-person', defaultPerson);
   document.getElementById('new-title').value   = '';
   document.getElementById('new-desc').value    = '';
   document.getElementById('new-date').value    = todayISO();
@@ -3344,10 +3353,13 @@ function saveNewTask(){
   const dateVal = document.getElementById('new-date').value;
   if(!noDate && !dateVal){ shake('new-date'); toast('Selecione um prazo ou marque "Sem prazo".','amber'); return; }
   const due = noDate ? 'Sem prazo' : fmtDate(dateVal);
+  const assignedPerson = (currentUser && currentUser.role !== 'admin')
+    ? currentUser.personKey
+    : document.getElementById('new-person').value;
   const newTask = {
     id: Date.now(),
     title,
-    person:    document.getElementById('new-person').value,
+    person:    assignedPerson,
     priority:  document.getElementById('new-prio').value,
     status:    document.getElementById('new-status').value,
     due,
@@ -3401,7 +3413,9 @@ function saveEditTask(){
   const dateVal = document.getElementById('edit-due').value;
   if(!noDate && !dateVal){ shake('edit-due'); toast('Selecione um prazo ou marque "Sem prazo".','amber'); return; }
   t.title    = title;
-  t.person   = document.getElementById('edit-person').value;
+  t.person   = (currentUser && currentUser.role !== 'admin')
+    ? currentUser.personKey
+    : document.getElementById('edit-person').value;
   t.priority = document.getElementById('edit-prio').value;
   t.status   = document.getElementById('edit-status').value;
   t.due      = noDate ? 'Sem prazo' : fmtDate(dateVal);
