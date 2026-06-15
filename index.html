@@ -6900,7 +6900,9 @@ window.addEventListener('load', () => {
   // ── RENDER ALERTAS ───────────────────────────────────────────
   function renderAlertas(lista) {
     const el = document.getElementById("fab-alertas-lista");
-    document.getElementById("fab-badge-alertas").textContent = lista.length;
+    if (!el) return;
+    const badge = document.getElementById("fab-badge-alertas");
+    if (badge) badge.textContent = lista.length;
 
     if (!lista.length) {
       el.innerHTML = '<div class="fab-empty">✅ Nenhum alerta no momento</div>';
@@ -6924,7 +6926,9 @@ window.addEventListener('load', () => {
   // ── RENDER EM FABRICAÇÃO ─────────────────────────────────────
   function renderFabricacao(lista) {
     const el = document.getElementById("fab-fab-lista");
-    document.getElementById("fab-badge-fab").textContent = lista.length;
+    if (!el) return;
+    const badge = document.getElementById("fab-badge-fab");
+    if (badge) badge.textContent = lista.length;
 
     if (!lista.length) {
       el.innerHTML = '<div class="fab-empty">Nenhuma peça em fabricação</div>';
@@ -6946,6 +6950,7 @@ window.addEventListener('load', () => {
   // ── RENDER SUBTIPO TABLE ──────────────────────────────────────
   function renderSubtipoTabela(filtro = "todos") {
     const tbody = document.getElementById("fab-subtipo-tbody");
+    if (!tbody) return;
     let dados = [..._subtipoDados].sort((a, b) => Number(b.vendidos) - Number(a.vendidos));
 
     if (filtro === "criticos") dados = dados.filter(d => Number(d.estoque) <= 3 && Number(d.vendidos) > 0);
@@ -7008,7 +7013,9 @@ window.addEventListener('load', () => {
 
   // ── RENDER GRÁFICO VENDAS MÊS ────────────────────────────────
   function renderChartVendas(dados) {
-    const ctx = document.getElementById("fab-chart-vendas").getContext("2d");
+    const canvas = document.getElementById("fab-chart-vendas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     if (_jfChartVendas) _jfChartVendas.destroy();
 
     _jfChartVendas = new Chart(ctx, {
@@ -7073,7 +7080,9 @@ window.addEventListener('load', () => {
 
   // ── RENDER GRÁFICO PEDRAS ────────────────────────────────────
   function renderChartPedras(dados) {
-    const ctx = document.getElementById("fab-chart-pedras").getContext("2d");
+    const canvas = document.getElementById("fab-chart-pedras");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     if (_jfChartPedras) _jfChartPedras.destroy();
 
     const cores = [
@@ -7135,6 +7144,9 @@ window.addEventListener('load', () => {
 
       renderChartVendas(vendasMes);
       renderChartPedras(vendasPedra);
+
+      // Preenche a tabela compartilhada (fab-lista-tbody) que fica na página HTML
+      if (typeof loadFabLista === "function") loadFabLista(_fabCurrentSec || "resumo");
 
       document.getElementById("fab-last-update").textContent =
         "Atualizado: " + new Date().toLocaleTimeString("pt-BR");
