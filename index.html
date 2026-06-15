@@ -229,6 +229,14 @@ body.light{
   --c-accent-dim:rgba(79,110,247,.12);
   --c-purple-dim:rgba(124,58,237,.12);
   /* fab — light overrides */
+  --fab-bg:        var(--c-bg);
+  --fab-surface:   var(--c-surface);
+  --fab-border:    var(--c-border);
+  --fab-border2:   var(--c-border2);
+  --fab-text:      var(--c-text);
+  --fab-muted:     var(--c-muted);
+  --fab-accent:    var(--c-accent);
+  --fab-purple:    var(--c-purple);
   --fab-green:     var(--c-green);
   --fab-yellow:    var(--c-amber);
   --fab-red:       var(--c-red);
@@ -1059,6 +1067,20 @@ body.light .fab-status-badge.critico { color:#b45309; background:rgba(180,83,9,.
 body.light .fab-status-badge.atencao { color:#92400e; background:rgba(146,64,14,.10); border-color:rgba(146,64,14,.25); }
 body.light .fab-status-badge.ok      { color:#15803d; background:rgba(21,128,61,.10); border-color:rgba(21,128,61,.25); }
 body.light .fab-status-badge.destaque{ color:#6d28d9; background:rgba(109,40,217,.10); border-color:rgba(109,40,217,.25); }
+body.light .fab-table td { color: var(--c-text); }
+body.light .fab-table th { color: var(--c-text); background: var(--c-surface2); }
+body.light .fab-table tbody tr:nth-child(even) td { background: var(--c-surface2); }
+body.light .fab-kpi { background: var(--c-surface); border-color: var(--c-border2); }
+body.light .fab-nav { background: var(--c-surface2); border-color: var(--c-border); }
+body.light .fab-card { background: var(--c-surface); border-color: var(--c-border); }
+body.light .fab-card-header { border-bottom-color: var(--c-border); }
+body.light .fab-filtros { background: var(--c-surface2); border-bottom-color: var(--c-border); }
+body.light .fab-filtro-busca { background: var(--c-bg); color: var(--c-text); border-color: var(--c-border); }
+body.light .fab-fv2-item { color: var(--c-muted); }
+body.light .fab-fv2-item:hover { color: var(--c-text); }
+body.light .fab-fv2-panel-title { color: var(--c-muted); }
+body.light .fab-refresh-btn { background: var(--c-surface); border-color: var(--c-border); color: var(--c-text); }
+body.light .fab-topbar { background: var(--c-bg); border-bottom-color: var(--c-border); }
 
 /* ── Category expand/collapse ── */
 .cat-expand-btn { background:none; border:none; color:var(--fab-muted); cursor:pointer; font-size:15px; padding:0; margin-right:4px; transition:transform .18s; display:inline-block; vertical-align:middle; line-height:1; flex-shrink:0; }
@@ -4819,6 +4841,13 @@ function renderMetalChart(metal){
 
   const labels = days.map(d=>{ const [y,m,dd]=d.split('-'); return `${dd}/${m}`; });
 
+  const isLight = document.body.classList.contains('light');
+  const chartTooltipBg    = isLight ? '#ffffff' : '#161921';
+  const chartTooltipBdr   = isLight ? '#bfc8da' : '#2a2d38';
+  const chartTooltipTitle = isLight ? '#1a1d27' : '#e8e9f0';
+  const chartTooltipBody  = isLight ? '#475569' : '#6b7280';
+  const chartGridClr      = isLight ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)';
+
   if(metalChart) metalChart.destroy();
   metalChart = new Chart(canvas, {
     type:'line',
@@ -4872,11 +4901,11 @@ function renderMetalChart(metal){
           labels:{color:'#6b7280',font:{family:'DM Sans',size:12},boxWidth:12,padding:16}
         },
         tooltip:{
-          backgroundColor:'#161921',
-          borderColor:'#2a2d38',
+          backgroundColor:chartTooltipBg,
+          borderColor:chartTooltipBdr,
           borderWidth:1,
-          titleColor:'#e8e9f0',
-          bodyColor:'#6b7280',
+          titleColor:chartTooltipTitle,
+          bodyColor:chartTooltipBody,
           padding:12,
           callbacks:{
             label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}g`
@@ -4885,11 +4914,11 @@ function renderMetalChart(metal){
       },
       scales:{
         x:{
-          grid:{color:'rgba(42,45,56,.6)'},
+          grid:{color:chartGridClr},
           ticks:{color:'#6b7280',font:{family:'DM Sans',size:11}}
         },
         y:{
-          grid:{color:'rgba(42,45,56,.6)'},
+          grid:{color:chartGridClr},
           ticks:{color:'#6b7280',font:{family:'DM Sans',size:11},callback:v=>v+'g'}
         }
       }
