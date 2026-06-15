@@ -202,7 +202,7 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .page.active{display:block;}
 
 /* ── SIDEBAR ── */
-.sidebar-logo{padding:12px 10px 12px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--c-border);margin-bottom:8px;}
+.sidebar-logo{padding:18px 16px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--c-border);margin-bottom:4px;}
 .logo-text-wrap{flex:1;min-width:0;overflow:hidden;}
 .logo-mark{width:32px;height:32px;background:var(--c-accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;font-style:italic;flex-shrink:0;}
 .logo-text{font-size:15px;font-weight:700;letter-spacing:-.3px;}
@@ -219,20 +219,19 @@ html,body{height:100%;background:var(--c-bg);color:var(--c-text);font-family:var
 .user-name{font-size:13px;font-weight:500;white-space:nowrap;}
 .user-role{font-size:10px;color:var(--c-muted);white-space:nowrap;}
 /* ── Sidebar collapse ── */
-.sidebar-collapse-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;color:var(--c-muted);font-size:18px;transition:all .18s;flex-shrink:0;margin-left:auto;}
-.sidebar-collapse-btn:hover{background:var(--c-surface2);color:var(--c-text);}
+.sidebar-collapse-btn{display:flex;align-items:center;gap:8px;padding:7px 16px;margin:2px 8px 6px;border-radius:8px;cursor:pointer;color:var(--c-muted);font-size:17px;transition:all .18s;}
+.sidebar-collapse-btn:hover{background:var(--c-border);color:var(--c-text);}
 .sidebar.collapsed{width:64px;}
-.sidebar.collapsed .logo-text,.sidebar.collapsed .logo-sub,.sidebar.collapsed .logo-mark,.sidebar.collapsed .logo-text-wrap{display:none;}
+.sidebar.collapsed .sidebar-logo{display:none;}
+.sidebar.collapsed .sidebar-collapse-btn{justify-content:center;padding:9px 0;margin:8px 4px 6px;}
 .sidebar.collapsed .nav-section{opacity:0;pointer-events:none;height:0;margin:0;padding:0;}
 .sidebar.collapsed .nav-badge{display:none;}
 .sidebar.collapsed .nav-item{font-size:0;gap:0;justify-content:center;padding:9px 0;margin:1px 4px;}
 .sidebar.collapsed .nav-item i{font-size:18px;}
 .sidebar.collapsed .sidebar-bottom>.nav-item{font-size:0;gap:0;justify-content:center;padding:9px 0;}
 .sidebar.collapsed .sidebar-bottom>.nav-item i{font-size:18px;}
-.sidebar.collapsed .user-name,.sidebar.collapsed .user-role{display:none;}
+.sidebar.collapsed .user-name,.sidebar.collapsed .user-role,.sidebar.collapsed #user-card-chevron{display:none;}
 .sidebar.collapsed .user-card{justify-content:center;padding:10px;gap:0;}
-.sidebar.collapsed .user-card .ti-logout{display:none;}
-.sidebar.collapsed .sidebar-logo{justify-content:center;padding:12px 0;}
 /* ── Profile popup ── */
 .profile-popup{position:absolute;bottom:calc(100% + 6px);left:0;right:0;background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;padding:6px;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.45);display:none;}
 .profile-popup.open{display:block;}
@@ -1406,14 +1405,15 @@ canvas.fab-canvas { width: 100% !important; }
   <!-- ═══════════ SIDEBAR ═══════════ -->
   <aside class="sidebar" id="main-sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="Recolher menu">
-        <i class="ti ti-menu-2"></i>
-      </div>
       <div class="logo-mark">S</div>
       <div class="logo-text-wrap">
         <div class="logo-text">SalesFlow</div>
         <div class="logo-sub">Gestão Comercial</div>
       </div>
+    </div>
+
+    <div class="sidebar-collapse-btn" id="sidebar-collapse-btn" onclick="toggleSidebar()" title="Recolher menu">
+      <i class="ti ti-menu-2"></i>
     </div>
 
     <div class="nav-section">Principal</div>
