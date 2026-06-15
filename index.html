@@ -5372,6 +5372,7 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
         </div>
       </div>
+      ${mkPanel('fab-fp-tipo',       'Tipo',         tipos,                       'tipo')}
       ${mkPanel('fab-fp-produto',    'Produto',      produtos,                    'produto')}
       ${mkPanel('fab-fp-subtipo',    'Subtipo',      subtipos,                    'subtipo')}
       ${mkPanel('fab-fp-dest-manut', 'Dest. Manut.', uniq('destino_manutencao'),  'destino_manutencao')}
@@ -6301,6 +6302,7 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="jm-f-busca" placeholder="Ref ou produto…" oninput="applyJmFiltros()">
         </div>
       </div>
+      ${mkPanel('jm-fp-tipo',          'Tipo',         uniq('tipo'))}
       ${mkPanel('jm-fp-produto',       'Produto',      uniq('produto'))}
       ${mkPanel('jm-fp-subtipo',       'Subtipo',      uniq('subtipo'))}
       ${mkPanel('jm-fp-dest-manut',    'Dest. Manut.', uniq('destino_manutencao'))}
