@@ -38,9 +38,14 @@ window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, qu
 
 window._API = 'https://goldtech-fabricacoes-api.onrender.com';
 
-// Fetch autenticado — usa session cookie HttpOnly (sem token em JS)
-window.apiFetch = function(url) {
-  return fetch(url, { credentials: 'include' });
+// Fetch autenticado — cookie HttpOnly (preferencial) + Bearer como fallback cross-origin
+window.apiFetch = async function(url) {
+  const headers = {};
+  try {
+    const u = auth && auth.currentUser;
+    if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
+  } catch(e) {}
+  return fetch(url, { headers, credentials: 'include' });
 };
 
 // ── Login — credenciais vão para o backend, nunca ficam no frontend ──
