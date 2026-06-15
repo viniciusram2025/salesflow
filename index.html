@@ -67,6 +67,7 @@ window._doFirebaseLogin = async function(email, pass){
     const user = { email, name: profile.name, personKey: profile.personKey, role: profile.role, permissions: profile.permissions || [], cargo: profile.cargo || '' };
     currentUser = user;
     sessionStorage.setItem('sf_user', JSON.stringify(user));
+    localStorage.setItem('sf_login_time', Date.now().toString());
     err.style.display = 'none';
     showApp(user);
   } catch(e) {
@@ -2700,14 +2701,34 @@ function doLogin(){
   }
 }
 
+const SESSION_MAX_MS = 12 * 60 * 60 * 1000; // 12 horas
+let _sessionTimer = null;
+
 function checkSession(){
-  const saved = sessionStorage.getItem('sf_user');
-  if(saved){ currentUser = JSON.parse(saved); showApp(currentUser); }
+  const saved     = sessionStorage.getItem('sf_user');
+  const loginTime = parseInt(localStorage.getItem('sf_login_time') || '0', 10);
+  if(!saved || !loginTime) return;
+  if(Date.now() - loginTime >= SESSION_MAX_MS){
+    sessionStorage.removeItem('sf_user');
+    localStorage.removeItem('sf_login_time');
+    return;
+  }
+  currentUser = JSON.parse(saved);
+  showApp(currentUser);
 }
 
 function showApp(user){
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='flex';
+
+  // Agenda logout automático ao atingir 12h de sessão
+  if(_sessionTimer) clearTimeout(_sessionTimer);
+  const loginTime = parseInt(localStorage.getItem('sf_login_time') || Date.now(), 10);
+  const remaining = SESSION_MAX_MS - (Date.now() - loginTime);
+  _sessionTimer = setTimeout(() => {
+    alert('Sua sessão expirou após 12 horas. Faça login novamente.');
+    doLogout();
+  }, Math.max(remaining, 0));
 
   // Inicia listeners Firebase
   if(typeof window._initFirebaseListeners === 'function'){
@@ -2819,7 +2840,9 @@ function saveNewPassword() {
 })();
 
 function doLogout(){
+  if(_sessionTimer) clearTimeout(_sessionTimer);
   sessionStorage.removeItem('sf_user');
+  localStorage.removeItem('sf_login_time');
   currentUser = null;
   if(typeof window._doFirebaseLogout === 'function') window._doFirebaseLogout();
   document.querySelectorAll('.nav-section, .nav-item').forEach(el => el.style.display = '');
