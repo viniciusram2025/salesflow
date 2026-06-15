@@ -1054,6 +1054,10 @@ tbody tr:last-child{border-bottom:none;}
 .fab-status-badge.atencao  { background:rgba(251,191,36,.12); color:#fbbf24; border:1px solid rgba(251,191,36,.3); }
 .fab-status-badge.destaque { background:rgba(155,114,240,.15); color:var(--fab-purple); border:1px solid rgba(155,114,240,.3); }
 .fab-status-badge.ok       { background:rgba(34,197,94,.1);   color:#22c55e; border:1px solid rgba(34,197,94,.25); }
+body.light .fab-status-badge.ruptura { color:#b91c1c; }
+body.light .fab-status-badge.critico { color:#b45309; }
+body.light .fab-status-badge.atencao { color:#92400e; }
+body.light .fab-status-badge.ok      { color:#15803d; }
 
 /* ── Category expand/collapse ── */
 .cat-expand-btn { background:none; border:none; color:var(--fab-muted); cursor:pointer; font-size:15px; padding:0; margin-right:4px; transition:transform .18s; display:inline-block; vertical-align:middle; line-height:1; flex-shrink:0; }
@@ -1290,12 +1294,12 @@ canvas.fab-canvas { width: 100% !important; }
 
 .fab-table td {
   padding: 11px 16px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
+  border-bottom: 1px solid var(--fab-row-sep);
   vertical-align: middle;
 }
 .fab-table td.right { text-align: right; }
 
-.fab-table tr:hover td { background: rgba(255,255,255,.03); }
+.fab-table tr:hover td { background: var(--fab-row-hover); }
 
 .fab-bar-wrap {
   display: flex;
@@ -1305,7 +1309,7 @@ canvas.fab-canvas { width: 100% !important; }
 .fab-bar-bg {
   flex: 1;
   height: 6px;
-  background: rgba(255,255,255,.07);
+  background: var(--fab-bar-track);
   border-radius: 3px;
   overflow: hidden;
   min-width: 60px;
@@ -1332,11 +1336,11 @@ canvas.fab-canvas { width: 100% !important; }
   align-items: center;
   justify-content: space-between;
   padding: 12px 20px;
-  border-bottom: 1px solid rgba(255,255,255,.04);
+  border-bottom: 1px solid var(--fab-row-sep);
   gap: 12px;
   transition: background .15s;
 }
-.fab-fab-item:hover { background: rgba(255,255,255,.03); }
+.fab-fab-item:hover { background: var(--fab-row-hover); }
 
 .fab-fab-ref  { font-weight: 600; font-size: 13px; }
 .fab-fab-sub  { font-size: 12px; color: var(--fab-muted); margin-top: 2px; }
@@ -5368,7 +5372,6 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
         </div>
       </div>
-      ${mkPanel('fab-fp-tipo',       'Tipo',       tipos,       'tipo')}
       ${mkPanel('fab-fp-produto',    'Produto',    produtos,    'produto')}
       ${mkPanel('fab-fp-subtipo',    'Subtipo',    subtipos,    'subtipo')}
       ${mkPanel('fab-fp-destino',    'Destino',    destinos,    'destino')}
@@ -6294,7 +6297,6 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="jm-f-busca" placeholder="Ref ou produto…" oninput="applyJmFiltros()">
         </div>
       </div>
-      ${mkPanel('jm-fp-tipo',        'Tipo',       uniq('tipo'))}
       ${mkPanel('jm-fp-produto',    'Produto',    uniq('produto'))}
       ${mkPanel('jm-fp-subtipo',    'Subtipo',    uniq('subtipo'))}
       ${mkPanel('jm-fp-destino',    'Destino',    uniq('destino'))}
@@ -6892,8 +6894,8 @@ window.addEventListener('load', () => {
     document.getElementById("fab-kpi-fabricacao").textContent = fmt.num(d.em_fabricacao);
     document.getElementById("fab-kpi-vendidos").textContent   = fmt.num(d.vendidos);
     document.getElementById("fab-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
-    document.getElementById("fab-kpi-ticket").textContent     = fmt.moedaK(d.ticket_medio);
-    document.getElementById("fab-kpi-faturamento").textContent = fmt.moedaK(d.faturamento_mes);
+    document.getElementById("fab-kpi-ticket").textContent     = fmt.moeda(d.ticket_medio);
+    document.getElementById("fab-kpi-faturamento").textContent = fmt.moeda(d.faturamento_mes);
   }
 
   // ── RENDER ALERTAS ───────────────────────────────────────────
@@ -7016,6 +7018,7 @@ window.addEventListener('load', () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (_jfChartVendas) _jfChartVendas.destroy();
+    const gridClr = document.body.classList.contains('light') ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)';
 
     _jfChartVendas = new Chart(ctx, {
       type: "bar",
@@ -7057,10 +7060,10 @@ window.addEventListener('load', () => {
           },
         },
         scales: {
-          x: { ticks: { color: "#6b7280", font: { size: 11 } }, grid: { color: "rgba(255,255,255,.04)" } },
+          x: { ticks: { color: "#6b7280", font: { size: 11 } }, grid: { color: gridClr } },
           y: {
             ticks: { color: "#6b7280", font: { size: 11 } },
-            grid: { color: "rgba(255,255,255,.04)" },
+            grid: { color: gridClr },
             position: "left",
           },
           y1: {
@@ -7083,6 +7086,7 @@ window.addEventListener('load', () => {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (_jfChartPedras) _jfChartPedras.destroy();
+    const gridClr = document.body.classList.contains('light') ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)';
 
     const cores = [
       "#4f6ef7","#22c55e","#f59e0b","#ef4444","#a855f7",
@@ -7112,7 +7116,7 @@ window.addEventListener('load', () => {
           },
         },
         scales: {
-          x: { ticks: { color: "#6b7280", font: { size: 11 } }, grid: { color: "rgba(255,255,255,.04)" } },
+          x: { ticks: { color: "#6b7280", font: { size: 11 } }, grid: { color: gridClr } },
           y: { ticks: { color: "#9ca3af", font: { size: 11 } }, grid: { display: false } },
         },
       },
