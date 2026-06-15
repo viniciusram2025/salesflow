@@ -13,8 +13,8 @@
 // FIREBASE CONFIG + AUTH
 // ══════════════════════════════════════════
 import { initializeApp }                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword,
-         signOut, onAuthStateChanged }                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithCustomToken,
+         signOut }                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc,
          getDoc, deleteDoc, onSnapshot,
          query, orderBy }                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -32,60 +32,71 @@ const fireApp = initializeApp(firebaseConfig);
 const auth    = getAuth(fireApp);
 const db      = getFirestore(fireApp);
 
-// Expõe para o escopo global
-window._db   = db;
-window._auth = auth;
+// Expõe apenas o necessário para os scripts não-module (Firestore real-time)
+window._db        = db;
 window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy };
 
-// Fetch autenticado — injeta token Firebase em chamadas à API interna
-window.apiFetch = async function(url) {
-  const headers = {};
-  try {
-    const u = auth.currentUser;
-    if (u) headers['Authorization'] = 'Bearer ' + await u.getIdToken();
-  } catch(e) {}
-  return fetch(url, { headers });
+window._API = 'https://goldtech-fabricacoes-api.onrender.com';
+
+// Fetch autenticado — usa session cookie HttpOnly (sem token em JS)
+window.apiFetch = function(url) {
+  return fetch(url, { credentials: 'include' });
 };
 
-// ── Login via Firebase Auth ───────────────────────────
+// ── Login — credenciais vão para o backend, nunca ficam no frontend ──
 window._doFirebaseLogin = async function(email, pass){
-  const err = document.getElementById('login-err');
-  const btn = document.querySelector('.login-btn');
+  const errEl = document.getElementById('login-err');
+  const btn   = document.querySelector('.login-btn');
   btn.textContent = 'Entrando...';
-  btn.disabled = true;
+  btn.disabled    = true;
   try {
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
-    // Busca perfil do usuário no Firestore
+    // Backend autentica, cria session cookie HttpOnly e devolve custom token
+    const resp = await fetch(`${window._API}/api/login`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify({ email, password: pass }),
+      credentials: 'include',
+    });
+    if (!resp.ok) {
+      const data = await resp.json();
+      throw new Error(data.error || 'Credenciais inválidas');
+    }
+    const { customToken } = await resp.json();
+
+    // Usa custom token só para autenticar o SDK do Firestore (listeners em tempo real)
+    await signInWithCustomToken(auth, customToken);
+
+    // Busca perfil no Firestore
     const snap = await getDoc(doc(db, 'usuarios', email));
-    if(!snap.exists()){
-      err.textContent = 'Usuário sem perfil configurado.';
-      err.style.display = 'block';
+    if (!snap.exists()) {
+      await fetch(`${window._API}/api/logout`, { method: 'POST', credentials: 'include' });
       await signOut(auth);
-      return;
+      throw new Error('Usuário sem perfil configurado.');
     }
     const profile = snap.data();
     const user = { email, name: profile.name, personKey: profile.personKey, role: profile.role, permissions: profile.permissions || [], cargo: profile.cargo || '' };
     currentUser = user;
     sessionStorage.setItem('sf_user', JSON.stringify(user));
     localStorage.setItem('sf_login_time', Date.now().toString());
-    err.style.display = 'none';
+    errEl.style.display = 'none';
     showApp(user);
   } catch(e) {
-    err.textContent = 'E-mail ou senha incorretos.';
-    err.style.display = 'block';
+    errEl.textContent = e.message || 'E-mail ou senha incorretos.';
+    errEl.style.display = 'block';
     const inp = document.getElementById('login-pass');
     inp.style.borderColor = 'rgba(240,82,82,.6)';
     inp.style.animation   = 'shake .3s ease';
     setTimeout(()=>{ inp.style.borderColor=''; inp.style.animation=''; }, 600);
   } finally {
     btn.textContent = 'Entrar';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 };
 
-// ── Logout via Firebase Auth ──────────────────────────
+// ── Logout ────────────────────────────────────────────
 window._doFirebaseLogout = async function(){
-  await signOut(auth);
+  await fetch(`${window._API}/api/logout`, { method: 'POST', credentials: 'include' }).catch(() => {});
+  await signOut(auth).catch(() => {});
 };
 
 // ── Listeners em tempo real ───────────────────────────
@@ -2803,7 +2814,7 @@ function openChangePasswordModal() {
   document.getElementById('cp-btn-save').disabled = false;
   openModal('modal-change-password');
 }
-function saveNewPassword() {
+async function saveNewPassword() {
   const newPass = document.getElementById('cp-new').value;
   const confirm = document.getElementById('cp-confirm').value;
   const errEl   = document.getElementById('cp-error');
@@ -2813,21 +2824,27 @@ function saveNewPassword() {
   okEl.style.display  = 'none';
   if (newPass.length < 6) { errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; errEl.style.display='block'; return; }
   if (newPass !== confirm) { errEl.textContent = 'As senhas não coincidem.'; errEl.style.display='block'; return; }
-  btn.disabled = true;
+  btn.disabled    = true;
   btn.textContent = 'Salvando…';
-  const user = window._auth && window._auth.currentUser;
-  if (!user) { errEl.textContent = 'Sessão expirada. Faça login novamente.'; errEl.style.display='block'; btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Salvar'; return; }
-  user.updatePassword(newPass)
-    .then(() => { okEl.style.display='block'; btn.innerHTML='<i class="ti ti-check"></i> Salvar'; setTimeout(() => closeModal('modal-change-password'), 1800); })
-    .catch(err => {
-      btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Salvar';
-      if (err.code === 'auth/requires-recent-login') {
-        errEl.textContent = 'Por segurança, saia e faça login novamente antes de alterar a senha.';
-      } else {
-        errEl.textContent = err.message;
-      }
-      errEl.style.display='block';
+  try {
+    const resp = await fetch(`${window._API}/api/change-password`, {
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      body:        JSON.stringify({ newPassword: newPass }),
+      credentials: 'include',
     });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Erro ao alterar senha');
+    okEl.textContent    = 'Senha alterada! Faça login novamente.';
+    okEl.style.display  = 'block';
+    btn.innerHTML       = '<i class="ti ti-check"></i> Salvar';
+    setTimeout(() => { closeModal('modal-change-password'); doLogout(); }, 2000);
+  } catch(e) {
+    errEl.textContent   = e.message;
+    errEl.style.display = 'block';
+    btn.disabled        = false;
+    btn.innerHTML       = '<i class="ti ti-check"></i> Salvar';
+  }
 }
 
 // ── INIT SIDEBAR STATE ────────────────────────────────────────
