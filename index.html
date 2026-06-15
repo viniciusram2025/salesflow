@@ -2088,9 +2088,9 @@ canvas.fab-canvas { width: 100% !important; }
       <div class="fab-kpi">
         <div class="fab-kpi-icon" style="background:rgba(34,197,94,.15);color:var(--c-green)"><i class="ti ti-shopping-cart"></i></div>
         <div class="fab-kpi-body">
-          <div class="fab-kpi-label">Vendidos Total</div>
+          <div class="fab-kpi-label">Vendidos Mês</div>
           <div class="fab-kpi-value" id="fab-kpi-vendidos" style="color:var(--c-green)">—</div>
-          <div class="fab-kpi-sub" id="fab-kpi-vendidos-mes">— vendidos este mês</div>
+          <div class="fab-kpi-sub" id="fab-kpi-vendidos-mes">mês atual</div>
         </div>
       </div>
       <div class="fab-kpi">
@@ -5372,11 +5372,12 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="fab-f-busca" placeholder="Ref ou produto…" oninput="applyFabFiltros()">
         </div>
       </div>
-      ${mkPanel('fab-fp-produto',    'Produto',    produtos,    'produto')}
-      ${mkPanel('fab-fp-subtipo',    'Subtipo',    subtipos,    'subtipo')}
-      ${mkPanel('fab-fp-destino',    'Destino',    destinos,    'destino')}
-      ${mkPanel('fab-fp-pedra',      'Tipo Pedra', pedras,      'tipo_pedra')}
-      ${mkPanel('fab-fp-lapidacao',  'Lapidação',  lapidacoes,  'lapidacao')}
+      ${mkPanel('fab-fp-produto',    'Produto',      produtos,                    'produto')}
+      ${mkPanel('fab-fp-subtipo',    'Subtipo',      subtipos,                    'subtipo')}
+      ${mkPanel('fab-fp-dest-manut', 'Dest. Manut.', uniq('destino_manutencao'),  'destino_manutencao')}
+      ${mkPanel('fab-fp-destino',    'Destino',      destinos,                    'destino')}
+      ${mkPanel('fab-fp-pedra',      'Tipo Pedra',   pedras,                      'tipo_pedra')}
+      ${mkPanel('fab-fp-lapidacao',  'Lapidação',    lapidacoes,                  'lapidacao')}
       <div class="fab-fv2-right">
         <div>
           <div class="fab-fv2-count" id="fab-filtros-count">${data.length}</div>
@@ -5393,12 +5394,13 @@ window.addEventListener('load', () => {
     const busca = (document.getElementById('fab-f-busca')?.value || '').toLowerCase();
 
     const dims = [
-      { id: 'fab-fp-tipo',       field: 'tipo'        },
-      { id: 'fab-fp-produto',    field: 'produto'     },
-      { id: 'fab-fp-subtipo',    field: 'subtipo'     },
-      { id: 'fab-fp-destino',    field: 'destino'     },
-      { id: 'fab-fp-pedra',      field: 'tipo_pedra'  },
-      { id: 'fab-fp-lapidacao',  field: 'lapidacao'   },
+      { id: 'fab-fp-tipo',        field: 'tipo'               },
+      { id: 'fab-fp-produto',     field: 'produto'            },
+      { id: 'fab-fp-subtipo',     field: 'subtipo'            },
+      { id: 'fab-fp-dest-manut',  field: 'destino_manutencao' },
+      { id: 'fab-fp-destino',     field: 'destino'            },
+      { id: 'fab-fp-pedra',       field: 'tipo_pedra'         },
+      { id: 'fab-fp-lapidacao',   field: 'lapidacao'          },
     ];
     dims.forEach(d => {
       d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
@@ -5500,6 +5502,7 @@ window.addEventListener('load', () => {
         ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
         ${srt('lapidacao')}Lapidação</th>
+        ${srt('destino_manutencao')}Dest. Manut.</th>
         ${srt('data_envio_fabricacao','right')}Envio Fab.</th>
         ${srt('dias','right')}Dias</th>
         ${srt('preco_minimo','right')}Preço Mín.</th>
@@ -5511,10 +5514,11 @@ window.addEventListener('load', () => {
         <td>${r.subtipo||'—'}</td>
         <td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td>
+        <td style="font-weight:600;color:var(--fab-accent)">${r.destino_manutencao||'—'}</td>
         <td class="right">${fmt.data(r.data_envio_fabricacao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
-      </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
+      </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em fabricação</td></tr>';
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
@@ -6297,11 +6301,12 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="jm-f-busca" placeholder="Ref ou produto…" oninput="applyJmFiltros()">
         </div>
       </div>
-      ${mkPanel('jm-fp-produto',    'Produto',    uniq('produto'))}
-      ${mkPanel('jm-fp-subtipo',    'Subtipo',    uniq('subtipo'))}
-      ${mkPanel('jm-fp-destino',    'Destino',    uniq('destino'))}
-      ${mkPanel('jm-fp-pedra',      'Tipo Pedra', uniq('tipo_pedra'))}
-      ${mkPanel('jm-fp-lapidacao',  'Lapidação',  uniq('lapidacao'))}
+      ${mkPanel('jm-fp-produto',       'Produto',      uniq('produto'))}
+      ${mkPanel('jm-fp-subtipo',       'Subtipo',      uniq('subtipo'))}
+      ${mkPanel('jm-fp-dest-manut',    'Dest. Manut.', uniq('destino_manutencao'))}
+      ${mkPanel('jm-fp-destino',       'Destino',      uniq('destino'))}
+      ${mkPanel('jm-fp-pedra',         'Tipo Pedra',   uniq('tipo_pedra'))}
+      ${mkPanel('jm-fp-lapidacao',     'Lapidação',    uniq('lapidacao'))}
       <div class="fab-fv2-right">
         <div>
           <div class="fab-fv2-count" id="jm-filtros-count">${data.length}</div>
@@ -6315,12 +6320,13 @@ window.addEventListener('load', () => {
   window.applyJmFiltros = function() {
     const busca = (document.getElementById('jm-f-busca')?.value || '').toLowerCase();
     const dims = [
-      { id: 'jm-fp-tipo',        field: 'tipo'       },
-      { id: 'jm-fp-produto',    field: 'produto'    },
-      { id: 'jm-fp-subtipo',    field: 'subtipo'    },
-      { id: 'jm-fp-destino',    field: 'destino'    },
-      { id: 'jm-fp-pedra',      field: 'tipo_pedra' },
-      { id: 'jm-fp-lapidacao',  field: 'lapidacao'  },
+      { id: 'jm-fp-tipo',         field: 'tipo'               },
+      { id: 'jm-fp-produto',      field: 'produto'            },
+      { id: 'jm-fp-subtipo',      field: 'subtipo'            },
+      { id: 'jm-fp-dest-manut',   field: 'destino_manutencao' },
+      { id: 'jm-fp-destino',      field: 'destino'            },
+      { id: 'jm-fp-pedra',        field: 'tipo_pedra'         },
+      { id: 'jm-fp-lapidacao',    field: 'lapidacao'          },
     ];
     dims.forEach(d => {
       d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
@@ -6411,6 +6417,7 @@ window.addEventListener('load', () => {
         ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
         ${srt('subtipo')}Subtipo</th>${srt('tipo_pedra')}Pedra</th>
         ${srt('lapidacao')}Lapidação</th>
+        ${srt('destino_manutencao')}Dest. Manut.</th>
         ${srt('data_saida_manutencao','right')}Saída Manut.</th>
         ${srt('dias','right')}Dias</th>${srt('preco_minimo','right')}Preço Mín.</th>
       </tr>`;
@@ -6419,10 +6426,11 @@ window.addEventListener('load', () => {
         <td><span style="font-size:11px;font-family:monospace;opacity:.8">${r.tipo||'—'}</span></td>
         <td>${r.produto||'—'}</td><td>${r.subtipo||'—'}</td><td>${r.tipo_pedra||'—'}</td>
         <td>${r.lapidacao||'—'}</td>
+        <td style="font-weight:600;color:var(--fab-accent)">${r.destino_manutencao||'—'}</td>
         <td class="right">${fmt.data(r.data_saida_manutencao)}</td>
         <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
         <td class="right">${r.preco_minimo?fmt.moeda(r.preco_minimo):'—'}</td>
-      </tr>`).join('') : `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--fab-muted)">${emptyMsg}</td></tr>`;
+      </tr>`).join('') : `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">${emptyMsg}</td></tr>`;
     } else if (sec === 'vendas') {
       thead.innerHTML = `<tr>
         ${srt('referencia')}Ref</th>${srt('tipo')}Tipo</th>${srt('produto')}Produto</th>
@@ -6713,6 +6721,7 @@ window.addEventListener('load', () => {
       ${srt('subtipo')}Subtipo</th>
       ${srt('tipo_pedra')}Pedra</th>
       ${srt('lapidacao')}Lapidação</th>
+      ${srt('destino_manutencao')}Dest. Manut.</th>
       ${srt('destino')}Destino</th>
       ${srt('data_saida_manutencao','right')}Saída Manut.</th>
       ${srt('dias','right')}Dias</th>
@@ -6726,11 +6735,12 @@ window.addEventListener('load', () => {
       <td>${r.subtipo||'—'}</td>
       <td>${r.tipo_pedra||'—'}</td>
       <td>${r.lapidacao||'—'}</td>
+      <td style="font-weight:600;color:var(--fab-accent)">${r.destino_manutencao||'—'}</td>
       <td>${r.destino||'—'}</td>
       <td class="right">${fmt_manut_data(r.data_saida_manutencao)}</td>
       <td class="right" style="font-weight:700;color:${r.dias>90?'var(--fab-red)':r.dias>30?'var(--fab-orange)':'var(--fab-text)'}">${r.dias}d</td>
       <td class="right">${r.preco_minimo?fmt_manut_moeda(r.preco_minimo):'—'}</td>
-    </tr>`).join('') : '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em manutenção</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--fab-muted)">Nenhuma peça em manutenção</td></tr>';
   }
 
   function buildManutFiltros(data) {
@@ -6753,12 +6763,13 @@ window.addEventListener('load', () => {
           <input class="fab-filtro-busca" id="manut-f-busca" placeholder="Ref ou produto…" oninput="applyManutFiltros()">
         </div>
       </div>
-      ${mkPanel('manut-fp-tipo',      'Tipo',       uniq('tipo'))}
-      ${mkPanel('manut-fp-produto',   'Produto',    uniq('produto'))}
-      ${mkPanel('manut-fp-subtipo',   'Subtipo',    uniq('subtipo'))}
-      ${mkPanel('manut-fp-destino',   'Destino',    uniq('destino'))}
-      ${mkPanel('manut-fp-pedra',     'Tipo Pedra', uniq('tipo_pedra'))}
-      ${mkPanel('manut-fp-lapidacao', 'Lapidação',  uniq('lapidacao'))}
+      ${mkPanel('manut-fp-tipo',        'Tipo',        uniq('tipo'))}
+      ${mkPanel('manut-fp-produto',     'Produto',     uniq('produto'))}
+      ${mkPanel('manut-fp-subtipo',     'Subtipo',     uniq('subtipo'))}
+      ${mkPanel('manut-fp-dest-manut',  'Dest. Manut.', uniq('destino_manutencao'))}
+      ${mkPanel('manut-fp-destino',     'Destino',     uniq('destino'))}
+      ${mkPanel('manut-fp-pedra',       'Tipo Pedra',  uniq('tipo_pedra'))}
+      ${mkPanel('manut-fp-lapidacao',   'Lapidação',   uniq('lapidacao'))}
       <div class="fab-fv2-right">
         <div>
           <div class="fab-fv2-count" id="manut-filtros-count">${data.length}</div>
@@ -6772,12 +6783,13 @@ window.addEventListener('load', () => {
   window.applyManutFiltros = function() {
     const busca = (document.getElementById('manut-f-busca')?.value || '').toLowerCase();
     const dims = [
-      { id: 'manut-fp-tipo',      field: 'tipo'       },
-      { id: 'manut-fp-produto',   field: 'produto'    },
-      { id: 'manut-fp-subtipo',   field: 'subtipo'    },
-      { id: 'manut-fp-destino',   field: 'destino'    },
-      { id: 'manut-fp-pedra',     field: 'tipo_pedra' },
-      { id: 'manut-fp-lapidacao', field: 'lapidacao'  },
+      { id: 'manut-fp-tipo',       field: 'tipo'                },
+      { id: 'manut-fp-produto',    field: 'produto'             },
+      { id: 'manut-fp-subtipo',    field: 'subtipo'             },
+      { id: 'manut-fp-dest-manut', field: 'destino_manutencao'  },
+      { id: 'manut-fp-destino',    field: 'destino'             },
+      { id: 'manut-fp-pedra',      field: 'tipo_pedra'          },
+      { id: 'manut-fp-lapidacao',  field: 'lapidacao'           },
     ];
     dims.forEach(d => {
       d.sel = new Set([...document.querySelectorAll(`#${d.id} input:checked`)].map(el => el.value));
@@ -6892,8 +6904,8 @@ window.addEventListener('load', () => {
   function renderResumo(d) {
     document.getElementById("fab-kpi-estoque").textContent    = fmt.num(d.estoque);
     document.getElementById("fab-kpi-fabricacao").textContent = fmt.num(d.em_fabricacao);
-    document.getElementById("fab-kpi-vendidos").textContent   = fmt.num(d.vendidos);
-    document.getElementById("fab-kpi-vendidos-mes").textContent = `${fmt.num(d.vendidos_mes)} vendidos este mês`;
+    document.getElementById("fab-kpi-vendidos").textContent   = fmt.num(d.vendidos_mes);
+    document.getElementById("fab-kpi-vendidos-mes").textContent = "mês atual";
     document.getElementById("fab-kpi-ticket").textContent     = fmt.moeda(d.ticket_medio);
     document.getElementById("fab-kpi-faturamento").textContent = fmt.moeda(d.faturamento_mes);
   }
@@ -7007,9 +7019,10 @@ window.addEventListener('load', () => {
   }
 
   window.fabFiltrarSubtipo = function (filtro, tabEl) {
-    document.querySelectorAll(".fab-tab").forEach(t => t.classList.remove("active"));
-    tabEl.classList.add("active");
-    renderSubtipoTabela(filtro);
+    _catFiltro = filtro;
+    tabEl.closest('.fab-tabs').querySelectorAll('.fab-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    renderCategoriaTabela(filtro);
   };
 
   // ── RENDER GRÁFICO VENDAS MÊS ────────────────────────────────
