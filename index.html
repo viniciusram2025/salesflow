@@ -7725,14 +7725,11 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { labels: {
-            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
-            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
-          }}
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false }
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:10 } }, grid: { display:false } }
+          y: { ticks: { color:t.text, font:{ size:10 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
         }
       }
     });
@@ -7764,14 +7761,11 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { labels: {
-            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
-            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
-          }}
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false }
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:10 } }, grid: { display:false } }
+          y: { ticks: { color:t.text, font:{ size:10 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
         }
       }
     });
@@ -7875,14 +7869,11 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => ` ${fmt.moeda(c.raw)}` }},
-          datalabels: { labels: {
-            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
-            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
-          }}
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false }
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
-          y: { ticks:{ color:t.text, font:{ size:11 } }, grid:{ display:false } }
+          y: { ticks:{ color:t.text, font:{ size:11 }, callback: (v,i) => `${sorted[i][0]}  (${qtds[i]})` }, grid:{ display:false } }
         }
       }
     });
@@ -7926,14 +7917,11 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { labels: {
-            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
-            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
-          }}
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false }
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
-          y: { ticks:{ color:t.text, font:{ size:11 } }, grid:{ display:false } }
+          y: { ticks:{ color:t.text, font:{ size:11 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid:{ display:false } }
         }
       }
     });
