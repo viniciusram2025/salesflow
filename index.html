@@ -7756,7 +7756,7 @@ window.addEventListener('load', () => {
     _rvCharts['destino'] = new Chart(el, {
       type: 'bar',
       plugins: [ChartDataLabels],
-      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(79,110,247,.7)', borderRadius: 3 }] },
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(99,102,241,.85)', borderRadius: 3 }] },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         layout: { padding: { right: 60 } },
@@ -7792,7 +7792,7 @@ window.addEventListener('load', () => {
     _rvCharts['produto'] = new Chart(el, {
       type: 'bar',
       plugins: [ChartDataLabels],
-      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 3 }] },
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(16,185,129,.85)', borderRadius: 3 }] },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         layout: { padding: { right: 60 } },
@@ -7911,7 +7911,7 @@ window.addEventListener('load', () => {
       plugins: [ChartDataLabels],
       data: {
         labels: sorted.map(([k]) => k),
-        datasets: [{ data: sorted.map(([,v]) => v.fat), backgroundColor: 'rgba(34,197,94,.7)', borderRadius:3 }]
+        datasets: [{ data: sorted.map(([,v]) => v.fat), backgroundColor: 'rgba(16,185,129,.85)', borderRadius:3 }]
       },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
@@ -7958,7 +7958,7 @@ window.addEventListener('load', () => {
     _rvCharts['scrap'] = new Chart(el, {
       type: 'bar',
       plugins: [ChartDataLabels],
-      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(156,163,175,.7)', borderRadius:3 }] },
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(100,116,139,.75)', borderRadius:3 }] },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         layout: { padding: { right: 60 } },
