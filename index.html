@@ -39,8 +39,8 @@ window._fbModules = { collection, doc, setDoc, getDoc, deleteDoc, onSnapshot, qu
 window._API = 'https://goldtech-fabricacoes-api.onrender.com';
 
 // Fetch autenticado — cookie HttpOnly (preferencial) + Bearer como fallback cross-origin
-window.apiFetch = async function(url) {
-  const headers = {};
+window.apiFetch = async function(url, opts) {
+  const headers = Object.assign({}, (opts && opts.headers) || {});
   try {
     const u = auth && auth.currentUser;
     if (u) {
@@ -57,7 +57,9 @@ window.apiFetch = async function(url) {
   } catch(e) {
     console.error('[apiFetch] erro ao obter token, usando apenas cookie:', e.message, '| URL:', url);
   }
-  return fetch(url, { headers, credentials: 'include' });
+  const res = await fetch(url, Object.assign({}, opts, { headers, credentials: 'include' }));
+  if (!res.ok) { const txt = await res.text(); throw new Error(txt); }
+  return res.json();
 };
 
 // ── Login — credenciais vão para o backend, nunca ficam no frontend ──
@@ -8275,7 +8277,7 @@ window.addEventListener('load', () => {
     const page = document.getElementById('page-fotografia');
     if (!page || !page.classList.contains('active')) return;
     try {
-      const data = await window.apiFetch('/fotos');
+      const data = await window.apiFetch(window._API+'/fotos');
       _fotoData = Array.isArray(data) ? data : [];
       fotoRenderKpis();
       window.fotoApplyFilter();
@@ -8342,9 +8344,9 @@ window.addEventListener('load', () => {
     };
     try {
       if (_fotoEditId) {
-        await window.apiFetch('/fotos/'+_fotoEditId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        await window.apiFetch(window._API+'/fotos/'+_fotoEditId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
       } else {
-        await window.apiFetch('/fotos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        await window.apiFetch(window._API+'/fotos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
       }
       fotoCloseModal();
       window.fotoLoad();
@@ -8354,7 +8356,7 @@ window.addEventListener('load', () => {
   window.fotoDelete = async function(id) {
     if (!confirm('Excluir este saquinho?')) return;
     try {
-      await window.apiFetch('/fotos/'+id, { method:'DELETE' });
+      await window.apiFetch(window._API+'/fotos/'+id, { method:'DELETE' });
       window.fotoLoad();
     } catch(e) { alert('Erro ao excluir.'); }
   };
