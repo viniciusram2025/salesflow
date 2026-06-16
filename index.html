@@ -7633,12 +7633,11 @@ window.addEventListener('load', () => {
   }
 
   function rvTipo(tipo) {
-    if (!tipo) return 'Outros';
+    if (!tipo) return 'JR';
     if (tipo === 'JF')  return 'JF';
     if (tipo === 'JMF') return 'JMF';
-    if (tipo.startsWith('JR')) return 'JR';
-    if (tipo.startsWith('JM')) return 'JM';
-    return 'Outros';
+    if (tipo === 'JMCP' || tipo === 'JMSP') return 'JM';
+    return 'JR';
   }
 
   function kill(key) {
@@ -7819,7 +7818,7 @@ window.addEventListener('load', () => {
     kill('tipo');
     const el = document.getElementById('rv-chart-tipo');
     if (!el) return;
-    const map = { JF:0, JMF:0, JR:0, JM:0, Outros:0 };
+    const map = { JF:0, JMF:0, JR:0, JM:0 };
     data.forEach(r => { const k = rvTipo(r.tipo); map[k] += Number(r.preco_cobrado||0); });
     // Remove chaves zeradas
     const labels = Object.keys(map).filter(k => map[k] > 0);
