@@ -2453,6 +2453,13 @@ canvas.fab-canvas { width: 100% !important; }
             <span id="rv-xau-price" style="font-size:12px;font-weight:700;color:var(--c-text);">—</span>
             <span id="rv-xau-pct" style="font-size:11px;font-weight:600;">—</span>
           </div>
+          <!-- Ticker USD/BRL -->
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:var(--c-surface2);border:1px solid var(--c-border);cursor:default;" title="Dólar americano em BRL — atualizado a cada 5 min">
+            <i class="ti ti-currency-dollar" style="font-size:13px;color:var(--c-accent);opacity:.85;"></i>
+            <span style="font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--c-text);">USD</span>
+            <span id="rv-usd-price" style="font-size:12px;font-weight:700;color:var(--c-text);">—</span>
+            <span id="rv-usd-pct" style="font-size:11px;font-weight:600;">—</span>
+          </div>
           <div class="fab-sync">
             <span id="rv-last-update" class="fab-sync-time">—</span>
             <button class="fab-refresh-btn" id="rv-refresh-btn" onclick="rvLoad()">
@@ -7955,22 +7962,25 @@ window.addEventListener('load', () => {
 
   // ── Cotação XAU (ouro) ────────────────────────────────────────
   let _rvXauTimer = null;
+  function _rvTickerSet(priceElId, pctElId, price, pct, decimals) {
+    const priceEl = document.getElementById(priceElId);
+    const pctEl   = document.getElementById(pctElId);
+    if (priceEl) priceEl.textContent = price.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:decimals, maximumFractionDigits:decimals });
+    if (pctEl) {
+      const sign = pct >= 0 ? '+' : '';
+      pctEl.textContent = `${sign}${pct.toLocaleString('pt-BR', { minimumFractionDigits:3, maximumFractionDigits:3 })}%`;
+      pctEl.style.color = pct >= 0 ? 'var(--c-green)' : 'var(--c-red)';
+    }
+  }
   async function rvXauFetch() {
     try {
-      const r = await fetch('https://economia.awesomeapi.com.br/json/last/XAU-BRL');
+      const r = await fetch('https://economia.awesomeapi.com.br/json/last/XAU-BRL,USD-BRL');
       if (!r.ok) return;
-      const d = (await r.json()).XAUBRL;
-      if (!d) return;
-      const price = Number(d.bid) / 31.1035; // oz → g
-      const pct   = Number(d.pctChange);
-      const priceEl = document.getElementById('rv-xau-price');
-      const pctEl   = document.getElementById('rv-xau-pct');
-      if (priceEl) priceEl.textContent = price.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2, maximumFractionDigits:2 });
-      if (pctEl) {
-        const sign = pct >= 0 ? '+' : '';
-        pctEl.textContent = `${sign}${pct.toLocaleString('pt-BR', { minimumFractionDigits:3, maximumFractionDigits:3 })}%`;
-        pctEl.style.color = pct >= 0 ? 'var(--c-green)' : 'var(--c-red)';
-      }
+      const json = await r.json();
+      const xau = json.XAUBRL;
+      const usd = json.USDBRL;
+      if (xau) _rvTickerSet('rv-xau-price', 'rv-xau-pct', Number(xau.bid) / 31.1035, Number(xau.pctChange), 2);
+      if (usd) _rvTickerSet('rv-usd-price', 'rv-usd-pct', Number(usd.bid), Number(usd.pctChange), 2);
     } catch (e) { /* silencia erros de rede */ }
   }
   function rvXauStart() {
