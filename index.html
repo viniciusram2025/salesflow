@@ -3067,6 +3067,7 @@ function checkSession(){
     return;
   }
   currentUser = JSON.parse(saved);
+  window._sessionRestoredPage = true; // sinaliza que goTo foi chamado antes dos módulos carregarem
   showApp(currentUser);
 }
 
@@ -5378,10 +5379,15 @@ window.addEventListener('load', () => {
   if(typeof window._initFirebaseListeners === 'function'){
     window._initFirebaseListeners();
   }
-  // checkSession() pode ter chamado goTo() antes dos módulos carregarem (fotoLoad ainda não definida).
-  // Após todos os scripts, verifica se a página fotografia ficou ativa sem carregar dados.
-  if(document.getElementById('page-fotografia')?.classList.contains('active') && typeof window.fotoLoad === 'function'){
-    window.fotoLoad();
+  // checkSession() restaurou uma sessão antes dos módulos carregarem — goTo() foi chamado cedo demais.
+  // Re-chama goTo agora que todos os scripts estão prontos para disparar os data-loaders corretos.
+  if(window._sessionRestoredPage){
+    window._sessionRestoredPage = false;
+    const activePage = document.querySelector('.page.active');
+    if(activePage && typeof window.goTo === 'function'){
+      const pageName = activePage.id.replace('page-', '');
+      window.goTo(pageName);
+    }
   }
 });
 </script>
