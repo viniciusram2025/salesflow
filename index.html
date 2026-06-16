@@ -2989,8 +2989,11 @@ function showApp(user){
   document.getElementById('user-av').style.color       = ci.color;
   document.getElementById('user-name-display').textContent = user.name||user.email;
   document.getElementById('user-role-display').textContent = user.role==='admin'?'Administrador': (user.cargo||'Usuário');
-  // Se admin navega para minhas tarefas, senão applyPermissions já navegou
-  if(user.role==='admin') goTo('minhas');
+  // Admin: restaura última página ou vai para minhas tarefas
+  if(user.role==='admin') {
+    const lastPage = localStorage.getItem('sf_last_page');
+    goTo(lastPage || 'minhas');
+  }
 }
 
 // ── SIDEBAR COLLAPSE ──────────────────────────────────────────
