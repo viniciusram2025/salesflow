@@ -1508,6 +1508,7 @@ canvas.fab-canvas { width: 100% !important; }
     <div class="nav-item" onclick="goTo('fabricacoes')" data-page="fabricacoes"><i class="ti ti-hammer"></i>Fabricações JF</div>
     <div class="nav-item" onclick="goTo('fabricacoes-jm')" data-page="fabricacoes-jm"><i class="ti ti-hammer"></i>Fabricações JM</div>
     <div class="nav-item" onclick="goTo('manutencao')" data-page="manutencao"><i class="ti ti-hammer"></i>Manutenções</div>
+    <div class="nav-item" onclick="goTo('revenda')" data-page="revenda"><i class="ti ti-shopping-bag"></i>Revenda</div>
 
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
@@ -2430,6 +2431,136 @@ canvas.fab-canvas { width: 100% !important; }
   </div>
 
 </div>
+
+      <!-- ══════ PAGE: REVENDA ══════ -->
+      <div id="page-revenda" class="page">
+
+        <!-- Topbar com período -->
+        <div class="fab-topbar">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Período</span>
+            <input type="date" id="rv-from" style="background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;">
+            <span style="color:var(--c-muted);font-size:12px;">até</span>
+            <input type="date" id="rv-to"   style="background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;">
+            <button class="btn" style="font-size:12px;padding:6px 14px;" onclick="rvLoad()"><i class="ti ti-search"></i> Carregar</button>
+          </div>
+          <div class="fab-sync">
+            <span id="rv-last-update" class="fab-sync-time">—</span>
+            <button class="fab-refresh-btn" id="rv-refresh-btn" onclick="rvLoad()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs principais -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:10px;overflow:hidden;margin-bottom:16px;">
+          <div style="background:var(--c-surface);padding:14px 20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
+            <div id="rv-kpi-fat" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+          </div>
+          <div style="background:var(--c-surface);padding:14px 20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
+            <div id="rv-kpi-luc" style="font-size:22px;font-weight:700;color:var(--c-green);margin-top:4px;">—</div>
+          </div>
+          <div style="background:var(--c-surface);padding:14px 20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
+            <div id="rv-kpi-tkt" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+          </div>
+          <div style="background:var(--c-surface);padding:14px 20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
+            <div id="rv-kpi-qtd" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+          </div>
+        </div>
+
+        <!-- Grid principal de gráficos: [Destino] [Produto/Tipo] [Donuts+Vendedor] -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 380px;gap:14px;margin-bottom:16px;align-items:start;">
+
+          <!-- Coluna esq: Por Destino (azul) -->
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Destino</span>
+            </div>
+            <div id="rv-destino-wrap" style="padding:12px 14px;height:460px;overflow:hidden;">
+              <canvas id="rv-chart-destino"></canvas>
+            </div>
+          </div>
+
+          <!-- Coluna centro: Por Tipo de Joia (verde) -->
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Tipo de Joia</span>
+            </div>
+            <div id="rv-produto-wrap" style="padding:12px 14px;height:460px;overflow:hidden;">
+              <canvas id="rv-chart-produto"></canvas>
+            </div>
+          </div>
+
+          <!-- Coluna dir: Canal + Tipo Fabricação + Vendedor (stacked) -->
+          <div style="display:flex;flex-direction:column;gap:12px;">
+
+            <div class="fab-card" style="padding:0;overflow:hidden;">
+              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Canal de Venda</span>
+              </div>
+              <div style="padding:12px 14px;height:190px;overflow:hidden;">
+                <canvas id="rv-chart-canal"></canvas>
+              </div>
+            </div>
+
+            <div class="fab-card" style="padding:0;overflow:hidden;">
+              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Tipo de Fabricação</span>
+              </div>
+              <div style="padding:12px 14px;height:185px;overflow:hidden;">
+                <canvas id="rv-chart-tipo"></canvas>
+              </div>
+            </div>
+
+            <div class="fab-card" style="padding:0;overflow:hidden;" id="rv-vendedor-card">
+              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
+              </div>
+              <div id="rv-vendedor-wrap" style="padding:12px 14px;height:110px;overflow:hidden;">
+                <canvas id="rv-chart-vendedor"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Seção SCRAP -->
+        <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;overflow:hidden;margin-bottom:18px;">
+          <div style="padding:12px 18px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:8px;background:var(--c-surface2);">
+            <i class="ti ti-recycle" style="color:var(--c-muted);font-size:15px;"></i>
+            <span style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-text);">Scrap</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border-bottom:1px solid var(--c-border);">
+            <div style="background:var(--c-surface);padding:12px 18px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
+              <div id="rv-scrap-fat" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:12px 18px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
+              <div id="rv-scrap-qtd" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:12px 18px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
+              <div id="rv-scrap-luc" style="font-size:18px;font-weight:700;color:var(--c-green);margin-top:3px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:12px 18px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
+              <div id="rv-scrap-tkt" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div id="rv-scrap-wrap" style="height:180px;overflow:hidden;">
+              <canvas id="rv-chart-scrap"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-revenda -->
 
       <!-- ══════ PAGE: USUÁRIOS ══════ -->
       <div id="page-usuarios" class="page">
@@ -3778,6 +3909,7 @@ const ALL_PAGES = [
   {key:'fabricacoes',    label:'Fabricações JF', icon:'ti-hammer'},
   {key:'fabricacoes-jm', label:'Fabricações JM', icon:'ti-hammer'},
   {key:'manutencao',     label:'Manutenções',    icon:'ti-hammer'},
+  {key:'revenda',        label:'Revenda',         icon:'ti-shopping-bag'},
   {key:'ia',             label:'IA de Reuniões', icon:'ti-brain'},
 ];
 
@@ -7388,6 +7520,334 @@ window.addEventListener('load', () => {
       fabStartAutoRefresh();
     }
   }
+
+// ════════════════════════════════════════════════════════════════
+// REVENDA DASHBOARD
+// ════════════════════════════════════════════════════════════════
+(function () {
+  let _rvData   = [];
+  const _rvCharts = {};
+
+  const fmt = {
+    moeda:  v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:2 }).format(v||0),
+    moedaK: v => {
+      if (!v) return 'R$0';
+      return v >= 1000 ? 'R$' + (v/1000).toFixed(0) + 'k' : 'R$' + v.toFixed(0);
+    },
+    pct: v => (v == null ? '—' : v.toFixed(2) + '%'),
+    num: v => new Intl.NumberFormat('pt-BR').format(v||0),
+  };
+
+  function rvTheme() {
+    const light = document.body.classList.contains('light');
+    return {
+      text:  light ? '#1a1d27' : '#e8e9f0',
+      muted: light ? '#475569' : '#9ca3af',
+      grid:  light ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)',
+    };
+  }
+
+  function rvCanal(destino) {
+    if (!destino) return 'Parceiros';
+    const d = destino.toUpperCase();
+    if (d === 'ETERNNO') return 'Eternno';
+    if (d.includes('LEIL')) return 'Leilão';
+    return 'Parceiros';
+  }
+
+  function rvTipo(tipo) {
+    if (!tipo) return 'Outros';
+    if (tipo === 'JF')  return 'JF';
+    if (tipo === 'JMF') return 'JMF';
+    if (tipo.startsWith('JR')) return 'JR';
+    if (tipo.startsWith('JM')) return 'JM';
+    return 'Outros';
+  }
+
+  function kill(key) {
+    if (_rvCharts[key]) { _rvCharts[key].destroy(); delete _rvCharts[key]; }
+  }
+
+  function rvInitDates() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth()+1).padStart(2,'0');
+    const d = String(now.getDate()).padStart(2,'0');
+    const fromEl = document.getElementById('rv-from');
+    const toEl   = document.getElementById('rv-to');
+    if (fromEl && !fromEl.value) fromEl.value = `${y}-${m}-01`;
+    if (toEl   && !toEl.value)   toEl.value   = `${y}-${m}-${d}`;
+  }
+
+  const RV_API = 'https://goldtech-fabricacoes-api.onrender.com';
+
+  window.rvLoad = async function () {
+    const from = document.getElementById('rv-from')?.value;
+    const to   = document.getElementById('rv-to')?.value;
+    if (!from || !to) { alert('Selecione o período.'); return; }
+    const btn = document.getElementById('rv-refresh-btn');
+    if (btn) btn.classList.add('spinning');
+    try {
+      const r = await window.apiFetch(`${RV_API}/revenda?from=${from}&to=${to}`);
+      if (!r.ok) throw new Error(await r.text());
+      _rvData = await r.json();
+      rvRender(_rvData);
+      const ts = new Date();
+      document.getElementById('rv-last-update').textContent =
+        'Atualizado: ' + ts.toLocaleTimeString('pt-BR');
+    } catch (e) {
+      console.error('Revenda error:', e);
+    } finally {
+      if (btn) btn.classList.remove('spinning');
+    }
+  };
+
+  function rvRender(data) {
+    const joias = data.filter(r => !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
+    const scrap = data.filter(r =>   r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
+    rvKPIs(joias);
+    rvDestino(joias);
+    rvProduto(joias);
+    rvCanalDonut(joias);
+    rvTipoDonut(joias);
+    rvVendedor(joias);
+    rvScrap(scrap);
+  }
+
+  // ── KPIs principais ──────────────────────────────────────────
+  function rvKPIs(data) {
+    const fat  = data.reduce((s,r) => s + Number(r.preco_cobrado||0), 0);
+    const cust = data.reduce((s,r) => s + Number(r.custo_real||0), 0);
+    const qtd  = data.length;
+    const luc  = fat > 0 ? (fat - cust) / fat * 100 : 0;
+    document.getElementById('rv-kpi-fat').textContent = fmt.moeda(fat);
+    document.getElementById('rv-kpi-luc').textContent = fmt.pct(luc);
+    document.getElementById('rv-kpi-tkt').textContent = fmt.moeda(qtd > 0 ? fat/qtd : 0);
+    document.getElementById('rv-kpi-qtd').textContent = fmt.num(qtd);
+  }
+
+  // ── Gráfico Destino (barras azuis, horizontal) ───────────────
+  function rvDestino(data) {
+    kill('destino');
+    const el = document.getElementById('rv-chart-destino');
+    if (!el) return;
+    const map = {};
+    data.forEach(r => {
+      const k = r.destino || '—';
+      if (!map[k]) map[k] = { qtd:0, fat:0 };
+      map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
+    });
+    const sorted = Object.entries(map).sort((a,b) => b[1].fat - a[1].fat).slice(0,20);
+    const labels = sorted.map(([k]) => k);
+    const values = sorted.map(([,v]) => v.fat);
+    const qtds   = sorted.map(([,v]) => v.qtd);
+    const t = rvTheme();
+    const h = Math.max(360, sorted.length * 26 + 40);
+    document.getElementById('rv-destino-wrap').style.height = h + 'px';
+    _rvCharts['destino'] = new Chart(el, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(79,110,247,.7)', borderRadius: 3 }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display:false }, tooltip: { callbacks: { label: (c) =>
+          [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`]
+        }}},
+        scales: {
+          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v) }, grid: { color:t.grid } },
+          y: { ticks: { color:t.text, font:{ size:11 } }, grid: { display:false } }
+        }
+      }
+    });
+  }
+
+  // ── Gráfico Produto / Tipo de Joia (barras verdes, horizontal) ─
+  function rvProduto(data) {
+    kill('produto');
+    const el = document.getElementById('rv-chart-produto');
+    if (!el) return;
+    const map = {};
+    data.forEach(r => {
+      const k = r.produto || '—';
+      if (!map[k]) map[k] = { qtd:0, fat:0 };
+      map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
+    });
+    const sorted = Object.entries(map).sort((a,b) => b[1].fat - a[1].fat).slice(0,20);
+    const labels = sorted.map(([k]) => k);
+    const values = sorted.map(([,v]) => v.fat);
+    const qtds   = sorted.map(([,v]) => v.qtd);
+    const t = rvTheme();
+    const h = Math.max(360, sorted.length * 26 + 40);
+    document.getElementById('rv-produto-wrap').style.height = h + 'px';
+    _rvCharts['produto'] = new Chart(el, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 3 }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display:false }, tooltip: { callbacks: { label: (c) =>
+          [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`]
+        }}},
+        scales: {
+          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v) }, grid: { color:t.grid } },
+          y: { ticks: { color:t.text, font:{ size:11 } }, grid: { display:false } }
+        }
+      }
+    });
+  }
+
+  // ── Donut Canal (Eternno / Parceiros / Leilão) ────────────────
+  function rvCanalDonut(data) {
+    kill('canal');
+    const el = document.getElementById('rv-chart-canal');
+    if (!el) return;
+    const map = { Eternno:0, Parceiros:0, 'Leilão':0 };
+    data.forEach(r => { map[rvCanal(r.destino)] += Number(r.preco_cobrado||0); });
+    const t = rvTheme();
+    _rvCharts['canal'] = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(map),
+        datasets: [{ data: Object.values(map), backgroundColor: ['#1d4ed8','#3b82f6','#93c5fd'], borderWidth:1, borderColor:'transparent' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7 } },
+          tooltip: { callbacks: { label: (c) => {
+            const total = c.dataset.data.reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? (c.raw/total*100).toFixed(1) : '0';
+            return ` ${fmt.moeda(c.raw)} (${pct}%)`;
+          }}}
+        }
+      }
+    });
+  }
+
+  // ── Donut Tipo Fabricação (JF / JMF / JR / JM) ───────────────
+  function rvTipoDonut(data) {
+    kill('tipo');
+    const el = document.getElementById('rv-chart-tipo');
+    if (!el) return;
+    const map = { JF:0, JMF:0, JR:0, JM:0, Outros:0 };
+    data.forEach(r => { const k = rvTipo(r.tipo); map[k] += Number(r.preco_cobrado||0); });
+    // Remove chaves zeradas
+    const labels = Object.keys(map).filter(k => map[k] > 0);
+    const values = labels.map(k => map[k]);
+    const colors = ['#15803d','#16a34a','#22c55e','#4ade80','#86efac'];
+    const t = rvTheme();
+    _rvCharts['tipo'] = new Chart(el, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth:1, borderColor:'transparent' }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7 } },
+          tooltip: { callbacks: { label: (c) => {
+            const total = c.dataset.data.reduce((a,b) => a+b, 0);
+            const pct = total > 0 ? (c.raw/total*100).toFixed(1) : '0';
+            return ` ${fmt.moeda(c.raw)} (${pct}%)`;
+          }}}
+        }
+      }
+    });
+  }
+
+  // ── Gráfico Vendedor Interno (Eternno) ────────────────────────
+  function rvVendedor(data) {
+    kill('vendedor');
+    const wrap = document.getElementById('rv-vendedor-wrap');
+    const el   = document.getElementById('rv-chart-vendedor');
+    if (!el || !wrap) return;
+    const eternno = data.filter(r => (r.destino||'').toUpperCase() === 'ETERNNO');
+    const map = {};
+    eternno.forEach(r => {
+      const k = r.vendedor_interno || '(Em branco)';
+      if (!map[k]) map[k] = 0;
+      map[k] += Number(r.preco_cobrado||0);
+    });
+    const sorted = Object.entries(map).sort((a,b) => b[1]-a[1]);
+    if (!sorted.length) {
+      wrap.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--c-muted);font-size:12px;">Sem dados Eternno</div>';
+      return;
+    }
+    const h = Math.max(80, sorted.length * 26 + 30);
+    wrap.style.height = h + 'px';
+    wrap.innerHTML = '<canvas id="rv-chart-vendedor"></canvas>';
+    const newEl = document.getElementById('rv-chart-vendedor');
+    const t = rvTheme();
+    _rvCharts['vendedor'] = new Chart(newEl, {
+      type: 'bar',
+      data: {
+        labels: sorted.map(([k]) => k),
+        datasets: [{ data: sorted.map(([,v]) => v), backgroundColor: 'rgba(34,197,94,.7)', borderRadius:3 }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label:(c) => ` ${fmt.moeda(c.raw)}` }}},
+        scales: {
+          x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
+          y: { ticks:{ color:t.text, font:{ size:11 } }, grid:{ display:false } }
+        }
+      }
+    });
+  }
+
+  // ── Seção SCRAP ───────────────────────────────────────────────
+  function rvScrap(data) {
+    const fat  = data.reduce((s,r) => s + Number(r.preco_cobrado||0), 0);
+    const cust = data.reduce((s,r) => s + Number(r.custo_real||0), 0);
+    const qtd  = data.length;
+    const luc  = fat > 0 ? (fat - cust) / fat * 100 : 0;
+    document.getElementById('rv-scrap-fat').textContent = fmt.moeda(fat);
+    document.getElementById('rv-scrap-qtd').textContent = fmt.num(qtd);
+    document.getElementById('rv-scrap-luc').textContent = fmt.pct(luc);
+    document.getElementById('rv-scrap-tkt').textContent = fmt.moeda(qtd > 0 ? fat/qtd : 0);
+
+    kill('scrap');
+    const el = document.getElementById('rv-chart-scrap');
+    if (!el) return;
+    const map = {};
+    data.forEach(r => {
+      const k = r.destino || '—';
+      if (!map[k]) map[k] = { qtd:0, fat:0 };
+      map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
+    });
+    if (!Object.keys(map).length) return;
+    const sorted = Object.entries(map).sort((a,b) => b[1].fat - a[1].fat);
+    const labels = sorted.map(([k]) => k);
+    const values = sorted.map(([,v]) => v.fat);
+    const qtds   = sorted.map(([,v]) => v.qtd);
+    const t = rvTheme();
+    const h = Math.max(120, sorted.length * 26 + 30);
+    document.getElementById('rv-scrap-wrap').style.height = h + 'px';
+    _rvCharts['scrap'] = new Chart(el, {
+      type: 'bar',
+      data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(156,163,175,.7)', borderRadius:3 }] },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label:(c) =>
+          [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`]
+        }}},
+        scales: {
+          x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
+          y: { ticks:{ color:t.text, font:{ size:11 } }, grid:{ display:false } }
+        }
+      }
+    });
+  }
+
+  // ── Gancho na navegação ───────────────────────────────────────
+  const _rvPrev = window.goTo;
+  window.goTo = function (page) {
+    _rvPrev(page);
+    if (page === 'revenda') {
+      rvInitDates();
+      window.rvLoad();
+    }
+  };
+})();
 
 </script>
 
