@@ -3162,6 +3162,7 @@ const PAGE_TITLES = {
 };
 
 function goTo(name){
+  localStorage.setItem('sf_last_page', name);
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
@@ -3994,9 +3995,10 @@ function applyPermissions(user){
     sec.style.display = hasVisible ? '' : 'none';
   });
 
-  // Navega para primeira página permitida
-  const firstPage = perms[0] || 'minhas';
-  goTo(firstPage);
+  // Restaura última página visitada (útil para TV com auto-refresh)
+  const lastPage  = localStorage.getItem('sf_last_page');
+  const startPage = (lastPage && perms.includes(lastPage)) ? lastPage : (perms[0] || 'minhas');
+  goTo(startPage);
 }
 
 // ══════════════════════════════════════════
@@ -7623,6 +7625,8 @@ window.addEventListener('load', () => {
     window._drpCallback = function(from, to) {
       _rvDateFrom = from || _rvDateFrom;
       _rvDateTo   = to   || _rvDateTo;
+      localStorage.setItem('sf_rv_from', _rvDateFrom);
+      localStorage.setItem('sf_rv_to',   _rvDateTo);
       rvUpdateDrpLabel();
       window.rvLoad();
     };
@@ -7660,6 +7664,14 @@ window.addEventListener('load', () => {
 
   function rvInitDates() {
     if (_rvDateFrom && _rvDateTo) { rvUpdateDrpLabel(); return; }
+    const savedFrom = localStorage.getItem('sf_rv_from');
+    const savedTo   = localStorage.getItem('sf_rv_to');
+    if (savedFrom && savedTo) {
+      _rvDateFrom = savedFrom;
+      _rvDateTo   = savedTo;
+      rvUpdateDrpLabel();
+      return;
+    }
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth()+1).padStart(2,'0');
@@ -7818,7 +7830,7 @@ window.addEventListener('load', () => {
               const total = ds.data.reduce((a,b) => a+b, 0);
               return chart.data.labels.map((lbl, i) => {
                 const pct = total > 0 ? (ds.data[i]/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1}) : '0';
-                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
+                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
               });
             }
           }},
@@ -7857,7 +7869,7 @@ window.addEventListener('load', () => {
               const total = ds.data.reduce((a,b) => a+b, 0);
               return chart.data.labels.map((lbl, i) => {
                 const pct = total > 0 ? (ds.data[i]/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1}) : '0';
-                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
+                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
               });
             }
           }},
