@@ -7675,14 +7675,13 @@ window.addEventListener('load', () => {
   function rvRender(data) {
     // Aplica filtro de destinos autorizados
     const allowed = data.filter(r => r.destino && RV_DESTINOS.has(r.destino.toUpperCase()));
-    const joias = allowed.filter(r => !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
-    const scrap = allowed.filter(r =>   r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
-    rvKPIs(joias);
-    rvDestino(joias);
-    rvProduto(joias);
-    rvCanalDonut(joias);
-    rvTipoDonut(joias);
-    rvVendedor(joias);
+    const scrap   = allowed.filter(r => r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
+    rvKPIs(allowed);
+    rvDestino(allowed);
+    rvProduto(allowed);
+    rvCanalDonut(allowed);
+    rvTipoDonut(allowed);
+    rvVendedor(allowed);
     rvScrap(scrap);
   }
 
