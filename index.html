@@ -7961,7 +7961,8 @@ window.addEventListener('load', () => {
   }
 
   // ── Cotação XAU (ouro) ────────────────────────────────────────
-  let _rvXauTimer = null;
+  let _rvXauTimer    = null;
+  let _rvAutoRefresh = null;
   function _rvTickerSet(priceElId, pctElId, price, pct, decimals) {
     const priceEl = document.getElementById(priceElId);
     const pctEl   = document.getElementById(pctElId);
@@ -7997,6 +7998,10 @@ window.addEventListener('load', () => {
       rvInitDates();
       window.rvLoad();
       rvXauStart();
+      if (_rvAutoRefresh) clearInterval(_rvAutoRefresh);
+      _rvAutoRefresh = setInterval(window.rvLoad, 60 * 1000);
+    } else {
+      if (_rvAutoRefresh) { clearInterval(_rvAutoRefresh); _rvAutoRefresh = null; }
     }
   };
 })();
