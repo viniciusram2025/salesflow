@@ -7677,7 +7677,7 @@ window.addEventListener('load', () => {
   function rvRender(data) {
     const allowed = data.filter(r => r.destino && RV_DESTINOS.has(r.destino.toUpperCase()));
     const scrap   = allowed.filter(r => r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
-    const main    = allowed.filter(r => RV_STATUS_MAIN.has(Number(r.status_id)) && !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
+    const main    = allowed.filter(r => RV_STATUS_MAIN.has(Number(r.status_id)));
     rvKPIs(main);
     rvDestino(main);
     rvProduto(main);
