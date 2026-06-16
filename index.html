@@ -7568,6 +7568,7 @@ window.addEventListener('load', () => {
 
   const fmt = {
     moeda:  v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:2 }).format(v||0),
+    moeda0: v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 }).format(v||0),
     moedaK: v => {
       if (!v) return 'R$0';
       return v >= 1000 ? 'R$' + (v/1000).toFixed(0) + 'k' : 'R$' + v.toFixed(0);
@@ -7723,7 +7724,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moedaK(v), color: t.muted, font:{ size:9 }, clip:false }
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.muted, font:{ size:11 }, clip:false }
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
@@ -7759,7 +7760,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moedaK(v), color: t.muted, font:{ size:9 }, clip:false }
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.muted, font:{ size:11 }, clip:false }
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
@@ -7865,7 +7866,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => ` ${fmt.moeda(c.raw)}` }},
-          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moedaK(v), color: t.muted, font:{ size:9 }, clip:false }
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.muted, font:{ size:11 }, clip:false }
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
@@ -7913,7 +7914,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moedaK(v), color: t.muted, font:{ size:9 }, clip:false }
+          datalabels: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.muted, font:{ size:11 }, clip:false }
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
