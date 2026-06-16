@@ -2446,6 +2446,13 @@ canvas.fab-canvas { width: 100% !important; }
               <i class="ti ti-chevron-down" style="font-size:11px;opacity:.5"></i>
             </button>
           </div>
+          <!-- Ticker XAU -->
+          <div id="rv-xau-ticker" style="display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:var(--c-surface2);border:1px solid var(--c-border);cursor:default;" title="Ouro (XAU) por grama em BRL — atualizado a cada 5 min">
+            <i class="ti ti-coin" style="font-size:13px;color:var(--c-amber);opacity:.85;"></i>
+            <span style="font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--c-text);">XAU</span>
+            <span id="rv-xau-price" style="font-size:12px;font-weight:700;color:var(--c-text);">—</span>
+            <span id="rv-xau-pct" style="font-size:11px;font-weight:600;">—</span>
+          </div>
           <div class="fab-sync">
             <span id="rv-last-update" class="fab-sync-time">—</span>
             <button class="fab-refresh-btn" id="rv-refresh-btn" onclick="rvLoad()">
@@ -2506,10 +2513,10 @@ canvas.fab-canvas { width: 100% !important; }
 
         </div>
 
-        <!-- Linha 2: Gráficos (preenche o restante da tela) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:10px;padding:10px 16px 10px;flex:1;min-height:0;overflow:hidden;">
+        <!-- Linha 2: barras principais (flex:1, alto) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px 16px 0;flex:1;min-height:0;overflow:hidden;">
 
-          <!-- Coluna esq: Por Destino (azul) -->
+          <!-- Por Destino -->
           <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
             <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
               <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Destino</span>
@@ -2519,56 +2526,60 @@ canvas.fab-canvas { width: 100% !important; }
             </div>
           </div>
 
-          <!-- Coluna centro: Por Tipo de Joia (verde) + SCRAP -->
-          <div style="display:flex;flex-direction:column;gap:8px;min-height:0;">
-            <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
-              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Tipo de Joia</span>
-              </div>
-              <div id="rv-produto-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
-                <canvas id="rv-chart-produto"></canvas>
-              </div>
+          <!-- Por Tipo de Joia -->
+          <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Tipo de Joia</span>
             </div>
-            <!-- SCRAP chart (parte inferior da coluna centro) -->
-            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;">
-              <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
-              </div>
-              <div id="rv-scrap-wrap" style="padding:6px 10px;height:120px;overflow:hidden;">
-                <canvas id="rv-chart-scrap"></canvas>
-              </div>
+            <div id="rv-produto-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
+              <canvas id="rv-chart-produto"></canvas>
             </div>
           </div>
 
-          <!-- Coluna dir: Canal + Tipo Fabricação + Vendedor -->
-          <div style="display:flex;flex-direction:column;gap:8px;min-height:0;">
-
-            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;">
-              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Canal de Venda</span>
-              </div>
-              <div style="padding:8px 10px;height:170px;overflow:hidden;">
-                <canvas id="rv-chart-canal"></canvas>
-              </div>
+          <!-- Vendedor Interno -->
+          <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;" id="rv-vendedor-card">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
             </div>
-
-            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;">
-              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Tipo de Fabricação</span>
-              </div>
-              <div style="padding:8px 10px;height:160px;overflow:hidden;">
-                <canvas id="rv-chart-tipo"></canvas>
-              </div>
+            <div id="rv-vendedor-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
+              <canvas id="rv-chart-vendedor"></canvas>
             </div>
+          </div>
 
-            <div class="fab-card" style="padding:0;overflow:hidden;flex:1;min-height:80px;display:flex;flex-direction:column;" id="rv-vendedor-card">
-              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
-              </div>
-              <div id="rv-vendedor-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
-                <canvas id="rv-chart-vendedor"></canvas>
-              </div>
+        </div>
+
+        <!-- Linha 3: donuts + scrap (altura fixa) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px 16px 10px;flex-shrink:0;">
+
+          <!-- Canal de Venda -->
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Canal de Venda</span>
             </div>
+            <div style="padding:8px 10px;height:190px;overflow:hidden;">
+              <canvas id="rv-chart-canal"></canvas>
+            </div>
+          </div>
+
+          <!-- Tipo de Fabricação -->
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Tipo de Fabricação</span>
+            </div>
+            <div style="padding:8px 10px;height:190px;overflow:hidden;">
+              <canvas id="rv-chart-tipo"></canvas>
+            </div>
+          </div>
+
+          <!-- Scrap — Por Destino -->
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
+            </div>
+            <div id="rv-scrap-wrap" style="padding:6px 10px;height:190px;overflow:hidden;">
+              <canvas id="rv-chart-scrap"></canvas>
+            </div>
+          </div>
 
         </div>
 
@@ -2884,6 +2895,10 @@ function toggleTheme(){
   localStorage.setItem('sf_theme', isLight ? 'light' : 'dark');
   const icon = document.getElementById('theme-icon');
   if(icon) icon.className = isLight ? 'ti ti-moon' : 'ti ti-sun';
+  // Re-renderiza gráficos da Revenda com as novas cores de tema
+  if (document.getElementById('page-revenda')?.classList.contains('active') && typeof rvRender === 'function') {
+    try { rvRender(window._rvDataGlobal || []); } catch(e) {}
+  }
 }
 
 function loadTheme(){
@@ -7659,6 +7674,7 @@ window.addEventListener('load', () => {
       const r = await window.apiFetch(`${RV_API}/revenda?from=${from}&to=${to}`);
       if (!r.ok) throw new Error(await r.text());
       _rvData = await r.json();
+      window._rvDataGlobal = _rvData;
       rvRender(_rvData);
       const ts = new Date();
       document.getElementById('rv-last-update').textContent =
@@ -7685,6 +7701,7 @@ window.addEventListener('load', () => {
     rvVendedor(main);
     rvScrap(scrap);
   }
+  window.rvRender = rvRender;
 
   // ── KPIs principais ──────────────────────────────────────────
   function rvKPIs(data) {
@@ -7940,6 +7957,32 @@ window.addEventListener('load', () => {
     });
   }
 
+  // ── Cotação XAU (ouro) ────────────────────────────────────────
+  let _rvXauTimer = null;
+  async function rvXauFetch() {
+    try {
+      const r = await fetch('https://economia.awesomeapi.com.br/json/last/XAU-BRL');
+      if (!r.ok) return;
+      const d = (await r.json()).XAUBRL;
+      if (!d) return;
+      const price = Number(d.bid);
+      const pct   = Number(d.pctChange);
+      const priceEl = document.getElementById('rv-xau-price');
+      const pctEl   = document.getElementById('rv-xau-pct');
+      if (priceEl) priceEl.textContent = price.toLocaleString('pt-BR', { style:'currency', currency:'BRL', minimumFractionDigits:2, maximumFractionDigits:2 });
+      if (pctEl) {
+        const sign = pct >= 0 ? '+' : '';
+        pctEl.textContent = `${sign}${pct.toLocaleString('pt-BR', { minimumFractionDigits:3, maximumFractionDigits:3 })}%`;
+        pctEl.style.color = pct >= 0 ? 'var(--c-green)' : 'var(--c-red)';
+      }
+    } catch (e) { /* silencia erros de rede */ }
+  }
+  function rvXauStart() {
+    rvXauFetch();
+    if (_rvXauTimer) clearInterval(_rvXauTimer);
+    _rvXauTimer = setInterval(rvXauFetch, 5 * 60 * 1000);
+  }
+
   // ── Gancho na navegação ───────────────────────────────────────
   const _rvPrev = window.goTo;
   window.goTo = function (page) {
@@ -7947,6 +7990,7 @@ window.addEventListener('load', () => {
     if (page === 'revenda') {
       rvInitDates();
       window.rvLoad();
+      rvXauStart();
     }
   };
 })();
