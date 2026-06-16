@@ -8226,8 +8226,8 @@ window.addEventListener('load', () => {
         <td style="white-space:nowrap;">${fmt.data(r.data_finalizacao)}</td>
         <td style="font-size:11px;color:var(--c-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.observacao||'—'}</td>
         <td style="white-space:nowrap;">
-          <button class="fab-icon-btn" title="Editar" onclick="fotoOpenModal(${r.id})"><i class="ti ti-pencil"></i></button>
-          <button class="fab-icon-btn" title="Excluir" style="color:var(--c-red);" onclick="fotoDelete(${r.id})"><i class="ti ti-trash"></i></button>
+          <button class="fab-icon-btn" title="Editar" onclick="fotoOpenModal('${r.id}')"><i class="ti ti-pencil"></i></button>
+          <button class="fab-icon-btn" title="Excluir" style="color:var(--c-red);" onclick="fotoDelete('${r.id}')"><i class="ti ti-trash"></i></button>
         </td>
       </tr>`;
     }).join('');
