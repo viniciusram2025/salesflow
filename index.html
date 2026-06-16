@@ -5378,6 +5378,11 @@ window.addEventListener('load', () => {
   if(typeof window._initFirebaseListeners === 'function'){
     window._initFirebaseListeners();
   }
+  // checkSession() pode ter chamado goTo() antes dos módulos carregarem (fotoLoad ainda não definida).
+  // Após todos os scripts, verifica se a página fotografia ficou ativa sem carregar dados.
+  if(document.getElementById('page-fotografia')?.classList.contains('active') && typeof window.fotoLoad === 'function'){
+    window.fotoLoad();
+  }
 });
 </script>
 <script>
