@@ -7672,16 +7672,18 @@ window.addEventListener('load', () => {
     }
   };
 
+  const RV_STATUS_MAIN = new Set([2, 4, 13]);
+
   function rvRender(data) {
-    // Aplica filtro de destinos autorizados
     const allowed = data.filter(r => r.destino && RV_DESTINOS.has(r.destino.toUpperCase()));
     const scrap   = allowed.filter(r => r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
-    rvKPIs(allowed);
-    rvDestino(allowed);
-    rvProduto(allowed);
-    rvCanalDonut(allowed);
-    rvTipoDonut(allowed);
-    rvVendedor(allowed);
+    const main    = allowed.filter(r => RV_STATUS_MAIN.has(Number(r.status_id)) && !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
+    rvKPIs(main);
+    rvDestino(main);
+    rvProduto(main);
+    rvCanalDonut(main);
+    rvTipoDonut(main);
+    rvVendedor(main);
     rvScrap(scrap);
   }
 
