@@ -7782,6 +7782,7 @@ window.addEventListener('load', () => {
     const t = rvTheme();
     _rvCharts['canal'] = new Chart(el, {
       type: 'doughnut',
+      plugins: [ChartDataLabels],
       data: {
         labels: Object.keys(map),
         datasets: [{ data: Object.values(map), backgroundColor: ['#1d4ed8','#3b82f6','#93c5fd'], borderWidth:1, borderColor:'transparent' }]
@@ -7789,12 +7790,26 @@ window.addEventListener('load', () => {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7 } },
+          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7,
+            generateLabels: (chart) => chart.data.labels.map((lbl, i) => ({
+              text: `${lbl}  ${fmt.moedaK(chart.data.datasets[0].data[i])}`,
+              fillStyle: chart.data.datasets[0].backgroundColor[i],
+              strokeStyle: 'transparent', lineWidth:0, hidden:false, index:i
+            }))
+          }},
           tooltip: { callbacks: { label: (c) => {
             const total = c.dataset.data.reduce((a,b) => a+b, 0);
             const pct = total > 0 ? (c.raw/total*100).toFixed(1) : '0';
             return ` ${fmt.moeda(c.raw)} (${pct}%)`;
-          }}}
+          }}},
+          datalabels: {
+            formatter: (v, ctx) => {
+              const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+              const pct = total > 0 ? Math.round(v/total*100) : 0;
+              return pct >= 5 ? `${pct}%` : '';
+            },
+            color: '#fff', font: { size:10, weight:'bold' }
+          }
         }
       }
     });
@@ -7814,6 +7829,7 @@ window.addEventListener('load', () => {
     const t = rvTheme();
     _rvCharts['tipo'] = new Chart(el, {
       type: 'doughnut',
+      plugins: [ChartDataLabels],
       data: {
         labels,
         datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth:1, borderColor:'transparent' }]
@@ -7821,12 +7837,26 @@ window.addEventListener('load', () => {
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7 } },
+          legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7,
+            generateLabels: (chart) => chart.data.labels.map((lbl, i) => ({
+              text: `${lbl}  ${fmt.moedaK(chart.data.datasets[0].data[i])}`,
+              fillStyle: chart.data.datasets[0].backgroundColor[i],
+              strokeStyle: 'transparent', lineWidth:0, hidden:false, index:i
+            }))
+          }},
           tooltip: { callbacks: { label: (c) => {
             const total = c.dataset.data.reduce((a,b) => a+b, 0);
             const pct = total > 0 ? (c.raw/total*100).toFixed(1) : '0';
             return ` ${fmt.moeda(c.raw)} (${pct}%)`;
-          }}}
+          }}},
+          datalabels: {
+            formatter: (v, ctx) => {
+              const total = ctx.dataset.data.reduce((a,b) => a+b, 0);
+              const pct = total > 0 ? Math.round(v/total*100) : 0;
+              return pct >= 5 ? `${pct}%` : '';
+            },
+            color: '#fff', font: { size:10, weight:'bold' }
+          }
         }
       }
     });
