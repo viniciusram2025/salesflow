@@ -7792,7 +7792,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7,
             generateLabels: (chart) => chart.data.labels.map((lbl, i) => ({
-              text: `${lbl}  ${fmt.moedaK(chart.data.datasets[0].data[i])}`,
+              text: `${lbl}  ${fmt.moeda0(chart.data.datasets[0].data[i])}`,
               fillStyle: chart.data.datasets[0].backgroundColor[i],
               strokeStyle: 'transparent', lineWidth:0, hidden:false, index:i
             }))
@@ -7839,7 +7839,7 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { position:'bottom', labels: { color:t.text, font:{size:10}, boxWidth:10, padding:7,
             generateLabels: (chart) => chart.data.labels.map((lbl, i) => ({
-              text: `${lbl}  ${fmt.moedaK(chart.data.datasets[0].data[i])}`,
+              text: `${lbl}  ${fmt.moeda0(chart.data.datasets[0].data[i])}`,
               fillStyle: chart.data.datasets[0].backgroundColor[i],
               strokeStyle: 'transparent', lineWidth:0, hidden:false, index:i
             }))
