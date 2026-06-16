@@ -7730,7 +7730,7 @@ window.addEventListener('load', () => {
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:10 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
+          y: { ticks: { color:t.text, font:{ size:12 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
         }
       }
     });
@@ -7747,7 +7747,7 @@ window.addEventListener('load', () => {
       if (!map[k]) map[k] = { qtd:0, fat:0 };
       map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
     });
-    const sorted = Object.entries(map).sort((a,b) => b[1].fat - a[1].fat).slice(0,20);
+    const sorted = Object.entries(map).sort((a,b) => b[1].qtd - a[1].qtd).slice(0,20);
     const labels = sorted.map(([k]) => k);
     const values = sorted.map(([,v]) => v.fat);
     const qtds   = sorted.map(([,v]) => v.qtd);
@@ -7766,7 +7766,7 @@ window.addEventListener('load', () => {
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:10 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
+          y: { ticks: { color:t.text, font:{ size:12 }, callback: (v,i) => `${labels[i]}  (${qtds[i]})` }, grid: { display:false } }
         }
       }
     });
