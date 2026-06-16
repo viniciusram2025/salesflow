@@ -2637,7 +2637,7 @@ canvas.fab-canvas { width: 100% !important; }
           <div class="fab-table-wrap" style="flex:1;overflow:auto;">
             <table class="fab-table" style="min-width:900px;">
               <thead id="foto-thead"></thead>
-              <tbody id="foto-tbody"></tbody>
+              <tbody id="foto-tbody"><tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -6403,6 +6403,10 @@ window.addEventListener('load', () => {
   async function fabLoad() {
     const btn = document.getElementById("fab-btn-refresh");
     btn.classList.add("spinning");
+    const _ld = '<tr><td colspan="20"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>';
+    const _setLoading = id => { const el = document.getElementById(id); if (el) el.innerHTML = _ld; };
+    _setLoading('fab-lista-tbody');
+    _setLoading('fab-categoria-tbody');
 
     try {
       const [resumo, fabricacao, categorias] = await Promise.all([
@@ -7141,6 +7145,10 @@ window.addEventListener('load', () => {
   async function jmLoad() {
     const btn = document.getElementById("jm-btn-refresh");
     btn.classList.add("spinning");
+    const _ld = '<tr><td colspan="20"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>';
+    const _setLoading = id => { const el = document.getElementById(id); if (el) el.innerHTML = _ld; };
+    _setLoading('jm-lista-tbody');
+    _setLoading('jm-categoria-tbody');
     try {
       const resumo = await apiGet("jm/resumo");
       renderJmResumo(resumo);
@@ -8277,6 +8285,8 @@ window.addEventListener('load', () => {
   window.fotoLoad = async function() {
     const page = document.getElementById('page-fotografia');
     if (!page || !page.classList.contains('active')) return;
+    const tbody = document.getElementById('foto-tbody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="11"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>';
     try {
       const r = await window.apiFetch(window._API+'/fotos');
       if (!r.ok) throw new Error(await r.text());
