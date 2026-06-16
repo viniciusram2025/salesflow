@@ -2644,15 +2644,15 @@ canvas.fab-canvas { width: 100% !important; }
 
     <!-- Modal Fotografia -->
     <div id="foto-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fotoCloseModal()">
-      <div class="modal-box" style="width:560px;max-width:95vw;">
-        <div class="modal-header">
+      <div class="modal" style="width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+        <div class="modal-head">
           <div style="display:flex;align-items:center;gap:8px;">
             <i class="ti ti-camera" style="color:var(--c-accent);font-size:16px;"></i>
             <span id="foto-modal-title" class="modal-title">Novo Saquinho</span>
           </div>
-          <button class="modal-close" onclick="fotoCloseModal()"><i class="ti ti-x"></i></button>
+          <button class="modal-close" onclick="fotoCloseModal()">&times;</button>
         </div>
-        <div class="modal-body" style="display:grid;gap:14px;">
+        <div style="display:grid;gap:14px;padding:4px 0 20px;">
           <!-- Datas -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div>
@@ -2665,16 +2665,16 @@ canvas.fab-canvas { width: 100% !important; }
             </div>
           </div>
           <!-- Cabeçalho das colunas -->
-          <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;align-items:center;padding:0 4px;">
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:8px;align-items:center;padding:0 2px;">
             <div></div>
             <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);">Recebido</div>
             <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);">Fotografado</div>
             <div style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);">Editado</div>
           </div>
           <!-- Fabricado -->
-          <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;display:inline-block;flex-shrink:0;"></span>
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(59,130,246,.1);border-left:3px solid #3b82f6;border-radius:6px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>
               <span style="font-size:12px;font-weight:700;color:#3b82f6;">Fabricado</span>
             </div>
             <input type="number" id="foto-f-qtd-fab" class="fab-input" min="0" value="0" style="text-align:center;">
@@ -2682,9 +2682,9 @@ canvas.fab-canvas { width: 100% !important; }
             <input type="number" id="foto-f-edit-fab" class="fab-input" min="0" value="0" style="text-align:center;">
           </div>
           <!-- Second -->
-          <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:8px;padding:10px 12px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block;flex-shrink:0;"></span>
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(249,115,22,.1);border-left:3px solid #f97316;border-radius:6px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0;"></span>
               <span style="font-size:12px;font-weight:700;color:#f97316;">Second</span>
             </div>
             <input type="number" id="foto-f-qtd-sec" class="fab-input" min="0" value="0" style="text-align:center;">
@@ -2692,9 +2692,9 @@ canvas.fab-canvas { width: 100% !important; }
             <input type="number" id="foto-f-edit-sec" class="fab-input" min="0" value="0" style="text-align:center;">
           </div>
           <!-- Scrap -->
-          <div style="display:grid;grid-template-columns:100px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(100,116,139,.08);border:1px solid rgba(100,116,139,.2);border-radius:8px;padding:10px 12px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span style="width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;flex-shrink:0;"></span>
+          <div style="display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:8px;align-items:center;background:rgba(100,116,139,.1);border-left:3px solid #64748b;border-radius:6px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;gap:7px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#64748b;flex-shrink:0;"></span>
               <span style="font-size:12px;font-weight:700;color:#94a3b8;">Scrap</span>
             </div>
             <input type="number" id="foto-f-qtd-scr" class="fab-input" min="0" value="0" style="text-align:center;">
@@ -2705,10 +2705,10 @@ canvas.fab-canvas { width: 100% !important; }
             <label class="fab-label">Observação <span style="opacity:.5;font-weight:400;">(opcional)</span></label>
             <input type="text" id="foto-f-obs" class="fab-input" placeholder="Ex: saquinho urgente, lote especial…">
           </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn" onclick="fotoCloseModal()">Cancelar</button>
-          <button class="btn btn-primary" onclick="fotoSave()"><i class="ti ti-check"></i>Salvar</button>
+          <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:4px;">
+            <button class="btn btn-ghost" onclick="fotoCloseModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="fotoSave()"><i class="ti ti-check"></i>Salvar</button>
+          </div>
         </div>
       </div>
     </div>
