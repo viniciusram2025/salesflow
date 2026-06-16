@@ -7822,7 +7822,7 @@ window.addEventListener('load', () => {
       plugins: [ChartDataLabels],
       data: {
         labels: Object.keys(map),
-        datasets: [{ data: Object.values(map), backgroundColor: ['#1d4ed8','#3b82f6','#93c5fd'], borderWidth:1, borderColor:'transparent' }]
+        datasets: [{ data: Object.values(map), backgroundColor: ['#3b82f6','#f97316','#a855f7'], borderWidth:1, borderColor:'transparent' }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -7854,7 +7854,7 @@ window.addEventListener('load', () => {
     // Remove chaves zeradas
     const labels = Object.keys(map).filter(k => map[k] > 0);
     const values = labels.map(k => map[k]);
-    const colors = ['#15803d','#16a34a','#22c55e','#4ade80','#86efac'];
+    const colors = ['#3b82f6','#f97316','#22c55e','#a855f7'];
     const t = rvTheme();
     _rvCharts['tipo'] = new Chart(el, {
       type: 'doughnut',
