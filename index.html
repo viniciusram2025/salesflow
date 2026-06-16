@@ -1516,6 +1516,9 @@ canvas.fab-canvas { width: 100% !important; }
     <div class="nav-section">IA</div>
     <div class="nav-item" onclick="goTo('ia')" data-page="ia"><i class="ti ti-brain"></i>IA de Reuniões</div>
 
+    <div class="nav-section">Operacional</div>
+    <div class="nav-item" onclick="goTo('fotografia')" data-page="fotografia"><i class="ti ti-camera"></i>Fotografia</div>
+
     <div class="nav-section nav-admin-only">Admin</div>
     <div class="nav-item nav-admin-only" onclick="goTo('usuarios')" data-page="usuarios"><i class="ti ti-shield-check"></i>Usuários & Acesso</div>
     <div class="nav-item nav-admin-only" onclick="goTo('configuracoes')" data-page="configuracoes"><i class="ti ti-settings-2"></i>Configurações</div>
@@ -2603,6 +2606,99 @@ canvas.fab-canvas { width: 100% !important; }
         <div id="usuarios-list" class="grid-2"></div>
       </div>
 
+    <!-- ══ FOTOGRAFIA ══ -->
+    <div id="page-fotografia" class="page">
+      <div class="fab-topbar" style="flex-shrink:0;">
+        <i class="ti ti-camera" style="color:var(--c-accent);font-size:16px;"></i>
+        <span style="font-weight:700;font-size:15px;">Fotografia</span>
+        <span id="foto-subtitle" style="font-size:12px;color:var(--c-muted);margin-left:4px;">Controle de saquinhos</span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-primary" onclick="fotoOpenModal(null)"><i class="ti ti-plus"></i>Novo Saquinho</button>
+      </div>
+      <!-- KPIs -->
+      <div id="foto-kpis" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:10px 16px 0;flex-shrink:0;"></div>
+      <!-- Filtros + Tabela -->
+      <div style="flex:1;min-height:0;overflow:auto;padding:10px 16px 16px;">
+        <div class="fab-card" style="height:100%;display:flex;flex-direction:column;">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--fab-border);flex-shrink:0;">
+            <i class="ti ti-table" style="color:var(--c-accent);"></i>
+            <span class="fab-card-title">Saquinhos</span>
+            <div style="flex:1;"></div>
+            <select id="foto-filter-status" class="fab-select" onchange="fotoApplyFilter()" style="font-size:12px;padding:4px 8px;">
+              <option value="">Todos os status</option>
+              <option value="aguardando">Aguardando</option>
+              <option value="andamento">Em andamento</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+            <input id="foto-filter-busca" class="fab-filtro-busca" placeholder="Buscar data ou obs…" oninput="fotoApplyFilter()" style="width:180px;">
+          </div>
+          <div class="fab-table-wrap" style="flex:1;overflow:auto;">
+            <table class="fab-table" style="min-width:900px;">
+              <thead id="foto-thead"></thead>
+              <tbody id="foto-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Fotografia -->
+    <div id="foto-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fotoCloseModal()">
+      <div class="modal-box" style="width:520px;max-width:95vw;">
+        <div class="modal-header">
+          <span id="foto-modal-title" class="modal-title">Novo Saquinho</span>
+          <button class="modal-close" onclick="fotoCloseModal()"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="modal-body" style="display:grid;gap:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label class="fab-label">Data Recebimento</label>
+              <input type="date" id="foto-f-data" class="fab-input">
+            </div>
+            <div>
+              <label class="fab-label">Data Finalização</label>
+              <input type="date" id="foto-f-fin" class="fab-input">
+            </div>
+          </div>
+          <!-- Fabricado -->
+          <div style="background:var(--c-surface2);border-radius:8px;padding:12px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-accent);margin-bottom:10px;">Fabricado</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div><label class="fab-label">Recebido</label><input type="number" id="foto-f-qtd-fab" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Fotografado</label><input type="number" id="foto-f-foto-fab" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Editado</label><input type="number" id="foto-f-edit-fab" class="fab-input" min="0" value="0"></div>
+            </div>
+          </div>
+          <!-- Second -->
+          <div style="background:var(--c-surface2);border-radius:8px;padding:12px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-accent);margin-bottom:10px;">Second</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div><label class="fab-label">Recebido</label><input type="number" id="foto-f-qtd-sec" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Fotografado</label><input type="number" id="foto-f-foto-sec" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Editado</label><input type="number" id="foto-f-edit-sec" class="fab-input" min="0" value="0"></div>
+            </div>
+          </div>
+          <!-- Scrap -->
+          <div style="background:var(--c-surface2);border-radius:8px;padding:12px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-accent);margin-bottom:10px;">Scrap</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div><label class="fab-label">Recebido</label><input type="number" id="foto-f-qtd-scr" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Fotografado</label><input type="number" id="foto-f-foto-scr" class="fab-input" min="0" value="0"></div>
+              <div><label class="fab-label">Editado</label><input type="number" id="foto-f-edit-scr" class="fab-input" min="0" value="0"></div>
+            </div>
+          </div>
+          <div>
+            <label class="fab-label">Observação</label>
+            <input type="text" id="foto-f-obs" class="fab-input" placeholder="Opcional…">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="fotoCloseModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="fotoSave()"><i class="ti ti-check"></i>Salvar</button>
+        </div>
+      </div>
+    </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -3162,7 +3258,8 @@ const PAGE_TITLES = {
   fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
   fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
   'fabricacoes-jm':{title:'Fabricações JM',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
-  'manutencao':{title:'Manutenções',sub:'Controle geral de peças em manutenção — JF · JM · JR'}
+  'manutencao':{title:'Manutenções',sub:'Controle geral de peças em manutenção — JF · JM · JR'},
+  'fotografia':{title:'Fotografia',sub:'Controle de saquinhos de fotos'}
 };
 
 function goTo(name){
@@ -3950,6 +4047,7 @@ const ALL_PAGES = [
   {key:'manutencao',     label:'Manutenções',    icon:'ti-hammer'},
   {key:'revenda',        label:'Revenda',         icon:'ti-shopping-bag'},
   {key:'ia',             label:'IA de Reuniões', icon:'ti-brain'},
+  {key:'fotografia',     label:'Fotografia',     icon:'ti-camera'},
 ];
 
 // Aplica permissões no menu lateral conforme perfil do usuário
@@ -8019,6 +8117,239 @@ window.addEventListener('load', () => {
       window.rvLoad();
       rvXauStart();
     }
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════
+// FOTOGRAFIA — módulo de controle de saquinhos
+// ══════════════════════════════════════════════════════════════
+(function() {
+  let _fotoData     = [];
+  let _fotoFiltered = [];
+  let _fotoEditId   = null;
+
+  const fmt = {
+    data: d => {
+      if (!d) return '—';
+      const s = d.slice(0,10);
+      return s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4);
+    }
+  };
+
+  function _statusOf(r) {
+    if (r.data_finalizacao) return 'finalizado';
+    const totFoto = (r.foto_fabricado||0)+(r.foto_second||0)+(r.foto_scrap||0);
+    const totEdit = (r.edit_fabricado||0)+(r.edit_second||0)+(r.edit_scrap||0);
+    if (totFoto > 0 || totEdit > 0) return 'andamento';
+    return 'aguardando';
+  }
+
+  function _statusBadge(st) {
+    const map = {
+      aguardando: ['#f59e0b','rgba(245,158,11,.15)','Aguardando'],
+      andamento:  ['#3b82f6','rgba(59,130,246,.15)','Em andamento'],
+      finalizado: ['#22c55e','rgba(34,197,94,.15)','Finalizado'],
+    };
+    const [c,bg,label] = map[st] || map.aguardando;
+    return `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:${bg};color:${c};white-space:nowrap;">${label}</span>`;
+  }
+
+  function _progBar(val, total, color) {
+    if (!total) return '<span style="color:var(--c-muted)">—</span>';
+    const pct = Math.min(100, Math.round(val/total*100));
+    return `<div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+      <div style="width:60px;height:5px;background:var(--c-border2);border-radius:3px;overflow:hidden;">
+        <div style="width:${pct}%;height:100%;background:${color};border-radius:3px;"></div>
+      </div>
+      <span style="font-size:12px;">${val}/${total}</span>
+    </div>`;
+  }
+
+  function fotoRender() {
+    const thead = document.getElementById('foto-thead');
+    const tbody = document.getElementById('foto-tbody');
+    if (!thead || !tbody) return;
+
+    thead.innerHTML = `<tr>
+      <th>Data Rec.</th>
+      <th>Fabricado<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
+      <th>Second<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
+      <th>Scrap<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
+      <th>Total Rec.</th>
+      <th>Fotografado</th>
+      <th>Editado</th>
+      <th>Status</th>
+      <th>Data Fin.</th>
+      <th>Obs.</th>
+      <th></th>
+    </tr>`;
+
+    if (!_fotoFiltered.length) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--c-muted)">Nenhum saquinho registrado</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = _fotoFiltered.map(r => {
+      const totRec  = (r.qtd_fabricado||0)+(r.qtd_second||0)+(r.qtd_scrap||0);
+      const totFoto = (r.foto_fabricado||0)+(r.foto_second||0)+(r.foto_scrap||0);
+      const totEdit = (r.edit_fabricado||0)+(r.edit_second||0)+(r.edit_scrap||0);
+      const st = _statusOf(r);
+
+      const fmtTipo = (rec, foto, edit) => {
+        if (!rec) return '<span style="color:var(--c-muted)">—</span>';
+        return `<span style="font-size:12px;">${rec} / ${foto} / ${edit}</span>`;
+      };
+
+      return `<tr>
+        <td style="font-weight:600;white-space:nowrap;">${fmt.data(r.data_recebimento)}</td>
+        <td>${fmtTipo(r.qtd_fabricado,r.foto_fabricado,r.edit_fabricado)}</td>
+        <td>${fmtTipo(r.qtd_second,r.foto_second,r.edit_second)}</td>
+        <td>${fmtTipo(r.qtd_scrap,r.foto_scrap,r.edit_scrap)}</td>
+        <td style="font-weight:700;">${totRec||'—'}</td>
+        <td>${_progBar(totFoto,totRec,'#3b82f6')}</td>
+        <td>${_progBar(totEdit,totRec,'#22c55e')}</td>
+        <td>${_statusBadge(st)}</td>
+        <td style="white-space:nowrap;">${fmt.data(r.data_finalizacao)}</td>
+        <td style="font-size:11px;color:var(--c-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.observacao||'—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="fab-icon-btn" title="Editar" onclick="fotoOpenModal(${r.id})"><i class="ti ti-pencil"></i></button>
+          <button class="fab-icon-btn" title="Excluir" style="color:var(--c-red);" onclick="fotoDelete(${r.id})"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function fotoRenderKpis() {
+    const el = document.getElementById('foto-kpis');
+    if (!el) return;
+    const total     = _fotoData.length;
+    const totRec    = _fotoData.reduce((a,r)=>a+(r.qtd_fabricado||0)+(r.qtd_second||0)+(r.qtd_scrap||0),0);
+    const totFoto   = _fotoData.reduce((a,r)=>a+(r.foto_fabricado||0)+(r.foto_second||0)+(r.foto_scrap||0),0);
+    const totEdit   = _fotoData.reduce((a,r)=>a+(r.edit_fabricado||0)+(r.edit_second||0)+(r.edit_scrap||0),0);
+    const pendente  = Math.max(0, totRec - totEdit);
+
+    const kpi = (label, val, color) => `
+      <div class="fab-kpi" style="padding:14px 16px;">
+        <div class="fab-kpi-label">${label}</div>
+        <div class="fab-kpi-value" style="font-size:22px;${color?'color:'+color:''}">${val}</div>
+      </div>`;
+
+    el.innerHTML =
+      kpi('Saquinhos', total) +
+      kpi('Peças Recebidas', totRec) +
+      kpi('Fotografadas', totFoto, '#3b82f6') +
+      kpi('Editadas', totEdit, '#22c55e') +
+      kpi('Pendentes', pendente, pendente>0?'var(--c-red)':'var(--c-muted)');
+  }
+
+  window.fotoApplyFilter = function() {
+    const status = (document.getElementById('foto-filter-status')||{}).value || '';
+    const busca  = ((document.getElementById('foto-filter-busca')||{}).value || '').toLowerCase();
+    _fotoFiltered = _fotoData.filter(r => {
+      const st = _statusOf(r);
+      if (status && st !== status) return false;
+      if (busca) {
+        const haystack = [r.data_recebimento, r.data_finalizacao, r.observacao].join(' ').toLowerCase();
+        if (!haystack.includes(busca)) return false;
+      }
+      return true;
+    });
+    fotoRender();
+  };
+
+  window.fotoLoad = async function() {
+    const page = document.getElementById('page-fotografia');
+    if (!page || !page.classList.contains('active')) return;
+    try {
+      const data = await window.apiFetch('/fotos');
+      _fotoData = Array.isArray(data) ? data : [];
+      fotoRenderKpis();
+      window.fotoApplyFilter();
+    } catch(e) {
+      const tbody = document.getElementById('foto-tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:24px;color:var(--c-red)">Erro ao carregar dados</td></tr>';
+    }
+  };
+
+  window.fotoOpenModal = function(id) {
+    _fotoEditId = id;
+    const title = document.getElementById('foto-modal-title');
+    if (title) title.textContent = id ? 'Editar Saquinho' : 'Novo Saquinho';
+
+    if (id) {
+      const r = _fotoData.find(x => x.id === id);
+      if (!r) return;
+      document.getElementById('foto-f-data').value     = (r.data_recebimento||'').slice(0,10);
+      document.getElementById('foto-f-fin').value      = (r.data_finalizacao||'').slice(0,10);
+      document.getElementById('foto-f-qtd-fab').value  = r.qtd_fabricado||0;
+      document.getElementById('foto-f-foto-fab').value = r.foto_fabricado||0;
+      document.getElementById('foto-f-edit-fab').value = r.edit_fabricado||0;
+      document.getElementById('foto-f-qtd-sec').value  = r.qtd_second||0;
+      document.getElementById('foto-f-foto-sec').value = r.foto_second||0;
+      document.getElementById('foto-f-edit-sec').value = r.edit_second||0;
+      document.getElementById('foto-f-qtd-scr').value  = r.qtd_scrap||0;
+      document.getElementById('foto-f-foto-scr').value = r.foto_scrap||0;
+      document.getElementById('foto-f-edit-scr').value = r.edit_scrap||0;
+      document.getElementById('foto-f-obs').value      = r.observacao||'';
+    } else {
+      const today = new Date();
+      const d = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+      document.getElementById('foto-f-data').value     = d;
+      document.getElementById('foto-f-fin').value      = '';
+      ['qtd-fab','foto-fab','edit-fab','qtd-sec','foto-sec','edit-sec','qtd-scr','foto-scr','edit-scr'].forEach(k => {
+        document.getElementById('foto-f-'+k).value = 0;
+      });
+      document.getElementById('foto-f-obs').value = '';
+    }
+
+    document.getElementById('foto-modal-overlay').style.display = 'flex';
+  };
+
+  window.fotoCloseModal = function() {
+    document.getElementById('foto-modal-overlay').style.display = 'none';
+  };
+
+  window.fotoSave = async function() {
+    const data_recebimento = document.getElementById('foto-f-data').value;
+    if (!data_recebimento) { alert('Informe a data de recebimento.'); return; }
+    const body = {
+      data_recebimento,
+      qtd_fabricado:  +document.getElementById('foto-f-qtd-fab').value||0,
+      foto_fabricado: +document.getElementById('foto-f-foto-fab').value||0,
+      edit_fabricado: +document.getElementById('foto-f-edit-fab').value||0,
+      qtd_second:     +document.getElementById('foto-f-qtd-sec').value||0,
+      foto_second:    +document.getElementById('foto-f-foto-sec').value||0,
+      edit_second:    +document.getElementById('foto-f-edit-sec').value||0,
+      qtd_scrap:      +document.getElementById('foto-f-qtd-scr').value||0,
+      foto_scrap:     +document.getElementById('foto-f-foto-scr').value||0,
+      edit_scrap:     +document.getElementById('foto-f-edit-scr').value||0,
+      data_finalizacao: document.getElementById('foto-f-fin').value || null,
+      observacao:       document.getElementById('foto-f-obs').value || null,
+    };
+    try {
+      if (_fotoEditId) {
+        await window.apiFetch('/fotos/'+_fotoEditId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      } else {
+        await window.apiFetch('/fotos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      }
+      fotoCloseModal();
+      window.fotoLoad();
+    } catch(e) { alert('Erro ao salvar: '+e.message); }
+  };
+
+  window.fotoDelete = async function(id) {
+    if (!confirm('Excluir este saquinho?')) return;
+    try {
+      await window.apiFetch('/fotos/'+id, { method:'DELETE' });
+      window.fotoLoad();
+    } catch(e) { alert('Erro ao excluir.'); }
+  };
+
+  // Hook no goTo para carregar ao entrar na página
+  const _fotoPrev = window.goTo;
+  window.goTo = function(page) {
+    _fotoPrev(page);
+    if (page === 'fotografia') window.fotoLoad();
   };
 })();
 
