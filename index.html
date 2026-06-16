@@ -2506,8 +2506,11 @@ canvas.fab-canvas { width: 100% !important; }
 
         </div>
 
-        <!-- Linha 2: Gráficos (preenche o restante da tela) -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:10px;padding:10px 16px 10px;flex:1;min-height:0;overflow:hidden;">
+        <!-- Linha 2: área flex coluna com gráficos principais + SCRAP embaixo -->
+        <div style="display:flex;flex-direction:column;gap:10px;padding:10px 16px 10px;flex:1;min-height:0;overflow:hidden;">
+
+          <!-- Linha superior: Por Destino | Por Tipo de Joia | Canal+Tipo+Vendedor -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:10px;flex:1;min-height:0;overflow:hidden;">
 
           <!-- Coluna esq: Por Destino (azul) -->
           <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
@@ -2519,7 +2522,7 @@ canvas.fab-canvas { width: 100% !important; }
             </div>
           </div>
 
-          <!-- Coluna centro: Por Tipo de Joia (verde) + SCRAP -->
+          <!-- Coluna centro: Por Tipo de Joia (verde) -->
           <div style="display:flex;flex-direction:column;gap:8px;min-height:0;">
             <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
               <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
@@ -2527,15 +2530,6 @@ canvas.fab-canvas { width: 100% !important; }
               </div>
               <div id="rv-produto-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
                 <canvas id="rv-chart-produto"></canvas>
-              </div>
-            </div>
-            <!-- SCRAP chart (na coluna do centro, parte inferior) -->
-            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;height:140px;">
-              <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
-              </div>
-              <div id="rv-scrap-wrap" style="padding:6px 10px;height:108px;overflow:hidden;">
-                <canvas id="rv-chart-scrap"></canvas>
               </div>
             </div>
           </div>
@@ -2570,8 +2564,21 @@ canvas.fab-canvas { width: 100% !important; }
               </div>
             </div>
 
+          </div><!-- /linha superior grid -->
+
+          <!-- Linha inferior: SCRAP (span 2 colunas) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:10px;flex-shrink:0;">
+            <div class="fab-card" style="grid-column:1/3;padding:0;overflow:hidden;">
+              <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
+              </div>
+              <div id="rv-scrap-wrap" style="padding:6px 10px;height:120px;overflow:hidden;">
+                <canvas id="rv-chart-scrap"></canvas>
+              </div>
+            </div>
           </div>
-        </div>
+
+        </div><!-- /área flex coluna -->
 
       </div><!-- /page-revenda -->
 
