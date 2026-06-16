@@ -2433,16 +2433,16 @@ canvas.fab-canvas { width: 100% !important; }
 </div>
 
       <!-- ══════ PAGE: REVENDA ══════ -->
-      <div id="page-revenda" class="page">
+      <div id="page-revenda" class="page" style="display:flex;flex-direction:column;height:100%;overflow:hidden;padding:0;">
 
-        <!-- Topbar com período -->
-        <div class="fab-topbar">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span style="font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Período</span>
-            <input type="date" id="rv-from" style="background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;">
-            <span style="color:var(--c-muted);font-size:12px;">até</span>
-            <input type="date" id="rv-to"   style="background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text);border-radius:6px;padding:5px 10px;font-size:12px;outline:none;">
-            <button class="btn" style="font-size:12px;padding:6px 14px;" onclick="rvLoad()"><i class="ti ti-search"></i> Carregar</button>
+        <!-- Topbar -->
+        <div class="fab-topbar" style="flex-shrink:0;">
+          <div class="fab-drp">
+            <button class="fab-drp-btn" id="rv-drp-btn" onclick="rvDrpToggle(event)">
+              <i class="ti ti-calendar" style="font-size:13px;opacity:.7"></i>
+              <span id="rv-drp-label">—</span>
+              <i class="ti ti-chevron-down" style="font-size:11px;opacity:.5"></i>
+            </button>
           </div>
           <div class="fab-sync">
             <span id="rv-last-update" class="fab-sync-time">—</span>
@@ -2453,110 +2453,121 @@ canvas.fab-canvas { width: 100% !important; }
           </div>
         </div>
 
-        <!-- KPIs principais -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:10px;overflow:hidden;margin-bottom:16px;">
-          <div style="background:var(--c-surface);padding:14px 20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
-            <div id="rv-kpi-fat" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+        <!-- Linha 1: KPIs (3/4) + SCRAP panel (1/4) -->
+        <div style="display:grid;grid-template-columns:3fr 1fr;gap:10px;padding:10px 16px 0;flex-shrink:0;">
+
+          <!-- KPIs principais -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:8px;overflow:hidden;">
+            <div style="background:var(--c-surface);padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
+              <div id="rv-kpi-fat" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:2px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
+              <div id="rv-kpi-luc" style="font-size:18px;font-weight:700;color:var(--c-green);margin-top:2px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
+              <div id="rv-kpi-tkt" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:2px;">—</div>
+            </div>
+            <div style="background:var(--c-surface);padding:10px 14px;">
+              <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
+              <div id="rv-kpi-qtd" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:2px;">—</div>
+            </div>
           </div>
-          <div style="background:var(--c-surface);padding:14px 20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
-            <div id="rv-kpi-luc" style="font-size:22px;font-weight:700;color:var(--c-green);margin-top:4px;">—</div>
+
+          <!-- SCRAP panel -->
+          <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;overflow:hidden;">
+            <div style="padding:5px 12px;background:var(--c-surface2);border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:6px;">
+              <i class="ti ti-recycle" style="color:var(--c-muted);font-size:13px;"></i>
+              <span style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-text);">Scrap</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--c-border);">
+              <div style="background:var(--c-surface);padding:6px 10px;">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
+                <div id="rv-scrap-fat" style="font-size:13px;font-weight:700;color:var(--c-text);margin-top:1px;">—</div>
+              </div>
+              <div style="background:var(--c-surface);padding:6px 10px;">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
+                <div id="rv-scrap-qtd" style="font-size:13px;font-weight:700;color:var(--c-text);margin-top:1px;">—</div>
+              </div>
+              <div style="background:var(--c-surface);padding:6px 10px;">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
+                <div id="rv-scrap-luc" style="font-size:13px;font-weight:700;color:var(--c-green);margin-top:1px;">—</div>
+              </div>
+              <div style="background:var(--c-surface);padding:6px 10px;">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
+                <div id="rv-scrap-tkt" style="font-size:13px;font-weight:700;color:var(--c-text);margin-top:1px;">—</div>
+              </div>
+            </div>
           </div>
-          <div style="background:var(--c-surface);padding:14px 20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
-            <div id="rv-kpi-tkt" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
-          </div>
-          <div style="background:var(--c-surface);padding:14px 20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
-            <div id="rv-kpi-qtd" style="font-size:22px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
-          </div>
+
         </div>
 
-        <!-- Grid principal de gráficos: [Destino] [Produto/Tipo] [Donuts+Vendedor] -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 380px;gap:14px;margin-bottom:16px;align-items:start;">
+        <!-- Linha 2: Gráficos (preenche o restante da tela) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 300px;gap:10px;padding:10px 16px 10px;flex:1;min-height:0;overflow:hidden;">
 
           <!-- Coluna esq: Por Destino (azul) -->
-          <div class="fab-card" style="padding:0;overflow:hidden;">
-            <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
-              <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Destino</span>
+          <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Destino</span>
             </div>
-            <div id="rv-destino-wrap" style="padding:12px 14px;height:460px;overflow:hidden;">
+            <div id="rv-destino-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
               <canvas id="rv-chart-destino"></canvas>
             </div>
           </div>
 
-          <!-- Coluna centro: Por Tipo de Joia (verde) -->
-          <div class="fab-card" style="padding:0;overflow:hidden;">
-            <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
-              <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Tipo de Joia</span>
+          <!-- Coluna centro: Por Tipo de Joia (verde) + SCRAP -->
+          <div style="display:flex;flex-direction:column;gap:8px;min-height:0;">
+            <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;flex:1;min-height:0;">
+              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Por Tipo de Joia</span>
+              </div>
+              <div id="rv-produto-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
+                <canvas id="rv-chart-produto"></canvas>
+              </div>
             </div>
-            <div id="rv-produto-wrap" style="padding:12px 14px;height:460px;overflow:hidden;">
-              <canvas id="rv-chart-produto"></canvas>
+            <!-- SCRAP chart (na coluna do centro, parte inferior) -->
+            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;height:140px;">
+              <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
+              </div>
+              <div id="rv-scrap-wrap" style="padding:6px 10px;height:108px;overflow:hidden;">
+                <canvas id="rv-chart-scrap"></canvas>
+              </div>
             </div>
           </div>
 
-          <!-- Coluna dir: Canal + Tipo Fabricação + Vendedor (stacked) -->
-          <div style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Coluna dir: Canal + Tipo Fabricação + Vendedor -->
+          <div style="display:flex;flex-direction:column;gap:8px;min-height:0;">
 
-            <div class="fab-card" style="padding:0;overflow:hidden;">
-              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Canal de Venda</span>
+            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;">
+              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Canal de Venda</span>
               </div>
-              <div style="padding:12px 14px;height:190px;overflow:hidden;">
+              <div style="padding:8px 10px;height:170px;overflow:hidden;">
                 <canvas id="rv-chart-canal"></canvas>
               </div>
             </div>
 
-            <div class="fab-card" style="padding:0;overflow:hidden;">
-              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Tipo de Fabricação</span>
+            <div class="fab-card" style="padding:0;overflow:hidden;flex-shrink:0;">
+              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Tipo de Fabricação</span>
               </div>
-              <div style="padding:12px 14px;height:185px;overflow:hidden;">
+              <div style="padding:8px 10px;height:160px;overflow:hidden;">
                 <canvas id="rv-chart-tipo"></canvas>
               </div>
             </div>
 
-            <div class="fab-card" style="padding:0;overflow:hidden;" id="rv-vendedor-card">
-              <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);">
-                <span style="font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
+            <div class="fab-card" style="padding:0;overflow:hidden;flex:1;min-height:80px;display:flex;flex-direction:column;" id="rv-vendedor-card">
+              <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+                <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
               </div>
-              <div id="rv-vendedor-wrap" style="padding:12px 14px;height:110px;overflow:hidden;">
+              <div id="rv-vendedor-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
                 <canvas id="rv-chart-vendedor"></canvas>
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- Seção SCRAP -->
-        <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:10px;overflow:hidden;margin-bottom:18px;">
-          <div style="padding:12px 18px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:8px;background:var(--c-surface2);">
-            <i class="ti ti-recycle" style="color:var(--c-muted);font-size:15px;"></i>
-            <span style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-text);">Scrap</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border-bottom:1px solid var(--c-border);">
-            <div style="background:var(--c-surface);padding:12px 18px;">
-              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Faturamento</div>
-              <div id="rv-scrap-fat" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
-            </div>
-            <div style="background:var(--c-surface);padding:12px 18px;">
-              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Quantidade</div>
-              <div id="rv-scrap-qtd" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
-            </div>
-            <div style="background:var(--c-surface);padding:12px 18px;">
-              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Lucratividade</div>
-              <div id="rv-scrap-luc" style="font-size:18px;font-weight:700;color:var(--c-green);margin-top:3px;">—</div>
-            </div>
-            <div style="background:var(--c-surface);padding:12px 18px;">
-              <div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Ticket Médio</div>
-              <div id="rv-scrap-tkt" style="font-size:18px;font-weight:700;color:var(--c-text);margin-top:3px;">—</div>
-            </div>
-          </div>
-          <div style="padding:14px 16px;">
-            <div id="rv-scrap-wrap" style="height:180px;overflow:hidden;">
-              <canvas id="rv-chart-scrap"></canvas>
-            </div>
           </div>
         </div>
 
@@ -5504,7 +5515,7 @@ window.addEventListener('load', () => {
     popup.style.background = document.body.classList.contains('light') ? '#ffffff' : '#111318';
     popup.style.zIndex = '9999';
     // position below trigger
-    const btn = document.getElementById('fab-drp-btn');
+    const btn = document.getElementById(window._drpAnchorId || 'fab-drp-btn');
     if (btn) {
       const r = btn.getBoundingClientRect();
       popup.style.top  = (r.bottom + 8) + 'px';
@@ -5571,13 +5582,22 @@ window.addEventListener('load', () => {
     _drpClose();
     _drpPickStart = null; window._drpHover = null;
     _drpUpdateBtn();
-    applyFabDateRange();
+    if (window._drpCallback) {
+      const cb = window._drpCallback;
+      window._drpCallback  = null;
+      window._drpAnchorId  = null;
+      window._drpLabelId   = null;
+      cb(_fabDateFrom, _fabDateTo);
+    } else {
+      applyFabDateRange();
+    }
   };
 
   function _drpUpdateBtn() {
     const lo = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateFrom:_fabDateTo) : _fabDateFrom;
     const hi = _fabDateFrom && _fabDateTo ? (_fabDateFrom<=_fabDateTo?_fabDateTo:_fabDateFrom) : '';
-    const el = document.getElementById('fab-drp-label');
+    const labelId = window._drpLabelId || 'fab-drp-label';
+    const el = document.getElementById(labelId);
     if (el) el.textContent = hi ? `${_drpFmtBR(lo)} → ${_drpFmtBR(hi)}` : _drpFmtBR(lo);
   }
 
@@ -7525,8 +7545,24 @@ window.addEventListener('load', () => {
 // REVENDA DASHBOARD
 // ════════════════════════════════════════════════════════════════
 (function () {
-  let _rvData   = [];
+  let _rvData     = [];
+  let _rvDateFrom = '';
+  let _rvDateTo   = '';
   const _rvCharts = {};
+
+  // Destinos autorizados (espelho do filtro do PBI)
+  const RV_DESTINOS = new Set([
+    'DESAPEGO DO LUXO','DESAPEGO LEGAL','DESAPEGUE BR','JUGELLI DESAPEGO',
+    'RESOLVI DESAPEGO','ACHADOS PERDIDOS','ALINE RAMOS','ALINI DUARTE',
+    'ANDRÉ FAUSTINO','BRILHO VINTAGE','CARLA LEILÃO','CIRCULAR JOIAS',
+    'CLAUDIA MASCARENHAS','DANIELLE VOGUE','ELIANE DANTAS','ETERNNO',
+    'ETIQUETA ÚNICA','ETSY BRECHO','FERNANDA SCARAMBONE','GRINGA',
+    'ILA LUX','IVAIR ONGARATTO','IZABELLA BARCKI','JOÃO FECHY JOIAS',
+    'LAURA BATEZINI','LEILÃO 24K','LEILÃO BRUNO','LEILÃO ETERNNO',
+    'LOHANA COELHO','LOUCA POR JÓIAS','LUCIMARY','MEGA DO LUXO',
+    'MERCADO LIVRE','NIUMA','REAL DEAL','SECOND HAND','SIDNEI QUARTIER',
+    'TATI CANTO','TRIZZ JOIAS','UMA VEZ MAIS','JÓIAS EM DESAPEGO',
+  ]);
 
   const fmt = {
     moeda:  v => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:2 }).format(v||0),
@@ -7536,6 +7572,37 @@ window.addEventListener('load', () => {
     },
     pct: v => (v == null ? '—' : v.toFixed(2) + '%'),
     num: v => new Intl.NumberFormat('pt-BR').format(v||0),
+  };
+
+  function rvFmtBR(ymd) {
+    if (!ymd) return '—';
+    const [y,m,d] = ymd.split('-');
+    const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${d}/${mn[+m-1]}/${y.slice(2)}`;
+  }
+
+  function rvUpdateDrpLabel() {
+    const el = document.getElementById('rv-drp-label');
+    if (!el) return;
+    const lo = _rvDateFrom <= _rvDateTo ? _rvDateFrom : _rvDateTo;
+    const hi = _rvDateFrom <= _rvDateTo ? _rvDateTo   : _rvDateFrom;
+    el.textContent = lo && hi ? `${rvFmtBR(lo)} → ${rvFmtBR(hi)}` : rvFmtBR(lo);
+  }
+
+  window.rvDrpToggle = function(e) {
+    // Sincroniza datas para o picker compartilhado
+    window._fabDateFrom = _rvDateFrom;
+    window._fabDateTo   = _rvDateTo;
+    // Configura hooks para contexto Revenda
+    window._drpAnchorId = 'rv-drp-btn';
+    window._drpLabelId  = 'rv-drp-label';
+    window._drpCallback = function(from, to) {
+      _rvDateFrom = from || _rvDateFrom;
+      _rvDateTo   = to   || _rvDateTo;
+      rvUpdateDrpLabel();
+      window.rvLoad();
+    };
+    window.fabDrpToggle(e);
   };
 
   function rvTheme() {
@@ -7569,21 +7636,21 @@ window.addEventListener('load', () => {
   }
 
   function rvInitDates() {
+    if (_rvDateFrom && _rvDateTo) { rvUpdateDrpLabel(); return; }
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth()+1).padStart(2,'0');
     const d = String(now.getDate()).padStart(2,'0');
-    const fromEl = document.getElementById('rv-from');
-    const toEl   = document.getElementById('rv-to');
-    if (fromEl && !fromEl.value) fromEl.value = `${y}-${m}-01`;
-    if (toEl   && !toEl.value)   toEl.value   = `${y}-${m}-${d}`;
+    _rvDateFrom = `${y}-${m}-01`;
+    _rvDateTo   = `${y}-${m}-${d}`;
+    rvUpdateDrpLabel();
   }
 
   const RV_API = 'https://goldtech-fabricacoes-api.onrender.com';
 
   window.rvLoad = async function () {
-    const from = document.getElementById('rv-from')?.value;
-    const to   = document.getElementById('rv-to')?.value;
+    const from = _rvDateFrom;
+    const to   = _rvDateTo;
     if (!from || !to) { alert('Selecione o período.'); return; }
     const btn = document.getElementById('rv-refresh-btn');
     if (btn) btn.classList.add('spinning');
@@ -7603,8 +7670,10 @@ window.addEventListener('load', () => {
   };
 
   function rvRender(data) {
-    const joias = data.filter(r => !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
-    const scrap = data.filter(r =>   r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
+    // Aplica filtro de destinos autorizados
+    const allowed = data.filter(r => r.destino && RV_DESTINOS.has(r.destino.toUpperCase()));
+    const joias = allowed.filter(r => !(r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP'));
+    const scrap = allowed.filter(r =>   r.nf_joia && r.nf_joia.toUpperCase() === 'SCRAP');
     rvKPIs(joias);
     rvDestino(joias);
     rvProduto(joias);
@@ -7642,8 +7711,6 @@ window.addEventListener('load', () => {
     const values = sorted.map(([,v]) => v.fat);
     const qtds   = sorted.map(([,v]) => v.qtd);
     const t = rvTheme();
-    const h = Math.max(360, sorted.length * 26 + 40);
-    document.getElementById('rv-destino-wrap').style.height = h + 'px';
     _rvCharts['destino'] = new Chart(el, {
       type: 'bar',
       data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(79,110,247,.7)', borderRadius: 3 }] },
@@ -7653,8 +7720,8 @@ window.addEventListener('load', () => {
           [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`]
         }}},
         scales: {
-          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v) }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:11 } }, grid: { display:false } }
+          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
+          y: { ticks: { color:t.text, font:{ size:10 } }, grid: { display:false } }
         }
       }
     });
@@ -7676,8 +7743,6 @@ window.addEventListener('load', () => {
     const values = sorted.map(([,v]) => v.fat);
     const qtds   = sorted.map(([,v]) => v.qtd);
     const t = rvTheme();
-    const h = Math.max(360, sorted.length * 26 + 40);
-    document.getElementById('rv-produto-wrap').style.height = h + 'px';
     _rvCharts['produto'] = new Chart(el, {
       type: 'bar',
       data: { labels, datasets: [{ data: values, backgroundColor: 'rgba(34,197,94,.7)', borderRadius: 3 }] },
@@ -7687,8 +7752,8 @@ window.addEventListener('load', () => {
           [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`]
         }}},
         scales: {
-          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v) }, grid: { color:t.grid } },
-          y: { ticks: { color:t.text, font:{ size:11 } }, grid: { display:false } }
+          x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
+          y: { ticks: { color:t.text, font:{ size:10 } }, grid: { display:false } }
         }
       }
     });
