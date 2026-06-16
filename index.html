@@ -2536,19 +2536,19 @@ canvas.fab-canvas { width: 100% !important; }
             </div>
           </div>
 
-          <!-- Vendedor Interno -->
-          <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;" id="rv-vendedor-card">
-            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
-              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
+          <!-- Scrap — Por Destino (linha do meio, coluna 3) -->
+          <div class="fab-card" style="padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+            <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
             </div>
-            <div id="rv-vendedor-wrap" style="padding:8px 10px;flex:1;min-height:0;overflow:hidden;">
-              <canvas id="rv-chart-vendedor"></canvas>
+            <div id="rv-scrap-wrap" style="padding:6px 10px;flex:1;min-height:0;overflow:hidden;">
+              <canvas id="rv-chart-scrap"></canvas>
             </div>
           </div>
 
         </div>
 
-        <!-- Linha 3: donuts + scrap (altura fixa) -->
+        <!-- Linha 3: donuts + vendedor (altura fixa) -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:10px 16px 10px;flex-shrink:0;">
 
           <!-- Canal de Venda -->
@@ -2571,13 +2571,13 @@ canvas.fab-canvas { width: 100% !important; }
             </div>
           </div>
 
-          <!-- Scrap — Por Destino -->
-          <div class="fab-card" style="padding:0;overflow:hidden;">
-            <div style="padding:6px 12px;border-bottom:1px solid var(--c-border);">
-              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Scrap — Por Destino</span>
+          <!-- Vendedor Interno (linha de baixo, coluna 3) -->
+          <div class="fab-card" style="padding:0;overflow:hidden;" id="rv-vendedor-card">
+            <div style="padding:8px 12px;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--c-muted);">Vendedor Interno (Eternno)</span>
             </div>
-            <div id="rv-scrap-wrap" style="padding:6px 10px;height:190px;overflow:hidden;">
-              <canvas id="rv-chart-scrap"></canvas>
+            <div id="rv-vendedor-wrap" style="padding:8px 10px;height:190px;overflow:hidden;">
+              <canvas id="rv-chart-vendedor"></canvas>
             </div>
           </div>
 
@@ -7811,7 +7811,7 @@ window.addEventListener('load', () => {
               const total = ds.data.reduce((a,b) => a+b, 0);
               return chart.data.labels.map((lbl, i) => {
                 const pct = total > 0 ? (ds.data[i]/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1}) : '0';
-                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
+                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
               });
             }
           }},
@@ -7850,7 +7850,7 @@ window.addEventListener('load', () => {
               const total = ds.data.reduce((a,b) => a+b, 0);
               return chart.data.labels.map((lbl, i) => {
                 const pct = total > 0 ? (ds.data[i]/total*100).toLocaleString('pt-BR',{maximumFractionDigits:1}) : '0';
-                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
+                return { text:`${lbl}  ${fmt.moeda0(ds.data[i])}  (${pct}%)`, fontColor:t.text, fillStyle:ds.backgroundColor[i], strokeStyle:'transparent', lineWidth:0, hidden:false, index:i };
               });
             }
           }},
@@ -7881,8 +7881,6 @@ window.addEventListener('load', () => {
       return;
     }
     const qtds = sorted.map(([,v]) => v.qtd);
-    const h = Math.max(80, sorted.length * 26 + 30);
-    wrap.style.height = h + 'px';
     wrap.innerHTML = '<canvas id="rv-chart-vendedor"></canvas>';
     const newEl = document.getElementById('rv-chart-vendedor');
     const t = rvTheme();
@@ -7935,8 +7933,6 @@ window.addEventListener('load', () => {
     const values = sorted.map(([,v]) => v.fat);
     const qtds   = sorted.map(([,v]) => v.qtd);
     const t = rvTheme();
-    const h = Math.max(120, sorted.length * 26 + 30);
-    document.getElementById('rv-scrap-wrap').style.height = h + 'px';
     _rvCharts['scrap'] = new Chart(el, {
       type: 'bar',
       plugins: [ChartDataLabels],
