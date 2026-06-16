@@ -57,9 +57,7 @@ window.apiFetch = async function(url, opts) {
   } catch(e) {
     console.error('[apiFetch] erro ao obter token, usando apenas cookie:', e.message, '| URL:', url);
   }
-  const res = await fetch(url, Object.assign({}, opts, { headers, credentials: 'include' }));
-  if (!res.ok) { const txt = await res.text(); throw new Error(txt); }
-  return res.json();
+  return fetch(url, Object.assign({}, opts, { headers, credentials: 'include' }));
 };
 
 // ── Login — credenciais vão para o backend, nunca ficam no frontend ──
@@ -8277,7 +8275,9 @@ window.addEventListener('load', () => {
     const page = document.getElementById('page-fotografia');
     if (!page || !page.classList.contains('active')) return;
     try {
-      const data = await window.apiFetch(window._API+'/fotos');
+      const r = await window.apiFetch(window._API+'/fotos');
+      if (!r.ok) throw new Error(await r.text());
+      const data = await r.json();
       _fotoData = Array.isArray(data) ? data : [];
       fotoRenderKpis();
       window.fotoApplyFilter();
@@ -8344,9 +8344,11 @@ window.addEventListener('load', () => {
     };
     try {
       if (_fotoEditId) {
-        await window.apiFetch(window._API+'/fotos/'+_fotoEditId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        const r = await window.apiFetch(window._API+'/fotos/'+_fotoEditId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        if (!r.ok) throw new Error(await r.text());
       } else {
-        await window.apiFetch(window._API+'/fotos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        const r = await window.apiFetch(window._API+'/fotos', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        if (!r.ok) throw new Error(await r.text());
       }
       fotoCloseModal();
       window.fotoLoad();
@@ -8356,7 +8358,8 @@ window.addEventListener('load', () => {
   window.fotoDelete = async function(id) {
     if (!confirm('Excluir este saquinho?')) return;
     try {
-      await window.apiFetch(window._API+'/fotos/'+id, { method:'DELETE' });
+      const r = await window.apiFetch(window._API+'/fotos/'+id, { method:'DELETE' });
+      if (!r.ok) throw new Error(await r.text());
       window.fotoLoad();
     } catch(e) { alert('Erro ao excluir.'); }
   };
