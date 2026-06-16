@@ -7988,21 +7988,24 @@ window.addEventListener('load', () => {
       pctEl.style.color = pct >= 0 ? 'var(--c-green)' : 'var(--c-red)';
     }
   }
-  async function rvXauFetch() {
+  async function rvXauFetch(attempt) {
+    attempt = attempt || 1;
     try {
       const r = await fetch('https://economia.awesomeapi.com.br/json/last/XAU-BRL,USD-BRL');
-      if (!r.ok) return;
+      if (!r.ok) throw new Error('http ' + r.status);
       const json = await r.json();
       const xau = json.XAUBRL;
       const usd = json.USDBRL;
       if (xau) _rvTickerSet('rv-xau-price', 'rv-xau-pct', Number(xau.bid) / 31.1035, Number(xau.pctChange), 2);
       if (usd) _rvTickerSet('rv-usd-price', 'rv-usd-pct', Number(usd.bid), Number(usd.pctChange), 2);
-    } catch (e) { /* silencia erros de rede */ }
+    } catch (e) {
+      if (attempt < 4) setTimeout(function(){ rvXauFetch(attempt + 1); }, 15000);
+    }
   }
   function rvXauStart() {
-    rvXauFetch();
+    rvXauFetch(1);
     if (_rvXauTimer) clearInterval(_rvXauTimer);
-    _rvXauTimer = setInterval(rvXauFetch, 5 * 60 * 1000);
+    _rvXauTimer = setInterval(function(){ rvXauFetch(1); }, 5 * 60 * 1000);
   }
 
   // ── Gancho na navegação ───────────────────────────────────────
