@@ -1316,7 +1316,7 @@ canvas.fab-canvas { width: 100% !important; }
 
 .fab-table th {
   padding: 10px 16px;
-  text-align: left;
+  text-align: center;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .5px;
@@ -1324,14 +1324,15 @@ canvas.fab-canvas { width: 100% !important; }
   border-bottom: 1px solid var(--fab-border);
   white-space: nowrap;
 }
-.fab-table th.right { text-align: right; }
+.fab-table th.right { text-align: center; }
 
 .fab-table td {
   padding: 11px 16px;
   border-bottom: 1px solid var(--fab-row-sep);
   vertical-align: middle;
+  text-align: center;
 }
-.fab-table td.right { text-align: right; }
+.fab-table td.right { text-align: center; }
 
 .fab-table tr:hover td { background: var(--fab-row-hover); }
 
@@ -5080,7 +5081,7 @@ function renderMetalHistorico(){
       <td class="td-cell"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:5px;background:${tc.bg};color:${tc.color};">${tc.label}</span>${diffTag}</td>
       <td class="td-num" style="color:${tc.pesoColor};font-weight:600;">${tc.sinal}${peso.toFixed(2)}g</td>
       <td class="td-num" style="color:var(--c-accent);font-weight:700;">${saldoAcum.toFixed(2)}g</td>
-      <td class="td-cell" style="text-align:right;">${deleteBtn}</td>
+      <td class="td-cell">${deleteBtn}</td>
     </tr>${obsRow}`;
   }).join('');
 }
