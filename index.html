@@ -7723,7 +7723,10 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: (v, ctx) => `${qtds[ctx.dataIndex]}x  ${fmt.moeda0(v)}`, color: t.muted, font:{ size:11 }, clip:false }
+          datalabels: { labels: {
+            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
+            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
+          }}
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
@@ -7759,7 +7762,10 @@ window.addEventListener('load', () => {
         plugins: {
           legend: { display:false },
           tooltip: { callbacks: { label: (c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: (v, ctx) => `${qtds[ctx.dataIndex]}x  ${fmt.moeda0(v)}`, color: t.muted, font:{ size:11 }, clip:false }
+          datalabels: { labels: {
+            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
+            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
+          }}
         },
         scales: {
           x: { ticks: { color:t.muted, callback: v => fmt.moedaK(v), font:{size:10} }, grid: { color:t.grid } },
@@ -7839,14 +7845,16 @@ window.addEventListener('load', () => {
     const map = {};
     eternno.forEach(r => {
       const k = r.vendedor_interno || '(Em branco)';
-      if (!map[k]) map[k] = 0;
-      map[k] += Number(r.preco_cobrado||0);
+      if (!map[k]) map[k] = { fat:0, qtd:0 };
+      map[k].fat += Number(r.preco_cobrado||0);
+      map[k].qtd++;
     });
-    const sorted = Object.entries(map).sort((a,b) => b[1]-a[1]);
+    const sorted = Object.entries(map).sort((a,b) => b[1].fat - a[1].fat);
     if (!sorted.length) {
       wrap.innerHTML = '<div style="text-align:center;padding:18px 0;color:var(--c-muted);font-size:12px;">Sem dados Eternno</div>';
       return;
     }
+    const qtds = sorted.map(([,v]) => v.qtd);
     const h = Math.max(80, sorted.length * 26 + 30);
     wrap.style.height = h + 'px';
     wrap.innerHTML = '<canvas id="rv-chart-vendedor"></canvas>';
@@ -7857,7 +7865,7 @@ window.addEventListener('load', () => {
       plugins: [ChartDataLabels],
       data: {
         labels: sorted.map(([k]) => k),
-        datasets: [{ data: sorted.map(([,v]) => v), backgroundColor: 'rgba(34,197,94,.7)', borderRadius:3 }]
+        datasets: [{ data: sorted.map(([,v]) => v.fat), backgroundColor: 'rgba(34,197,94,.7)', borderRadius:3 }]
       },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
@@ -7865,7 +7873,10 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => ` ${fmt.moeda(c.raw)}` }},
-          datalabels: { anchor:'end', align:'end', formatter: (v, ctx) => `${qtds[ctx.dataIndex]}x  ${fmt.moeda0(v)}`, color: t.muted, font:{ size:11 }, clip:false }
+          datalabels: { labels: {
+            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
+            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
+          }}
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
@@ -7913,7 +7924,10 @@ window.addEventListener('load', () => {
         plugins: {
           legend:{ display:false },
           tooltip:{ callbacks:{ label:(c) => [` ${fmt.moeda(c.raw)}`, ` ${qtds[c.dataIndex]} peças`] }},
-          datalabels: { anchor:'end', align:'end', formatter: (v, ctx) => `${qtds[ctx.dataIndex]}x  ${fmt.moeda0(v)}`, color: t.muted, font:{ size:11 }, clip:false }
+          datalabels: { labels: {
+            value: { anchor:'end', align:'end', formatter: v => fmt.moeda0(v), color: t.text, font:{ size:11, weight:'600' }, clip:false },
+            qty:   { anchor:'start', align:'end', offset:6, formatter: (v,ctx) => `${qtds[ctx.dataIndex]}`, color:'rgba(255,255,255,0.45)', font:{ size:9 }, clip:false }
+          }}
         },
         scales: {
           x: { ticks:{ color:t.muted, callback: v => fmt.moedaK(v) }, grid:{ color:t.grid } },
