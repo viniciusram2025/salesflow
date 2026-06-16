@@ -7960,7 +7960,7 @@ window.addEventListener('load', () => {
       if (!r.ok) return;
       const d = (await r.json()).XAUBRL;
       if (!d) return;
-      const price = Number(d.bid);
+      const price = Number(d.bid) / 31.1035; // oz → g
       const pct   = Number(d.pctChange);
       const priceEl = document.getElementById('rv-xau-price');
       const pctEl   = document.getElementById('rv-xau-pct');
