@@ -7705,7 +7705,7 @@ window.addEventListener('load', () => {
     if (!el) return;
     const map = {};
     data.forEach(r => {
-      const k = r.destino || '—';
+      const k = r.destino ? r.destino.toUpperCase() : '—';
       if (!map[k]) map[k] = { qtd:0, fat:0 };
       map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
     });
@@ -7892,7 +7892,7 @@ window.addEventListener('load', () => {
     if (!el) return;
     const map = {};
     data.forEach(r => {
-      const k = r.destino || '—';
+      const k = r.destino ? r.destino.toUpperCase() : '—';
       if (!map[k]) map[k] = { qtd:0, fat:0 };
       map[k].qtd++; map[k].fat += Number(r.preco_cobrado||0);
     });
