@@ -8156,6 +8156,8 @@ window.addEventListener('load', () => {
   let _fotoData     = [];
   let _fotoFiltered = [];
   let _fotoEditId   = null;
+  let _fotoSortCol  = 'data_recebimento';
+  let _fotoSortDir  = -1; // -1 = desc (mais recente primeiro)
 
   const fmt = {
     data: d => {
@@ -8199,8 +8201,9 @@ window.addEventListener('load', () => {
     const tbody = document.getElementById('foto-tbody');
     if (!thead || !tbody) return;
 
+    const _srt = col => { const a = _fotoSortCol===col; const d = a?(_fotoSortDir===1?'sort-asc':'sort-desc'):''; return `<th class="sortable ${d}" onclick="fotoSortBy('${col}')">`; };
     thead.innerHTML = `<tr>
-      <th>Data Rec.</th>
+      ${_srt('data_recebimento')}Data Rec.</th>
       <th>Fabricado<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
       <th>Second<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
       <th>Scrap<br><span style="font-weight:400;opacity:.6;font-size:10px;">Rec / Foto / Edit</span></th>
@@ -8283,7 +8286,19 @@ window.addEventListener('load', () => {
       }
       return true;
     });
+    if (_fotoSortCol) {
+      _fotoFiltered = [..._fotoFiltered].sort((a, b) => {
+        const av = a[_fotoSortCol] ?? '', bv = b[_fotoSortCol] ?? '';
+        return String(av).localeCompare(String(bv)) * _fotoSortDir;
+      });
+    }
     fotoRender();
+  };
+
+  window.fotoSortBy = function(col) {
+    if (_fotoSortCol === col) _fotoSortDir *= -1;
+    else { _fotoSortCol = col; _fotoSortDir = 1; }
+    window.fotoApplyFilter();
   };
 
   window.fotoLoad = async function() {
