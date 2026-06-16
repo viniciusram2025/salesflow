@@ -3301,6 +3301,7 @@ function goTo(name){
   if(name==='fabricacoes')     { fabLoad(); }
   if(name==='fabricacoes-jm') { jmLoad(); }
   if(name==='manutencao')     { manutencaoLoad(); }
+  if(name==='fotografia')     { if(typeof window.fotoLoad==='function') window.fotoLoad(); }
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -8366,12 +8367,6 @@ window.addEventListener('load', () => {
     } catch(e) { alert('Erro ao excluir.'); }
   };
 
-  // Hook no goTo para carregar ao entrar na página
-  const _fotoPrev = window.goTo;
-  window.goTo = function(page) {
-    _fotoPrev(page);
-    if (page === 'fotografia') window.fotoLoad();
-  };
 })();
 
 </script>
