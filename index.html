@@ -2475,8 +2475,8 @@ canvas.fab-canvas { width: 100% !important; }
           </div>
         </div>
 
-        <!-- Linha 1: KPIs + SCRAP + Últimas Vendas -->
-        <div style="display:grid;grid-template-columns:3fr 1fr 1fr;gap:10px;padding:10px 16px 0;flex-shrink:0;">
+        <!-- Linha 1: KPIs (3/4) + SCRAP panel (1/4) -->
+        <div style="display:grid;grid-template-columns:3fr 1fr;gap:10px;padding:10px 16px 0;flex-shrink:0;">
 
           <!-- KPIs principais -->
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:8px;overflow:hidden;">
@@ -2522,16 +2522,6 @@ canvas.fab-canvas { width: 100% !important; }
                 <div id="rv-scrap-tkt" style="font-size:16px;font-weight:700;color:var(--c-text);margin-top:2px;">—</div>
               </div>
             </div>
-          </div>
-
-          <!-- Últimas Vendas panel -->
-          <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="padding:6px 12px;background:var(--c-surface2);border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:6px;flex-shrink:0;">
-              <i class="ti ti-clock-hour-3" style="color:var(--c-muted);font-size:13px;"></i>
-              <span style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-text);">Últimas Vendas</span>
-              <span id="rv-ultimas-count" style="font-size:9px;color:var(--c-muted);margin-left:auto;"></span>
-            </div>
-            <div id="rv-ultimas-list" style="overflow-y:auto;flex:1;"></div>
           </div>
 
         </div>
@@ -7862,7 +7852,6 @@ window.addEventListener('load', () => {
     rvTipoDonut(main);
     rvVendedor(main);
     rvScrap(scrap);
-    rvUltimas(main);
   }
   window.rvRender = rvRender;
 
@@ -8071,30 +8060,6 @@ window.addEventListener('load', () => {
   }
 
   // ── Últimas Vendas ────────────────────────────────────────────
-  function rvUltimas(data) {
-    const list  = document.getElementById('rv-ultimas-list');
-    const count = document.getElementById('rv-ultimas-count');
-    if (!list) return;
-
-    const sorted = [...data].sort((a, b) => (b.data_venda||'').localeCompare(a.data_venda||''));
-    if (count) count.textContent = sorted.length ? `${sorted.length} venda${sorted.length>1?'s':''}` : '';
-
-    if (!sorted.length) {
-      list.innerHTML = '<div style="padding:12px;text-align:center;color:var(--c-muted);font-size:12px;">Nenhuma venda no período</div>';
-      return;
-    }
-
-    list.innerHTML = sorted.map(r => {
-      const val  = Number(r.preco_cobrado||0);
-      const tipo = r.produto||r.subtipo||r.tipo||'—';
-      return `<div style="padding:5px 12px;border-bottom:1px solid var(--c-border);display:flex;gap:6px;align-items:baseline;">
-        <span style="font-size:10px;font-weight:700;color:var(--c-text);white-space:nowrap;">${r.referencia||'—'}</span>
-        <span style="font-size:9px;color:var(--c-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tipo}</span>
-        <span style="font-size:10px;font-weight:700;color:var(--c-green);white-space:nowrap;">${fmt.moeda(val)}</span>
-      </div>`;
-    }).join('');
-  }
-
   // ── Seção SCRAP ───────────────────────────────────────────────
   function rvScrap(data) {
     const fat  = data.reduce((s,r) => s + Number(r.preco_cobrado||0), 0);
