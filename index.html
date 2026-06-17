@@ -7798,21 +7798,19 @@ window.addEventListener('load', () => {
   }
 
   function rvInitDates() {
-    if (_rvDateFrom && _rvDateTo) { rvUpdateDrpLabel(); return; }
-    const savedFrom = localStorage.getItem('sf_rv_from');
-    const savedTo   = localStorage.getItem('sf_rv_to');
-    if (savedFrom && savedTo) {
-      _rvDateFrom = savedFrom;
-      _rvDateTo   = savedTo;
-      rvUpdateDrpLabel();
-      return;
-    }
     const now = new Date();
     const y = now.getFullYear();
     const m = String(now.getMonth()+1).padStart(2,'0');
     const d = String(now.getDate()).padStart(2,'0');
-    _rvDateFrom = `${y}-${m}-01`;
-    _rvDateTo   = `${y}-${m}-${d}`;
+    const today       = `${y}-${m}-${d}`;
+    const firstOfMonth = `${y}-${m}-01`;
+    const savedFrom   = localStorage.getItem('sf_rv_from');
+    // Usa o from salvo se for do mês atual, senão reseta para o dia 1
+    _rvDateFrom = (savedFrom && savedFrom.startsWith(`${y}-${m}`)) ? savedFrom : firstOfMonth;
+    // To é sempre hoje
+    _rvDateTo = today;
+    localStorage.setItem('sf_rv_from', _rvDateFrom);
+    localStorage.setItem('sf_rv_to',   _rvDateTo);
     rvUpdateDrpLabel();
   }
 
