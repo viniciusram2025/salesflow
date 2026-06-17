@@ -1520,6 +1520,7 @@ canvas.fab-canvas { width: 100% !important; }
 
     <div class="nav-section">Operacional</div>
     <div class="nav-item" onclick="goTo('fotografia')" data-page="fotografia"><i class="ti ti-camera"></i>Fotografia</div>
+    <div class="nav-item" onclick="goTo('parceiros')" data-page="parceiros"><i class="ti ti-building-store"></i>Parceiros</div>
 
     <div class="nav-section nav-admin-only">Admin</div>
     <div class="nav-item nav-admin-only" onclick="goTo('usuarios')" data-page="usuarios"><i class="ti ti-shield-check"></i>Usuários & Acesso</div>
@@ -2654,6 +2655,56 @@ canvas.fab-canvas { width: 100% !important; }
       </div>
     </div>
 
+    <!-- ══ PARCEIROS / COMODATO ══ -->
+    <div id="page-parceiros" class="page">
+      <div class="fab-topbar" style="flex-shrink:0;">
+        <i class="ti ti-building-store" style="color:var(--c-accent);font-size:16px;"></i>
+        <span style="font-weight:700;font-size:15px;">Parceiros</span>
+        <span style="font-size:12px;color:var(--c-muted);margin-left:4px;">Comodato em campo</span>
+        <div style="flex:1;"></div>
+        <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()"><i class="ti ti-refresh"></i> Atualizar</button>
+      </div>
+
+      <!-- KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:8px;margin:10px 16px 0;flex-shrink:0;overflow:hidden;">
+        <div style="background:var(--c-surface);padding:10px 16px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Parceiros</div>
+          <div id="parc-kpi-parceiros" style="font-size:24px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+        </div>
+        <div style="background:var(--c-surface);padding:10px 16px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Peças em Campo</div>
+          <div id="parc-kpi-pecas" style="font-size:24px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
+        </div>
+        <div style="background:var(--c-surface);padding:10px 16px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">★ Carros Chefe</div>
+          <div id="parc-kpi-cc" style="font-size:24px;font-weight:700;color:var(--c-amber);margin-top:4px;">—</div>
+        </div>
+        <div style="background:var(--c-surface);padding:10px 16px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Mais de 30 dias</div>
+          <div id="parc-kpi-old" style="font-size:24px;font-weight:700;color:var(--c-red);margin-top:4px;">—</div>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
+        <div class="fab-card" style="padding:0;overflow:hidden;">
+          <table class="fab-table">
+            <thead>
+              <tr>
+                <th style="width:24px;"></th>
+                <th>Parceiro</th>
+                <th class="right">Peças</th>
+                <th class="right">★ Carros Chefe</th>
+                <th class="right">Dias Médio</th>
+                <th>Mais Antiga</th>
+              </tr>
+            </thead>
+            <tbody id="parc-tbody"><tr><td colspan="6"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Fotografia -->
     <div id="foto-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this)fotoCloseModal()">
       <div class="modal" style="width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
@@ -3286,7 +3337,8 @@ const PAGE_TITLES = {
   fabricacoes:{title:'Fabricações JF',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
   'fabricacoes-jm':{title:'Fabricações JM',sub:'Estoque · Em fabricação · Vendidos — tempo real'},
   'manutencao':{title:'Manutenções',sub:'Controle geral de peças em manutenção — JF · JM · JR'},
-  'fotografia':{title:'Fotografia',sub:'Controle de saquinhos de fotos'}
+  'fotografia':{title:'Fotografia',sub:'Controle de saquinhos de fotos'},
+  'parceiros':{title:'Parceiros',sub:'Comodato — peças em campo por parceiro'}
 };
 
 function goTo(name){
@@ -3312,6 +3364,7 @@ function goTo(name){
   if(name==='fabricacoes-jm') { jmLoad(); }
   if(name==='manutencao')     { manutencaoLoad(); }
   if(name==='fotografia')     { if(typeof window.fotoLoad==='function') window.fotoLoad(); }
+  if(name==='parceiros')      { if(typeof window.parceiroLoad==='function') window.parceiroLoad(); }
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -8336,6 +8389,148 @@ window.addEventListener('load', () => {
     if (_fotoSortCol === col) _fotoSortDir *= -1;
     else { _fotoSortCol = col; _fotoSortDir = 1; }
     window.fotoApplyFilter();
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // PARCEIROS / COMODATO
+  // ═══════════════════════════════════════════════════════════════
+  let _parcData = [];
+
+  function _parcIsCC(r) {
+    const s = (r.subtipo   || '').toUpperCase();
+    const p = (r.produto   || '').toUpperCase();
+    if (s === 'SOLITÁRIO'    && p.includes('ANEL'))      return true;
+    if (s === 'SOLITÁRIO'    && p.includes('BRINCO'))    return true;
+    if (s === 'PONTO DE LUZ' || p.includes('PONTO DE LUZ')) return true;
+    if (s === 'MEIA ALIANÇA')                             return true;
+    if (s === 'RIVIERA'      && p.includes('COLAR'))     return true;
+    if (s === 'RIVIERA'      && p.includes('PULSEIRA'))  return true;
+    if (p.includes('ALIANÇA RIVIERA'))                    return true;
+    if (s === 'MARACANÃ'     && p.includes('ANEL'))      return true;
+    if (s === 'MARACANÃ'     && p.includes('COLAR'))     return true;
+    if (s === 'MARACANÃ'     && p.includes('BRINCO'))    return true;
+    if (s === 'PARA RIVIERA' && p.includes('PINGENTE'))  return true;
+    return false;
+  }
+
+  function _parcFmtDate(d) {
+    if (!d) return '—';
+    const s = String(d).slice(0,10);
+    const [y,m,dd] = s.split('-');
+    const mn = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${dd}/${mn[+m-1]}/${y.slice(2)}`;
+  }
+
+  function _parcRender() {
+    const tbody = document.getElementById('parc-tbody');
+    if (!tbody) return;
+
+    // Agrupa por destino
+    const grupos = {};
+    _parcData.forEach(r => {
+      const d = r.destino || 'Sem Destino';
+      if (!grupos[d]) grupos[d] = [];
+      grupos[d].push(r);
+    });
+
+    // Atualiza KPIs
+    const totalParceiros = Object.keys(grupos).length;
+    const totalPecas     = _parcData.length;
+    const totalCC        = _parcData.filter(_parcIsCC).length;
+    const totalOld       = _parcData.filter(r => Number(r.dias_campo) > 30).length;
+    document.getElementById('parc-kpi-parceiros').textContent = totalParceiros;
+    document.getElementById('parc-kpi-pecas').textContent     = totalPecas;
+    document.getElementById('parc-kpi-cc').textContent        = totalCC;
+    document.getElementById('parc-kpi-old').textContent       = totalOld;
+
+    // Ordena parceiros: sem carros chefe primeiro (alerta), depois por peças desc
+    const sorted = Object.entries(grupos).sort(([,a],[,b]) => {
+      const ccA = a.filter(_parcIsCC).length;
+      const ccB = b.filter(_parcIsCC).length;
+      if (ccA === 0 && ccB > 0) return -1;
+      if (ccB === 0 && ccA > 0) return  1;
+      return b.length - a.length;
+    });
+
+    tbody.innerHTML = sorted.map(([destino, pecas], idx) => {
+      const gid    = 'pg' + idx;
+      const cc     = pecas.filter(_parcIsCC).length;
+      const dias   = pecas.map(r => Number(r.dias_campo)||0);
+      const dMed   = Math.round(dias.reduce((s,v)=>s+v,0) / dias.length);
+      const oldest = pecas.reduce((a,b) => (a.dias_campo > b.dias_campo ? a : b));
+      const alerta = cc === 0;
+
+      const rowStyle = alerta ? 'background:var(--c-amber-dim);' : '';
+      const ccBadge  = cc > 0
+        ? `<span style="color:var(--c-amber);font-weight:700;">★ ${cc}</span>`
+        : `<span style="color:var(--c-red);font-size:11px;">nenhum</span>`;
+      const oldBadge = oldest.dias_campo > 30
+        ? `<span style="color:var(--c-red);font-size:11px;">${oldest.dias_campo}d</span>`
+        : `<span style="color:var(--c-muted);font-size:11px;">${oldest.dias_campo}d</span>`;
+
+      // Sublinhas (ocultas)
+      const subRows = pecas
+        .slice()
+        .sort((a,b) => Number(b.dias_campo) - Number(a.dias_campo))
+        .map(r => {
+          const isCC = _parcIsCC(r);
+          const pedra = [r.tipo_pedra, r.lapidacao].filter(Boolean).join(' ');
+          const diasCor = Number(r.dias_campo) > 30 ? 'color:var(--c-red);' : 'color:var(--c-muted);';
+          return `<tr data-parent="${gid}" style="display:none;background:var(--c-surface2);">
+            <td></td>
+            <td style="padding-left:32px;color:var(--c-muted);font-size:11px;">${_parcFmtDate(r.data_saida)}</td>
+            <td style="font-weight:700;font-size:12px;">${r.referencia||'—'}${isCC ? ' <span style="color:var(--c-amber);">★</span>' : ''}</td>
+            <td style="font-size:12px;color:var(--c-text);">${r.produto||''} ${r.subtipo||''}</td>
+            <td style="font-size:11px;color:var(--c-muted);">${pedra||'—'}</td>
+            <td style="font-size:11px;${diasCor}">${r.dias_campo}d em campo</td>
+          </tr>`;
+        }).join('');
+
+      return `<tr style="cursor:pointer;${rowStyle}" onclick="window.parcToggle('${gid}',this)">
+          <td><span id="${gid}-ico" style="font-size:11px;color:var(--c-muted);">▶</span></td>
+          <td style="font-weight:600;">${destino}${alerta ? ' <span style="font-size:10px;color:var(--c-amber);">⚠ sem carro chefe</span>' : ''}</td>
+          <td class="right">${pecas.length}</td>
+          <td class="right">${ccBadge}</td>
+          <td class="right" style="color:var(--c-muted);font-size:12px;">${dMed}d</td>
+          <td>${oldBadge} — ${_parcFmtDate(oldest.data_saida)}</td>
+        </tr>
+        <!-- detalhe header -->
+        <tr data-parent="${gid}" style="display:none;background:var(--c-surface2);">
+          <td></td>
+          <td style="padding-left:32px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Data Saída</td>
+          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Ref</td>
+          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Produto / Subtipo</td>
+          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Pedra</td>
+          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Tempo</td>
+        </tr>
+        ${subRows}`;
+    }).join('');
+  }
+
+  window.parcToggle = function(gid, row) {
+    const ico  = document.getElementById(gid + '-ico');
+    const rows = document.querySelectorAll(`[data-parent="${gid}"]`);
+    const open = ico.textContent === '▶';
+    ico.textContent = open ? '▼' : '▶';
+    rows.forEach(r => r.style.display = open ? '' : 'none');
+  };
+
+  window.parceiroLoad = async function() {
+    const page = document.getElementById('page-parceiros');
+    if (!page || !page.classList.contains('active')) return;
+    const tbody = document.getElementById('parc-tbody');
+    const _err  = msg => { if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--c-red);">${msg} <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()" style="margin-left:8px;"><i class="ti ti-refresh"></i> Tentar novamente</button></td></tr>`; };
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>';
+    try {
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 25000));
+      const r = await Promise.race([window.apiFetch(window._API + '/comodato'), timeout]);
+      if (!r.ok) { _err('Erro ' + r.status); return; }
+      _parcData = await r.json();
+      _parcRender();
+    } catch(e) {
+      console.error('[parceiroLoad]', e);
+      _err(e.message === 'timeout' ? 'Servidor iniciando — aguarde alguns segundos.' : 'Erro: ' + (e.message || 'falha na conexão'));
+    }
   };
 
   window.fotoLoad = async function() {
