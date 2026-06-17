@@ -2665,7 +2665,13 @@ canvas.fab-canvas { width: 100% !important; }
         <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()"><i class="ti ti-refresh"></i> Atualizar</button>
       </div>
 
-      <!-- KPIs -->
+      <!-- Tabs -->
+      <div class="fab-tabs" style="flex-shrink:0;">
+        <button id="parc-tab-parceiro" class="fab-tab active" onclick="window.parcSwitchTab('parceiro')">Por Parceiro</button>
+        <button id="parc-tab-cc" class="fab-tab" onclick="window.parcSwitchTab('cc')">★ Carros Chefe</button>
+      </div>
+
+      <!-- KPIs (compartilhado) -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:8px;margin:10px 16px 0;flex-shrink:0;overflow:hidden;">
         <div style="background:var(--c-surface);padding:10px 16px;">
           <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Parceiros</div>
@@ -2685,8 +2691,8 @@ canvas.fab-canvas { width: 100% !important; }
         </div>
       </div>
 
-      <!-- Tabela -->
-      <div style="flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
+      <!-- View: Por Parceiro -->
+      <div id="parc-view-parceiro" style="flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
         <div class="fab-card" style="padding:0;overflow:hidden;">
           <table class="fab-table">
             <thead>
@@ -2702,6 +2708,12 @@ canvas.fab-canvas { width: 100% !important; }
             <tbody id="parc-tbody"><tr><td colspan="6"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- View: Carros Chefe -->
+      <div id="parc-view-cc" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
+        <div id="parc-cc-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
+        <div id="parc-cc-content"></div>
       </div>
     </div>
 
@@ -8394,7 +8406,23 @@ window.addEventListener('load', () => {
   // ═══════════════════════════════════════════════════════════════
   // PARCEIROS / COMODATO
   // ═══════════════════════════════════════════════════════════════
-  let _parcData = [];
+  let _parcData      = [];
+  let _parcActiveTab = 'parceiro';
+  let _parcActiveCC  = null; // null = todos, else = destino string
+
+  const _PARC_CC_CATS = [
+    { label: 'Anel Solitário',      check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='SOLITÁRIO'    && p.includes('ANEL'); }},
+    { label: 'Brinco Solitário',    check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='SOLITÁRIO'    && p.includes('BRINCO'); }},
+    { label: 'Ponto de Luz',        check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='PONTO DE LUZ' || p.includes('PONTO DE LUZ'); }},
+    { label: 'Meia Aliança',        check: r => (r.subtipo||'').toUpperCase()==='MEIA ALIANÇA' },
+    { label: 'Colar Riviera',       check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='RIVIERA'      && p.includes('COLAR'); }},
+    { label: 'Pulseira Riviera',    check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='RIVIERA'      && p.includes('PULSEIRA'); }},
+    { label: 'Aliança Riviera',     check: r => (r.produto||'').toUpperCase().includes('ALIANÇA RIVIERA') },
+    { label: 'Anel Maracanã',       check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='MARACANÃ'     && p.includes('ANEL'); }},
+    { label: 'Colar Maracanã',      check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='MARACANÃ'     && p.includes('COLAR'); }},
+    { label: 'Brinco Maracanã',     check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='MARACANÃ'     && p.includes('BRINCO'); }},
+    { label: 'Pingente P/ Riviera', check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='PARA RIVIERA' && p.includes('PINGENTE'); }},
+  ];
 
   function _parcIsCC(r) {
     const s = (r.subtipo   || '').toUpperCase();
@@ -8515,6 +8543,96 @@ window.addEventListener('load', () => {
     rows.forEach(r => r.style.display = open ? '' : 'none');
   };
 
+  window.parcSwitchTab = function(tab) {
+    _parcActiveTab = tab;
+    document.getElementById('parc-tab-parceiro').classList.toggle('active', tab === 'parceiro');
+    document.getElementById('parc-tab-cc').classList.toggle('active', tab === 'cc');
+    document.getElementById('parc-view-parceiro').style.display = tab === 'parceiro' ? '' : 'none';
+    document.getElementById('parc-view-cc').style.display       = tab === 'cc'       ? '' : 'none';
+    if (tab === 'cc' && _parcData.length) _parcRenderCC();
+  };
+
+  window.parcFilterCC = function(destino) {
+    _parcActiveCC = destino || null;
+    document.querySelectorAll('.parc-chip').forEach(c => {
+      const isActive = (destino ? c.dataset.dest === destino : c.dataset.dest === '');
+      c.style.background   = isActive ? 'var(--c-accent-dim)' : 'var(--c-surface2)';
+      c.style.color        = isActive ? 'var(--c-accent)'     : 'var(--c-muted)';
+      c.style.borderColor  = isActive ? 'rgba(79,110,247,.3)' : 'var(--c-border)';
+    });
+    _parcRenderCCContent();
+  };
+
+  function _parcRenderCC() {
+    const chips = document.getElementById('parc-cc-chips');
+    if (!chips) return;
+    const partners = [...new Set(_parcData.filter(_parcIsCC).map(r => r.destino).filter(Boolean))].sort();
+    const chipStyle = (active) => `class="parc-chip" style="padding:5px 12px;border-radius:20px;border:1px solid;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:${active?'var(--c-accent-dim)':'var(--c-surface2)'};color:${active?'var(--c-accent)':'var(--c-muted)'};border-color:${active?'rgba(79,110,247,.3)':'var(--c-border)'};"`;
+    chips.innerHTML =
+      `<button ${chipStyle(true)} data-dest="" onclick="window.parcFilterCC(null)">Todos</button>` +
+      partners.map(p => `<button ${chipStyle(false)} data-dest="${p}" onclick="window.parcFilterCC('${p.replace(/'/g,"\\'")}')">${p}</button>`).join('');
+    _parcRenderCCContent();
+  }
+
+  function _parcRenderCCContent() {
+    const el = document.getElementById('parc-cc-content');
+    if (!el) return;
+    if (_parcActiveCC === null) _parcRenderMatrix(el);
+    else _parcRenderPartnerCC(el, _parcActiveCC);
+  }
+
+  function _parcRenderMatrix(el) {
+    const partners = [...new Set(_parcData.filter(r => r.destino).map(r => r.destino))].sort();
+    const matrix = _PARC_CC_CATS.map(cat => ({
+      label: cat.label,
+      counts: partners.map(p => _parcData.filter(r => r.destino === p && cat.check(r)).length),
+      total:  _parcData.filter(cat.check).length
+    }));
+    const shortName = n => n.split(' ').slice(0,2).join(' ');
+    el.innerHTML = `<div style="overflow-x:auto;"><table class="fab-table">
+      <thead><tr>
+        <th>★ Categoria</th>
+        ${partners.map(p => `<th class="right" style="font-size:10px;white-space:nowrap;">${shortName(p)}</th>`).join('')}
+        <th class="right">Total</th>
+      </tr></thead>
+      <tbody>
+        ${matrix.map(row => `<tr>
+          <td style="font-weight:600;font-size:12px;">${row.label}</td>
+          ${row.counts.map(c => `<td class="right" style="background:${c>0?'var(--c-green-dim)':'var(--c-red-dim)'};color:${c>0?'var(--c-green)':'var(--c-red)'};font-weight:700;">${c>0?c:'—'}</td>`).join('')}
+          <td class="right" style="font-weight:700;color:var(--c-amber);">${row.total||'—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  function _parcRenderPartnerCC(el, destino) {
+    const ccPecas = _parcData.filter(r => r.destino === destino && _parcIsCC(r));
+    const coverage = _PARC_CC_CATS.map(cat => ({ label: cat.label, pecas: ccPecas.filter(cat.check) }));
+    const has = coverage.filter(c => c.pecas.length > 0).length;
+    const pill = (c) => `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
+      background:${c.pecas.length>0?'var(--c-green-dim)':'var(--c-red-dim)'};
+      color:${c.pecas.length>0?'var(--c-green)':'var(--c-red)'};
+      border:1px solid ${c.pecas.length>0?'rgba(34,201,135,.2)':'rgba(240,82,82,.2)'};">
+      ${c.pecas.length>0?'✓':'✗'} ${c.label}${c.pecas.length>1?' ×'+c.pecas.length:''}</span>`;
+    el.innerHTML = `
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);margin-bottom:8px;">
+          ${destino} — ${has} de ${_PARC_CC_CATS.length} categorias cobertas
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">${coverage.map(pill).join('')}</div>
+      </div>
+      ${ccPecas.length ? `<div class="fab-card" style="padding:0;overflow:hidden;"><table class="fab-table">
+        <thead><tr><th>Ref</th><th>Produto / Subtipo</th><th>Pedra</th><th>Lapidação</th><th class="right">Dias</th></tr></thead>
+        <tbody>${ccPecas.sort((a,b)=>Number(b.dias_campo)-Number(a.dias_campo)).map(r => `<tr>
+          <td style="font-weight:700;">${r.referencia||'—'}</td>
+          <td>${r.produto||''} ${r.subtipo||''}</td>
+          <td style="color:var(--c-muted);font-size:12px;">${r.tipo_pedra||'—'}</td>
+          <td style="color:var(--c-muted);font-size:12px;">${r.lapidacao||'—'}</td>
+          <td class="right" style="color:${Number(r.dias_campo)>30?'var(--c-red)':'var(--c-muted)'};font-size:12px;">${r.dias_campo}d</td>
+        </tr>`).join('')}</tbody>
+      </table></div>` : '<div style="text-align:center;padding:20px;color:var(--c-muted);">Nenhum carro chefe em campo para este parceiro</div>'}`;
+  }
+
   window.parceiroLoad = async function() {
     const page = document.getElementById('page-parceiros');
     if (!page || !page.classList.contains('active')) return;
@@ -8527,6 +8645,7 @@ window.addEventListener('load', () => {
       if (!r.ok) { _err('Erro ' + r.status); return; }
       _parcData = await r.json();
       _parcRender();
+      if (_parcActiveTab === 'cc') _parcRenderCC();
     } catch(e) {
       console.error('[parceiroLoad]', e);
       _err(e.message === 'timeout' ? 'Servidor iniciando — aguarde alguns segundos.' : 'Erro: ' + (e.message || 'falha na conexão'));
