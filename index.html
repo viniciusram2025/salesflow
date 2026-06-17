@@ -2596,6 +2596,23 @@ canvas.fab-canvas { width: 100% !important; }
 
         </div>
 
+        <!-- Últimas Vendas -->
+        <div style="padding:0 16px 16px;flex-shrink:0;">
+          <div class="fab-card" style="padding:0;overflow:hidden;">
+            <div style="padding:10px 16px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:8px;">
+              <i class="ti ti-clock-hour-3" style="font-size:14px;color:var(--c-muted);"></i>
+              <span style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Últimas Vendas</span>
+              <span id="rv-ultimas-count" style="font-size:11px;color:var(--c-muted);margin-left:4px;"></span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="fab-table" style="min-width:600px;">
+                <thead id="rv-ultimas-thead"></thead>
+                <tbody id="rv-ultimas-tbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--c-muted);">—</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div><!-- /page-revenda -->
 
       <!-- ══════ PAGE: USUÁRIOS ══════ -->
@@ -7852,6 +7869,7 @@ window.addEventListener('load', () => {
     rvTipoDonut(main);
     rvVendedor(main);
     rvScrap(scrap);
+    rvUltimas(main);
   }
   window.rvRender = rvRender;
 
@@ -8057,6 +8075,46 @@ window.addEventListener('load', () => {
         }
       }
     });
+  }
+
+  // ── Últimas Vendas ────────────────────────────────────────────
+  function rvUltimas(data) {
+    const thead = document.getElementById('rv-ultimas-thead');
+    const tbody = document.getElementById('rv-ultimas-tbody');
+    const count = document.getElementById('rv-ultimas-count');
+    if (!tbody) return;
+
+    const sorted = [...data].sort((a, b) => (b.data_venda||'').localeCompare(a.data_venda||''));
+    if (count) count.textContent = sorted.length ? `${sorted.length} venda${sorted.length>1?'s':''}` : '';
+
+    if (thead) thead.innerHTML = `<tr>
+      <th>Data</th><th>Ref.</th><th>Tipo de Joia</th><th class="right">Valor</th><th>Destino</th>
+    </tr>`;
+
+    if (!sorted.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--c-muted);">Nenhuma venda no período</td></tr>';
+      return;
+    }
+
+    const fmtD = d => d ? d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4) : '—';
+    const destLabel = d => {
+      if (!d) return '—';
+      const u = d.toUpperCase();
+      if (u.includes('ETERNNO')) return 'Eternno';
+      if (u.includes('LEILA') || u.includes('LEIL')) return 'Leilão';
+      return d;
+    };
+
+    tbody.innerHTML = sorted.map(r => {
+      const val = Number(r.preco_cobrado||0);
+      return `<tr>
+        <td style="white-space:nowrap;color:var(--c-muted);font-size:12px;">${fmtD(r.data_venda)}</td>
+        <td style="font-weight:700;">${r.referencia||'—'}</td>
+        <td style="color:var(--c-text);">${r.produto||r.subtipo||r.tipo||'—'}</td>
+        <td style="text-align:right;font-weight:700;color:var(--c-green);">${fmt.moeda(val)}</td>
+        <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;background:var(--c-surface2);border:1px solid var(--c-border2);white-space:nowrap;">${destLabel(r.destino)}</span></td>
+      </tr>`;
+    }).join('');
   }
 
   // ── Seção SCRAP ───────────────────────────────────────────────
