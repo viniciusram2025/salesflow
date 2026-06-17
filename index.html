@@ -8410,6 +8410,8 @@ window.addEventListener('load', () => {
   let _parcActiveTab = 'parceiro';
   let _parcActiveCC  = null; // null = todos, else = destino string
 
+  const _PARC_EXCLUIDOS = new Set(['LUCIMARY','HELTON','EDUARDO','THAÍS','THAIS']);
+
   const _PARC_CC_CATS = [
     { label: 'Anel Solitário',      check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='SOLITÁRIO'    && p.includes('ANEL'); }},
     { label: 'Brinco Solitário',    check: r => { const s=(r.subtipo||'').toUpperCase(),p=(r.produto||'').toUpperCase(); return s==='SOLITÁRIO'    && p.includes('BRINCO'); }},
@@ -8643,7 +8645,8 @@ window.addEventListener('load', () => {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 25000));
       const r = await Promise.race([window.apiFetch(window._API + '/comodato'), timeout]);
       if (!r.ok) { _err('Erro ' + r.status); return; }
-      _parcData = await r.json();
+      const raw = await r.json();
+      _parcData = raw.filter(r => !_PARC_EXCLUIDOS.has((r.destino||'').toUpperCase()));
       _parcRender();
       if (_parcActiveTab === 'cc') _parcRenderCC();
     } catch(e) {
