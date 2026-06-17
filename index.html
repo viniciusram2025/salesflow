@@ -3298,7 +3298,7 @@ function goTo(name){
   if(name==='configuracoes')   renderConfigPage();
   if(name==='calendario')      renderCalendar();
   if(name==='relatorios')      {} // static page
-  if(name==='fabricacoes')     { fabLoad(); fabStartAutoRefresh(); }
+  if(name==='fabricacoes')     { fabLoad(); }
   if(name==='fabricacoes-jm') { jmLoad(); }
   if(name==='manutencao')     { manutencaoLoad(); }
   if(name==='fotografia')     { if(typeof window.fotoLoad==='function') window.fotoLoad(); }
@@ -7692,16 +7692,12 @@ window.addEventListener('load', () => {
       _origGoTo(page);
       if (page === "fabricacoes") {
         fabLoad();
-        fabStartAutoRefresh();
-      } else {
-        if (_jfAutoRefresh) clearInterval(_jfAutoRefresh);
       }
     };
   } else {
     // Fallback: inicializa direto se a página já estiver visível
     if (document.getElementById("page-fabricacoes")?.style.display !== "none") {
       fabLoad();
-      fabStartAutoRefresh();
     }
   }
 
