@@ -8084,10 +8084,14 @@ window.addEventListener('load', () => {
     list.innerHTML = sorted.map(r => {
       const val  = Number(r.preco_cobrado||0);
       const tipo = r.produto||r.subtipo||r.tipo||'—';
-      return `<div style="padding:4px 12px;border-bottom:1px solid var(--c-border);display:flex;gap:6px;align-items:baseline;">
-        <span style="font-size:10px;font-weight:700;color:var(--c-text);white-space:nowrap;">${r.referencia||'—'}</span>
-        <span style="font-size:9px;color:var(--c-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tipo}</span>
-        <span style="font-size:10px;font-weight:700;color:var(--c-green);white-space:nowrap;">${fmt.moeda(val)}</span>
+      const dest = r.destino||'—';
+      return `<div style="padding:3px 12px 4px;border-bottom:1px solid var(--c-border);">
+        <div style="display:flex;gap:6px;align-items:baseline;">
+          <span style="font-size:10px;font-weight:700;color:var(--c-text);white-space:nowrap;">${r.referencia||'—'}</span>
+          <span style="font-size:9px;color:var(--c-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${tipo}</span>
+          <span style="font-size:10px;font-weight:700;color:var(--c-green);white-space:nowrap;">${fmt.moeda(val)}</span>
+        </div>
+        <div style="font-size:9px;color:var(--c-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;">${dest}</div>
       </div>`;
     }).join('');
   }
