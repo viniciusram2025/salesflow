@@ -2665,13 +2665,7 @@ canvas.fab-canvas { width: 100% !important; }
         <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()"><i class="ti ti-refresh"></i> Atualizar</button>
       </div>
 
-      <!-- Tabs -->
-      <div class="fab-tabs" style="flex-shrink:0;">
-        <button id="parc-tab-parceiro" class="fab-tab active" onclick="window.parcSwitchTab('parceiro')">Por Parceiro</button>
-        <button id="parc-tab-cc" class="fab-tab" onclick="window.parcSwitchTab('cc')">★ Carros Chefe</button>
-      </div>
-
-      <!-- KPIs (compartilhado) -->
+      <!-- KPIs -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--c-border);border:1px solid var(--c-border);border-radius:8px;margin:10px 16px 0;flex-shrink:0;overflow:hidden;">
         <div style="background:var(--c-surface);padding:10px 16px;">
           <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Parceiros</div>
@@ -2691,27 +2685,8 @@ canvas.fab-canvas { width: 100% !important; }
         </div>
       </div>
 
-      <!-- View: Por Parceiro -->
-      <div id="parc-view-parceiro" style="flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
-        <div class="fab-card" style="padding:0;overflow:hidden;">
-          <table class="fab-table">
-            <thead>
-              <tr>
-                <th style="width:24px;"></th>
-                <th>Parceiro</th>
-                <th class="right">Peças</th>
-                <th class="right">★ Carros Chefe</th>
-                <th class="right">Dias Médio</th>
-                <th>Mais Antiga</th>
-              </tr>
-            </thead>
-            <tbody id="parc-tbody"><tr><td colspan="6"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- View: Carros Chefe -->
-      <div id="parc-view-cc" style="display:none;flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
+      <!-- Carros Chefe -->
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:10px 16px 16px;">
         <div id="parc-cc-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;"></div>
         <div id="parc-cc-content"></div>
       </div>
@@ -8406,9 +8381,8 @@ window.addEventListener('load', () => {
   // ═══════════════════════════════════════════════════════════════
   // PARCEIROS / COMODATO
   // ═══════════════════════════════════════════════════════════════
-  let _parcData      = [];
-  let _parcActiveTab = 'parceiro';
-  let _parcActiveCC  = null; // null = todos, else = destino string
+  let _parcData     = [];
+  let _parcActiveCC = null; // null = todos, else = destino string
 
   const _PARC_EXCLUIDOS = new Set(['LUCIMARY','HELTON','EDUARDO','THAÍS','THAIS']);
 
@@ -8451,108 +8425,13 @@ window.addEventListener('load', () => {
     return `${dd}/${mn[+m-1]}/${y.slice(2)}`;
   }
 
-  function _parcRender() {
-    const tbody = document.getElementById('parc-tbody');
-    if (!tbody) return;
-
-    // Agrupa por destino
-    const grupos = {};
-    _parcData.forEach(r => {
-      const d = r.destino || 'Sem Destino';
-      if (!grupos[d]) grupos[d] = [];
-      grupos[d].push(r);
-    });
-
-    // Atualiza KPIs
-    const totalParceiros = Object.keys(grupos).length;
-    const totalPecas     = _parcData.length;
-    const totalCC        = _parcData.filter(_parcIsCC).length;
-    const totalOld       = _parcData.filter(r => Number(r.dias_campo) > 30).length;
-    document.getElementById('parc-kpi-parceiros').textContent = totalParceiros;
-    document.getElementById('parc-kpi-pecas').textContent     = totalPecas;
-    document.getElementById('parc-kpi-cc').textContent        = totalCC;
-    document.getElementById('parc-kpi-old').textContent       = totalOld;
-
-    // Ordena parceiros: sem carros chefe primeiro (alerta), depois por peças desc
-    const sorted = Object.entries(grupos).sort(([,a],[,b]) => {
-      const ccA = a.filter(_parcIsCC).length;
-      const ccB = b.filter(_parcIsCC).length;
-      if (ccA === 0 && ccB > 0) return -1;
-      if (ccB === 0 && ccA > 0) return  1;
-      return b.length - a.length;
-    });
-
-    tbody.innerHTML = sorted.map(([destino, pecas], idx) => {
-      const gid    = 'pg' + idx;
-      const cc     = pecas.filter(_parcIsCC).length;
-      const dias   = pecas.map(r => Number(r.dias_campo)||0);
-      const dMed   = Math.round(dias.reduce((s,v)=>s+v,0) / dias.length);
-      const oldest = pecas.reduce((a,b) => (a.dias_campo > b.dias_campo ? a : b));
-      const alerta = cc === 0;
-
-      const rowStyle = alerta ? 'background:var(--c-amber-dim);' : '';
-      const ccBadge  = cc > 0
-        ? `<span style="color:var(--c-amber);font-weight:700;">★ ${cc}</span>`
-        : `<span style="color:var(--c-red);font-size:11px;">nenhum</span>`;
-      const oldBadge = oldest.dias_campo > 30
-        ? `<span style="color:var(--c-red);font-size:11px;">${oldest.dias_campo}d</span>`
-        : `<span style="color:var(--c-muted);font-size:11px;">${oldest.dias_campo}d</span>`;
-
-      // Sublinhas (ocultas)
-      const subRows = pecas
-        .slice()
-        .sort((a,b) => Number(b.dias_campo) - Number(a.dias_campo))
-        .map(r => {
-          const isCC = _parcIsCC(r);
-          const pedra = [r.tipo_pedra, r.lapidacao].filter(Boolean).join(' ');
-          const diasCor = Number(r.dias_campo) > 30 ? 'color:var(--c-red);' : 'color:var(--c-muted);';
-          return `<tr data-parent="${gid}" style="display:none;background:var(--c-surface2);">
-            <td></td>
-            <td style="padding-left:32px;color:var(--c-muted);font-size:11px;">${_parcFmtDate(r.data_saida)}</td>
-            <td style="font-weight:700;font-size:12px;">${r.referencia||'—'}${isCC ? ' <span style="color:var(--c-amber);">★</span>' : ''}</td>
-            <td style="font-size:12px;color:var(--c-text);">${r.produto||''} ${r.subtipo||''}</td>
-            <td style="font-size:11px;color:var(--c-muted);">${pedra||'—'}</td>
-            <td style="font-size:11px;${diasCor}">${r.dias_campo}d em campo</td>
-          </tr>`;
-        }).join('');
-
-      return `<tr style="cursor:pointer;${rowStyle}" onclick="window.parcToggle('${gid}',this)">
-          <td><span id="${gid}-ico" style="font-size:11px;color:var(--c-muted);">▶</span></td>
-          <td style="font-weight:600;">${destino}${alerta ? ' <span style="font-size:10px;color:var(--c-amber);">⚠ sem carro chefe</span>' : ''}</td>
-          <td class="right">${pecas.length}</td>
-          <td class="right">${ccBadge}</td>
-          <td class="right" style="color:var(--c-muted);font-size:12px;">${dMed}d</td>
-          <td>${oldBadge} — ${_parcFmtDate(oldest.data_saida)}</td>
-        </tr>
-        <!-- detalhe header -->
-        <tr data-parent="${gid}" style="display:none;background:var(--c-surface2);">
-          <td></td>
-          <td style="padding-left:32px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Data Saída</td>
-          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Ref</td>
-          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Produto / Subtipo</td>
-          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Pedra</td>
-          <td style="font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);">Tempo</td>
-        </tr>
-        ${subRows}`;
-    }).join('');
+  function _parcUpdateKPIs() {
+    const partners = new Set(_parcData.map(r => r.destino).filter(Boolean));
+    document.getElementById('parc-kpi-parceiros').textContent = partners.size;
+    document.getElementById('parc-kpi-pecas').textContent     = _parcData.length;
+    document.getElementById('parc-kpi-cc').textContent        = _parcData.filter(_parcIsCC).length;
+    document.getElementById('parc-kpi-old').textContent       = _parcData.filter(r => Number(r.dias_campo) > 30).length;
   }
-
-  window.parcToggle = function(gid, row) {
-    const ico  = document.getElementById(gid + '-ico');
-    const rows = document.querySelectorAll(`[data-parent="${gid}"]`);
-    const open = ico.textContent === '▶';
-    ico.textContent = open ? '▼' : '▶';
-    rows.forEach(r => r.style.display = open ? '' : 'none');
-  };
-
-  window.parcSwitchTab = function(tab) {
-    _parcActiveTab = tab;
-    document.getElementById('parc-tab-parceiro').classList.toggle('active', tab === 'parceiro');
-    document.getElementById('parc-tab-cc').classList.toggle('active', tab === 'cc');
-    document.getElementById('parc-view-parceiro').style.display = tab === 'parceiro' ? '' : 'none';
-    document.getElementById('parc-view-cc').style.display       = tab === 'cc'       ? '' : 'none';
-    if (tab === 'cc' && _parcData.length) _parcRenderCC();
-  };
 
   window.parcFilterCC = function(destino) {
     _parcActiveCC = destino || null;
@@ -8585,27 +8464,60 @@ window.addEventListener('load', () => {
 
   function _parcRenderMatrix(el) {
     const partners = [...new Set(_parcData.filter(r => r.destino).map(r => r.destino))].sort();
-    const matrix = _PARC_CC_CATS.map(cat => ({
-      label: cat.label,
-      counts: partners.map(p => _parcData.filter(r => r.destino === p && cat.check(r)).length),
-      total:  _parcData.filter(cat.check).length
-    }));
     const shortName = n => n.split(' ').slice(0,2).join(' ');
+
+    const matrix = _PARC_CC_CATS.map((cat, catIdx) => {
+      const pieces = _parcData.filter(cat.check);
+      const counts = partners.map(p => pieces.filter(r => r.destino === p).length);
+      // sub-variants by pedra + lapidação
+      const varMap = {};
+      pieces.forEach(r => {
+        const key = (r.tipo_pedra||'—') + '||' + (r.lapidacao||'—');
+        if (!varMap[key]) varMap[key] = { pedra: r.tipo_pedra||'—', lap: r.lapidacao||'—', counts: partners.map(()=>0), total: 0 };
+        const pi = partners.indexOf(r.destino);
+        if (pi >= 0) varMap[key].counts[pi]++;
+        varMap[key].total++;
+      });
+      const variants = Object.values(varMap).sort((a,b) => b.total - a.total);
+      return { label: cat.label, counts, total: pieces.length, variants, catIdx };
+    });
+
+    const rows = matrix.map(row => {
+      const hasAny = row.total > 0;
+      const subRows = row.variants.map(v => `<tr data-subcat="${row.catIdx}" style="display:none;background:var(--c-surface2);">
+        <td style="padding-left:28px;font-size:11px;color:var(--c-muted);white-space:nowrap;">
+          <span style="opacity:.5;margin-right:4px;">└</span>${v.pedra} · ${v.lap}
+        </td>
+        ${v.counts.map(c => `<td class="right" style="font-size:11px;color:${c>0?'var(--c-green)':'var(--c-border)'};">${c>0?c:'·'}</td>`).join('')}
+        <td class="right" style="font-size:11px;color:var(--c-muted);">${v.total}</td>
+      </tr>`).join('');
+
+      return `<tr style="cursor:${hasAny?'pointer':'default'};" onclick="${hasAny?`window._parcCCToggle(${row.catIdx})`:''}">
+        <td style="font-weight:600;font-size:12px;">
+          ${hasAny?`<span id="parc-cc-ico-${row.catIdx}" style="font-size:10px;color:var(--c-muted);margin-right:5px;display:inline-block;width:10px;">▶</span>`:'<span style="display:inline-block;width:15px;"></span>'}${row.label}
+        </td>
+        ${row.counts.map(c => `<td class="right" style="background:${c>0?'var(--c-green-dim)':'var(--c-red-dim)'};color:${c>0?'var(--c-green)':'var(--c-red)'};font-weight:700;">${c>0?c:'—'}</td>`).join('')}
+        <td class="right" style="font-weight:700;color:var(--c-amber);">${row.total||'—'}</td>
+      </tr>${subRows}`;
+    }).join('');
+
     el.innerHTML = `<div style="overflow-x:auto;"><table class="fab-table">
       <thead><tr>
         <th>★ Categoria</th>
         ${partners.map(p => `<th class="right" style="font-size:10px;white-space:nowrap;">${shortName(p)}</th>`).join('')}
         <th class="right">Total</th>
       </tr></thead>
-      <tbody>
-        ${matrix.map(row => `<tr>
-          <td style="font-weight:600;font-size:12px;">${row.label}</td>
-          ${row.counts.map(c => `<td class="right" style="background:${c>0?'var(--c-green-dim)':'var(--c-red-dim)'};color:${c>0?'var(--c-green)':'var(--c-red)'};font-weight:700;">${c>0?c:'—'}</td>`).join('')}
-          <td class="right" style="font-weight:700;color:var(--c-amber);">${row.total||'—'}</td>
-        </tr>`).join('')}
-      </tbody>
+      <tbody>${rows}</tbody>
     </table></div>`;
   }
+
+  window._parcCCToggle = function(catIdx) {
+    const icon = document.getElementById('parc-cc-ico-' + catIdx);
+    const subRows = document.querySelectorAll('[data-subcat="' + catIdx + '"]');
+    const open = icon && icon.textContent.trim() === '▶';
+    if (icon) icon.textContent = open ? '▼' : '▶';
+    subRows.forEach(r => r.style.display = open ? '' : 'none');
+  };
 
   function _parcRenderPartnerCC(el, destino) {
     const ccPecas = _parcData.filter(r => r.destino === destino && _parcIsCC(r));
@@ -8638,17 +8550,17 @@ window.addEventListener('load', () => {
   window.parceiroLoad = async function() {
     const page = document.getElementById('page-parceiros');
     if (!page || !page.classList.contains('active')) return;
-    const tbody = document.getElementById('parc-tbody');
-    const _err  = msg => { if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--c-red);">${msg} <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()" style="margin-left:8px;"><i class="ti ti-refresh"></i> Tentar novamente</button></td></tr>`; };
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div></td></tr>';
+    const content = document.getElementById('parc-cc-content');
+    const _err = msg => { if (content) content.innerHTML = `<div style="text-align:center;padding:28px;color:var(--c-red);">${msg} <button class="btn-ghost btn-sm" onclick="window.parceiroLoad()" style="margin-left:8px;"><i class="ti ti-refresh"></i> Tentar novamente</button></div>`; };
+    if (content) content.innerHTML = '<div class="fab-loading"><div class="fab-spinner"></div> Carregando...</div>';
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 25000));
       const r = await Promise.race([window.apiFetch(window._API + '/comodato'), timeout]);
       if (!r.ok) { _err('Erro ' + r.status); return; }
       const raw = await r.json();
       _parcData = raw.filter(r => !_PARC_EXCLUIDOS.has((r.destino||'').toUpperCase()));
-      _parcRender();
-      if (_parcActiveTab === 'cc') _parcRenderCC();
+      _parcUpdateKPIs();
+      _parcRenderCC();
     } catch(e) {
       console.error('[parceiroLoad]', e);
       _err(e.message === 'timeout' ? 'Servidor iniciando — aguarde alguns segundos.' : 'Erro: ' + (e.message || 'falha na conexão'));
