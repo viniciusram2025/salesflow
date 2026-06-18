@@ -8543,9 +8543,10 @@ window.addEventListener('load', () => {
     const matrix = _PARC_CC_CATS.map((cat, catIdx) => {
       const pieces = _parcData.filter(cat.check);
       const counts = partners.map(p => pieces.filter(r => r.destino === p).length);
-      // sub-variants by subtipo + pedra + lapidação
+      // sub-variants by subtipo + pedra + lapidação — só pedras nobres
+      const _PEDRAS_CC = new Set(['DIAMANTE','ESMERALDA','ESMERALDA COLOMBIANA','TURMALINA PARAÍBA','TURMALINA PARAIBA']);
       const varMap = {};
-      pieces.forEach(r => {
+      pieces.filter(r => _PEDRAS_CC.has((r.tipo_pedra||'').toUpperCase())).forEach(r => {
         const key = (r.subtipo||'—') + '||' + (r.tipo_pedra||'—') + '||' + (r.lapidacao||'—');
         if (!varMap[key]) varMap[key] = { sub: r.subtipo||'—', pedra: r.tipo_pedra||'—', lap: r.lapidacao||'—', counts: partners.map(()=>0), total: 0 };
         const pi = partners.indexOf(r.destino);
