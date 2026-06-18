@@ -2638,10 +2638,11 @@ canvas.fab-canvas { width: 100% !important; }
             <span class="fab-card-title">Saquinhos</span>
             <div style="flex:1;"></div>
             <select id="foto-filter-status" class="fab-select" onchange="fotoApplyFilter()" style="font-size:12px;padding:4px 8px;">
-              <option value="">Todos os status</option>
+              <option value="">Em aberto</option>
               <option value="aguardando">Aguardando</option>
               <option value="andamento">Em andamento</option>
-              <option value="finalizado">Finalizado</option>
+              <option value="finalizado">Arquivados (Finalizado)</option>
+              <option value="todos">Todos (incl. finalizados)</option>
             </select>
             <input id="foto-filter-busca" class="fab-filtro-busca" placeholder="Buscar data ou obs…" oninput="fotoApplyFilter()" style="width:180px;">
           </div>
@@ -8361,7 +8362,10 @@ window.addEventListener('load', () => {
     const busca  = ((document.getElementById('foto-filter-busca')||{}).value || '').toLowerCase();
     _fotoFiltered = _fotoData.filter(r => {
       const st = _statusOf(r);
-      if (status && st !== status) return false;
+      // por padrão esconde finalizados (arquivados) — visíveis só quando selecionado explicitamente
+      if (!status && st === 'finalizado') return false;
+      if (status === 'finalizado' && st !== 'finalizado') return false;
+      if (status && status !== 'todos' && status !== 'finalizado' && st !== status) return false;
       if (busca) {
         const haystack = [r.data_recebimento, r.data_finalizacao, r.observacao].join(' ').toLowerCase();
         if (!haystack.includes(busca)) return false;
