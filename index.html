@@ -144,6 +144,31 @@ window._initFirebaseListeners = function(){
       return task;
     });
     applyFilter();
+    // Lembrete de atrasadas — mostra uma vez por sessão ao abrir o app
+    if(!window._overdueReminderShown){
+      window._overdueReminderShown = true;
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      const minhas  = isAdmin ? TASKS : TASKS.filter(t => currentUser && t.person === currentUser.personKey);
+      const atrasadas = minhas.filter(t => t.late > 0 && t.status !== 'done');
+      if(atrasadas.length){
+        const lista = atrasadas.slice(0,8).map(t=>`<div style="padding:4px 0;border-bottom:1px solid var(--c-border);font-size:12px;"><span style="color:var(--c-text);font-weight:600;">${t.title}</span> <span style="color:var(--c-red);font-size:11px;margin-left:6px;">${t.late}d atraso</span></div>`).join('');
+        const extra = atrasadas.length > 8 ? `<div style="font-size:11px;color:var(--c-muted);margin-top:6px;">+${atrasadas.length-8} outras tarefas atrasadas</div>` : '';
+        showDialog({
+          title: `⚠ ${atrasadas.length} tarefa${atrasadas.length>1?'s':''} atrasada${atrasadas.length>1?'s':''}`,
+          message: `<div style="max-height:220px;overflow-y:auto;">${lista}</div>${extra}`,
+          confirmLabel: 'Ver tarefas',
+          cancelLabel: 'Fechar',
+          type: 'warning',
+          showCancel: true,
+          onConfirm: () => {
+            goTo('minhas');
+            document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+            const chip = [...document.querySelectorAll('.chip')].find(c=>c.textContent.trim()==='Atrasadas');
+            if(chip){ chip.classList.add('active'); filterTasks('atrasadas', chip); }
+          }
+        });
+      }
+    }
   });
 
   // METAIS
@@ -3442,9 +3467,24 @@ function renderTasks(list){
 function toggleTask(id){
   const t = TASKS.find(x=>x.id===id);
   if(!t) return;
-  t.status = t.status==='done'?'pendente':'done';
-  const { doc, setDoc } = window._fbModules;
-  setDoc(doc(window._db,'tasks', String(t.id)), t);
+  if(t.status==='done'){
+    showDialog({ title:'Tarefa arquivada', message:'Esta tarefa já foi concluída e <strong>não pode ser reativada</strong>. Para criar uma tarefa similar, use "+ Nova tarefa".', confirmLabel:'Entendi', showCancel:false, type:'info' });
+    return;
+  }
+  showDialog({
+    title: 'Concluir tarefa?',
+    message: 'Ao confirmar, esta tarefa será <strong>arquivada</strong>. Tarefas concluídas <strong>não podem ser reabertas</strong>.',
+    confirmLabel: 'Sim, concluir',
+    cancelLabel: 'Cancelar',
+    type: 'warning',
+    onConfirm: () => {
+      t.status = 'done';
+      const { doc, setDoc } = window._fbModules;
+      setDoc(doc(window._db,'tasks', String(t.id)), t);
+      applyFilter();
+      toast('Tarefa concluída e arquivada.','green');
+    }
+  });
 }
 
 let currentFilter = 'todas';
@@ -3742,6 +3782,10 @@ let editingId = null;
 function openEditTask(id){
   const t = TASKS.find(x=>x.id===id);
   if(!t) return;
+  if(t.status==='done'){
+    showDialog({ title:'Tarefa arquivada', message:'Esta tarefa foi concluída e <strong>não pode ser editada</strong>.', confirmLabel:'Entendi', showCancel:false, type:'info' });
+    return;
+  }
   editingId = id;
   document.getElementById('edit-id').value     = id;
   document.getElementById('edit-title').value  = t.title;
@@ -3993,6 +4037,27 @@ function toast(msg, type='green'){
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(),2800);
+}
+
+function showDialog({ title, message, confirmLabel='OK', cancelLabel='Cancelar', onConfirm, type='info', showCancel=true }){
+  const accent = type==='danger'?'var(--c-red)':type==='warning'?'var(--c-amber)':'var(--c-accent)';
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:3000;display:flex;align-items:center;justify-content:center;';
+  overlay.innerHTML = `
+    <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:14px;padding:28px 28px 22px;max-width:440px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.55);animation:fadeUp .18s ease;">
+      <div style="font-size:15px;font-weight:700;color:var(--c-text);margin-bottom:10px;">${title}</div>
+      <div style="font-size:13px;color:var(--c-muted);line-height:1.65;margin-bottom:22px;">${message}</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        ${showCancel?`<button id="_dlg_cancel" style="background:transparent;border:1px solid var(--c-border);border-radius:8px;padding:8px 18px;color:var(--c-muted);font-size:13px;cursor:pointer;">${cancelLabel}</button>`:''}
+        <button id="_dlg_confirm" style="background:${accent};border:none;border-radius:8px;padding:8px 20px;color:#fff;font-weight:700;font-size:13px;cursor:pointer;">${confirmLabel}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.querySelector('#_dlg_confirm').onclick = () => { close(); if(onConfirm) onConfirm(); };
+  const cb = overlay.querySelector('#_dlg_cancel');
+  if(cb) cb.onclick = close;
+  overlay.addEventListener('click', e => { if(e.target===overlay) close(); });
 }
 
 // ─── NOTIFICATIONS ────────────────────────────────────
