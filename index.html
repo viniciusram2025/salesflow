@@ -8478,11 +8478,11 @@ window.addEventListener('load', () => {
     const matrix = _PARC_CC_CATS.map((cat, catIdx) => {
       const pieces = _parcData.filter(cat.check);
       const counts = partners.map(p => pieces.filter(r => r.destino === p).length);
-      // sub-variants by pedra + lapidação
+      // sub-variants by subtipo + pedra + lapidação
       const varMap = {};
       pieces.forEach(r => {
-        const key = (r.tipo_pedra||'—') + '||' + (r.lapidacao||'—');
-        if (!varMap[key]) varMap[key] = { pedra: r.tipo_pedra||'—', lap: r.lapidacao||'—', counts: partners.map(()=>0), total: 0 };
+        const key = (r.subtipo||'—') + '||' + (r.tipo_pedra||'—') + '||' + (r.lapidacao||'—');
+        if (!varMap[key]) varMap[key] = { sub: r.subtipo||'—', pedra: r.tipo_pedra||'—', lap: r.lapidacao||'—', counts: partners.map(()=>0), total: 0 };
         const pi = partners.indexOf(r.destino);
         if (pi >= 0) varMap[key].counts[pi]++;
         varMap[key].total++;
@@ -8495,7 +8495,7 @@ window.addEventListener('load', () => {
       const hasAny = row.total > 0;
       const subRows = row.variants.map(v => `<tr data-subcat="${row.catIdx}" style="display:none;background:var(--c-surface2);">
         <td style="padding-left:28px;font-size:11px;color:var(--c-muted);white-space:nowrap;">
-          <span style="opacity:.5;margin-right:4px;">└</span>${v.pedra} · ${v.lap}
+          <span style="opacity:.5;margin-right:4px;">└</span>${v.sub} · ${v.pedra} · ${v.lap}
         </td>
         ${v.counts.map(c => `<td class="right" style="font-size:11px;color:${c>0?'var(--c-green)':'var(--c-border)'};">${c>0?c:'·'}</td>`).join('')}
         <td class="right" style="font-size:11px;color:var(--c-muted);">${v.total}</td>
