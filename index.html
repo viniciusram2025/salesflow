@@ -3484,21 +3484,26 @@ function applyFilter(){
   const _fWeekStart = new Date(_fToday); _fWeekStart.setDate(_fToday.getDate()-((_fDow+6)%7));
   const _fWeekEnd   = new Date(_fWeekStart); _fWeekEnd.setDate(_fWeekStart.getDate()+6);
 
+  // Filtros do painel (lidos antes para saber se o admin pediu explicitamente por concluídas)
+  const fp = (document.getElementById('filter-person')?.value)   || filterPerson;
+  const fpr= (document.getElementById('filter-priority')?.value) || filterPriority;
+  const fs = (document.getElementById('filter-status')?.value)   || filterStatus;
+
   if(currentFilter==='atrasadas')
     list = list.filter(t=>t.late>0);
   else if(currentFilter==='concluidas')
     list = list.filter(t=>t.status==='done');
-  else if(currentFilter==='hoje')
-    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fToday.getTime(); });
-  else if(currentFilter==='amanha')
-    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fTomorrow.getTime(); });
-  else if(currentFilter==='semana')
-    list = list.filter(t=>{ const d=parseDue(t.due); return d&&d>=_fWeekStart&&d<=_fWeekEnd; });
+  else {
+    // esconde concluídas por padrão — a não ser que o painel de filtros peça explicitamente
+    if(fs !== 'done') list = list.filter(t=>t.status!=='done');
+    if(currentFilter==='hoje')
+      list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fToday.getTime(); });
+    else if(currentFilter==='amanha')
+      list = list.filter(t=>{ const d=parseDue(t.due); return d&&d.getTime()===_fTomorrow.getTime(); });
+    else if(currentFilter==='semana')
+      list = list.filter(t=>{ const d=parseDue(t.due); return d&&d>=_fWeekStart&&d<=_fWeekEnd; });
+  }
 
-  // Filtros do painel
-  const fp = (document.getElementById('filter-person')?.value)   || filterPerson;
-  const fpr= (document.getElementById('filter-priority')?.value) || filterPriority;
-  const fs = (document.getElementById('filter-status')?.value)   || filterStatus;
   if(fp)  list = list.filter(t=>t.person===fp);
   if(fpr) list = list.filter(t=>t.priority===fpr);
   if(fs)  list = list.filter(t=>t.status===fs);
