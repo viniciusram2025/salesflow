@@ -2702,12 +2702,12 @@ canvas.fab-canvas { width: 100% !important; }
           <div id="parc-kpi-pecas" style="font-size:24px;font-weight:700;color:var(--c-text);margin-top:4px;">—</div>
         </div>
         <div style="background:var(--c-surface);padding:10px 16px;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">★ Carros Chefe</div>
-          <div id="parc-kpi-cc" style="font-size:24px;font-weight:700;color:var(--c-amber);margin-top:4px;">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Vencidas &gt;90d</div>
+          <div id="parc-kpi-cc" style="font-size:24px;font-weight:700;color:var(--c-red);margin-top:4px;">—</div>
         </div>
         <div style="background:var(--c-surface);padding:10px 16px;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Mais de 30 dias</div>
-          <div id="parc-kpi-old" style="font-size:24px;font-weight:700;color:var(--c-red);margin-top:4px;">—</div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--c-muted);">Valor em Campo</div>
+          <div id="parc-kpi-old" style="font-size:20px;font-weight:700;color:var(--c-green);margin-top:4px;">—</div>
         </div>
       </div>
 
@@ -4186,6 +4186,7 @@ const ALL_PAGES = [
   {key:'revenda',        label:'Revenda',         icon:'ti-shopping-bag'},
   {key:'ia',             label:'IA de Reuniões', icon:'ti-brain'},
   {key:'fotografia',     label:'Fotografia',     icon:'ti-camera'},
+  {key:'parceiros',      label:'Parceiros',      icon:'ti-building-store'},
 ];
 
 // Aplica permissões no menu lateral conforme perfil do usuário
@@ -8499,12 +8500,16 @@ window.addEventListener('load', () => {
     return `${dd}/${mn[+m-1]}/${y.slice(2)}`;
   }
 
+  const _fmtR = v => 'R$ ' + Number(v||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+
   function _parcUpdateKPIs() {
     const partners = new Set(_parcData.map(r => r.destino).filter(Boolean));
+    const vencidas = _parcData.filter(r => Number(r.dias_campo) > 90).length;
+    const valor    = _parcData.reduce((s, r) => s + (Number(r.preco_loja)||0), 0);
     document.getElementById('parc-kpi-parceiros').textContent = partners.size;
     document.getElementById('parc-kpi-pecas').textContent     = _parcData.length;
-    document.getElementById('parc-kpi-cc').textContent        = _parcData.filter(_parcIsCC).length;
-    document.getElementById('parc-kpi-old').textContent       = _parcData.filter(r => Number(r.dias_campo) > 30).length;
+    document.getElementById('parc-kpi-cc').textContent        = vencidas;
+    document.getElementById('parc-kpi-old').textContent       = _fmtR(valor);
   }
 
   window.parcFilterCC = function(destino) {
@@ -8533,7 +8538,7 @@ window.addEventListener('load', () => {
     const el = document.getElementById('parc-cc-content');
     if (!el) return;
     if (_parcActiveCC === null) _parcRenderMatrix(el);
-    else _parcRenderPartnerCC(el, _parcActiveCC);
+    else _parcRenderPartnerProfile(el, _parcActiveCC);
   }
 
   function _parcRenderMatrix(el) {
@@ -8594,32 +8599,114 @@ window.addEventListener('load', () => {
     subRows.forEach(r => r.style.display = open ? '' : 'none');
   };
 
-  function _parcRenderPartnerCC(el, destino) {
-    const ccPecas = _parcData.filter(r => r.destino === destino && _parcIsCC(r));
+  async function _parcRenderPartnerProfile(el, destino) {
+    el.innerHTML = '<div class="fab-loading"><div class="fab-spinner"></div> Carregando perfil...</div>';
+
+    const pecas    = _parcData.filter(r => r.destino === destino);
+    const vencidas = pecas.filter(r => Number(r.dias_campo) > 90);
+    const alertas  = pecas.filter(r => Number(r.dias_campo) >= 75 && Number(r.dias_campo) <= 90);
+    const diasMed  = pecas.length ? Math.round(pecas.reduce((s,r)=>s+Number(r.dias_campo||0),0)/pecas.length) : 0;
+    const ccPecas  = pecas.filter(_parcIsCC);
     const coverage = _PARC_CC_CATS.map(cat => ({ label: cat.label, pecas: ccPecas.filter(cat.check) }));
-    const has = coverage.filter(c => c.pecas.length > 0).length;
-    const pill = (c) => `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;
-      background:${c.pecas.length>0?'var(--c-green-dim)':'var(--c-red-dim)'};
-      color:${c.pecas.length>0?'var(--c-green)':'var(--c-red)'};
-      border:1px solid ${c.pecas.length>0?'rgba(34,201,135,.2)':'rgba(240,82,82,.2)'};">
-      ${c.pecas.length>0?'✓':'✗'} ${c.label}${c.pecas.length>1?' ×'+c.pecas.length:''}</span>`;
+    const ccHas    = coverage.filter(c => c.pecas.length > 0).length;
+
+    const tipoMap = {};
+    pecas.forEach(r => {
+      const k = (r.produto||'—') + (r.subtipo ? ' / '+r.subtipo : '');
+      tipoMap[k] = (tipoMap[k]||0)+1;
+    });
+    const topTipos = Object.entries(tipoMap).sort((a,b)=>b[1]-a[1]);
+
+    if (!window._parcVendasCache) {
+      try {
+        const to = new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')),15000));
+        const rv = await Promise.race([window.apiFetch(window._API+'/vendas-parceiro'), to]);
+        window._parcVendasCache = rv.ok ? await rv.json() : [];
+      } catch { window._parcVendasCache = []; }
+    }
+
+    const vp           = (window._parcVendasCache||[]).filter(r => r.destino === destino);
+    const totalVendas  = vp.reduce((s,r)=>s+Number(r.total_vendas||0),0);
+    const totalFat     = vp.reduce((s,r)=>s+Number(r.total_faturado||0),0);
+    const ticketMed    = totalVendas > 0 ? totalFat/totalVendas : 0;
+    const topVendidos  = [...vp].sort((a,b)=>Number(b.total_vendas)-Number(a.total_vendas)).slice(0,6);
+
+    const kpi = (label, val, cor='var(--c-text)') => `
+      <div style="background:var(--c-surface);border:1px solid var(--c-border);border-radius:8px;padding:10px 12px;text-align:center;">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);">${label}</div>
+        <div style="font-size:20px;font-weight:700;color:${cor};margin-top:3px;">${val}</div>
+      </div>`;
+    const pill = c => `<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${c.pecas.length>0?'var(--c-green-dim)':'var(--c-red-dim)'};color:${c.pecas.length>0?'var(--c-green)':'var(--c-red)'};border:1px solid ${c.pecas.length>0?'rgba(34,201,135,.2)':'rgba(240,82,82,.2)'};">${c.pecas.length>0?'✓':'✗'} ${c.label}${c.pecas.length>1?' ×'+c.pecas.length:''}</span>`;
+    const diasCor = d => Number(d)>90?'var(--c-red)':Number(d)>=75?'var(--c-amber)':'var(--c-muted)';
+    const ccCor = n => n>=8?'var(--c-green)':n>=5?'var(--c-amber)':'var(--c-red)';
+
     el.innerHTML = `
-      <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--c-muted);margin-bottom:8px;">
-          ${destino} — ${has} de ${_PARC_CC_CATS.length} categorias cobertas
+    <div style="background:var(--c-surface2);border:1px solid var(--c-border);border-radius:10px;padding:14px 16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <i class="ti ti-building-store" style="color:var(--c-accent);font-size:18px;"></i>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--c-text);">${destino}</div>
+          <div style="font-size:11px;color:var(--c-muted);">${pecas.length} peças em comodato · ${totalVendas} vendas históricas</div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">${coverage.map(pill).join('')}</div>
       </div>
-      ${ccPecas.length ? `<div class="fab-card" style="padding:0;overflow:hidden;"><table class="fab-table">
-        <thead><tr><th>Ref</th><th>Produto / Subtipo</th><th>Pedra</th><th>Lapidação</th><th class="right">Dias</th></tr></thead>
-        <tbody>${ccPecas.sort((a,b)=>Number(b.dias_campo)-Number(a.dias_campo)).map(r => `<tr>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;">
+        ${kpi('Em Campo', pecas.length)}
+        ${kpi('CC Cobertos', ccHas+'/'+_PARC_CC_CATS.length, ccCor(ccHas))}
+        ${kpi('Vencidas >90d', vencidas.length, vencidas.length>0?'var(--c-red)':'var(--c-green)')}
+        ${kpi('Dias Médio', diasMed+'d', diasMed>90?'var(--c-red)':diasMed>60?'var(--c-amber)':'var(--c-muted)')}
+      </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);margin-bottom:8px;">★ Carros Chefe</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${coverage.map(pill).join('')}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="fab-card" style="padding:12px 14px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);margin-bottom:10px;">Em Campo por Tipo</div>
+        ${topTipos.map(([tipo,cnt])=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--c-border);">
+            <span style="font-size:12px;color:var(--c-text);">${tipo}</span>
+            <span style="font-size:12px;font-weight:700;color:var(--c-accent);">${cnt}</span>
+          </div>`).join('')||'<div style="color:var(--c-muted);font-size:12px;">Nenhuma peça em campo</div>'}
+      </div>
+      <div class="fab-card" style="padding:12px 14px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);margin-bottom:10px;">Histórico de Vendas</div>
+        ${totalVendas>0 ? `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px;">
+            <div style="text-align:center;"><div style="font-size:9px;color:var(--c-muted);text-transform:uppercase;font-weight:700;letter-spacing:.4px;">Vendas</div><div style="font-size:18px;font-weight:700;color:var(--c-text);">${totalVendas}</div></div>
+            <div style="text-align:center;"><div style="font-size:9px;color:var(--c-muted);text-transform:uppercase;font-weight:700;letter-spacing:.4px;">Ticket Médio</div><div style="font-size:13px;font-weight:700;color:var(--c-green);">${_fmtR(ticketMed)}</div></div>
+            <div style="text-align:center;"><div style="font-size:9px;color:var(--c-muted);text-transform:uppercase;font-weight:700;letter-spacing:.4px;">Faturado</div><div style="font-size:13px;font-weight:700;color:var(--c-green);">${_fmtR(totalFat)}</div></div>
+          </div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--c-muted);margin-bottom:6px;">Mais Vendidos</div>
+          ${topVendidos.map(r=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid var(--c-border);">
+              <span style="font-size:12px;color:var(--c-text);">${r.produto||'—'}${r.subtipo?' / '+r.subtipo:''}</span>
+              <div style="flex-shrink:0;margin-left:8px;text-align:right;">
+                <span style="font-size:11px;font-weight:700;color:var(--c-accent);">×${r.total_vendas}</span>
+                <span style="font-size:10px;color:var(--c-muted);margin-left:4px;">${_fmtR(r.ticket_medio)}</span>
+              </div>
+            </div>`).join('')}
+        ` : '<div style="color:var(--c-muted);font-size:12px;text-align:center;padding:12px 0;">Sem histórico de vendas registrado</div>'}
+      </div>
+    </div>
+
+    ${vencidas.length>0||alertas.length>0 ? `
+    <div class="fab-card" style="padding:0;overflow:hidden;">
+      <div style="padding:8px 14px;background:${vencidas.length>0?'var(--c-red-dim)':'var(--c-amber-dim)'};border-bottom:1px solid var(--c-border);">
+        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${vencidas.length>0?'var(--c-red)':'var(--c-amber)'};">
+          ${vencidas.length>0?`⚠ ${vencidas.length} peça${vencidas.length>1?'s':''} com prazo vencido (>90d)`:
+          `${alertas.length} peça${alertas.length>1?'s':''} próximas de vencer (75–90d)`}
+        </span>
+      </div>
+      <table class="fab-table">
+        <thead><tr><th>Ref</th><th>Produto / Subtipo</th><th>Pedra</th><th class="right">Dias em Campo</th></tr></thead>
+        <tbody>${[...vencidas,...alertas].sort((a,b)=>Number(b.dias_campo)-Number(a.dias_campo)).map(r=>`<tr>
           <td style="font-weight:700;">${r.referencia||'—'}</td>
           <td>${r.produto||''} ${r.subtipo||''}</td>
-          <td style="color:var(--c-muted);font-size:12px;">${r.tipo_pedra||'—'}</td>
-          <td style="color:var(--c-muted);font-size:12px;">${r.lapidacao||'—'}</td>
-          <td class="right" style="color:${Number(r.dias_campo)>30?'var(--c-red)':'var(--c-muted)'};font-size:12px;">${r.dias_campo}d</td>
+          <td style="font-size:12px;color:var(--c-muted);">${r.tipo_pedra||'—'}</td>
+          <td class="right" style="font-weight:700;color:${diasCor(r.dias_campo)};">${r.dias_campo}d</td>
         </tr>`).join('')}</tbody>
-      </table></div>` : '<div style="text-align:center;padding:20px;color:var(--c-muted);">Nenhum carro chefe em campo para este parceiro</div>'}`;
+      </table>
+    </div>` : ''}`;
   }
 
   window.parceiroLoad = async function() {
@@ -8634,6 +8721,7 @@ window.addEventListener('load', () => {
       if (!r.ok) { _err('Erro ' + r.status); return; }
       const raw = await r.json();
       _parcData = raw.filter(r => !_PARC_EXCLUIDOS.has((r.destino||'').toUpperCase()));
+      window._parcVendasCache = null; // invalida cache de vendas ao atualizar
       _parcUpdateKPIs();
       _parcRenderCC();
     } catch(e) {
